@@ -3,6 +3,7 @@ package com.example.mosawebapp.account.controller;
 import com.example.mosawebapp.Exceptions.NotFoundException;
 import com.example.mosawebapp.Exceptions.TokenException;
 import com.example.mosawebapp.Exceptions.ValidationException;
+import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.dto.AccountDto;
 import com.example.mosawebapp.account.dto.AccountForm;
 import com.example.mosawebapp.account.dto.LoginForm;
@@ -10,7 +11,7 @@ import com.example.mosawebapp.account.service.AccountService;
 import com.example.mosawebapp.apiresponse.ApiResponse;
 import com.example.mosawebapp.security.ApiResponseDto;
 import com.example.mosawebapp.security.JwtGenerator;
-import java.util.List;
+import com.example.mosawebapp.security.domain.TokenBlacklistingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -33,10 +34,14 @@ public class AccountController {
   private static final String BEARER = "Bearer ";
   private static final String ERROR_DUE = "Error due to {}";
   private final AccountService accountService;
+  private final TokenBlacklistingService tokenBlacklistingService;
   private final JwtGenerator jwtGenerator;
 
-  public AccountController(AccountService accountService, JwtGenerator jwtGenerator) {
+
+  public AccountController(AccountService accountService,
+      TokenBlacklistingService tokenBlacklistingService, JwtGenerator jwtGenerator) {
     this.accountService = accountService;
+    this.tokenBlacklistingService = tokenBlacklistingService;
     this.jwtGenerator = jwtGenerator;
   }
 
@@ -46,7 +51,7 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try{
-      if(!jwtGenerator.validateToken(token) || token.isEmpty()){
+      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
         throw new TokenException(TOKEN_INVALID);
       }
 
@@ -63,7 +68,7 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try{
-      if(!jwtGenerator.validateToken(token) || token.isEmpty()){
+      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
         throw new TokenException(TOKEN_INVALID);
       }
 
@@ -77,13 +82,54 @@ public class AccountController {
     }
   }
 
+  @GetMapping(value="/logout")
+  public ResponseEntity<?> logout(@RequestHeader("Authorization") String header){
+    String token = header.replace(BEARER, "");
+
+    try{
+      if(!jwtGenerator.isTokenValid(token)){
+        throw new TokenException(TOKEN_INVALID);
+      }
+
+      if(tokenBlacklistingService.isTokenBlacklisted(token)) {
+        throw new SecurityException("Token is already blacklisted");
+      }
+
+      tokenBlacklistingService.addTokenToBlacklist(token);
+
+      logger.info("user logged out");
+      return ResponseEntity.ok(new ApiResponse("Logged out successfully"));
+    } catch (Exception e){
+      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GetMapping(value="/currentUser")
+  public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String header){
+    String token = header.replace(BEARER, "");
+
+    try{
+      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
+        throw new TokenException(TOKEN_INVALID);
+      }
+
+      String accId = jwtGenerator.getUserFromJWT(token);
+      Account account= accountService.findOne(accId);
+
+      return ResponseEntity.ok(AccountDto.buildFromEntity(account));
+    } catch (Exception e){
+      logger.error(ERROR_DUE, e.getMessage());
+      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   @PostMapping(value="/addAccount")
   public ResponseEntity<?> createAccount(@RequestBody AccountForm form, @RequestHeader("Authorization") String header){
     logger.info("creating account with form {}", form);
     String token = header.replace(BEARER, "");
 
     try {
-      if(!jwtGenerator.validateToken(token) || token.isEmpty()){
+      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
         throw new TokenException(TOKEN_INVALID);
       }
 
@@ -114,7 +160,7 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try {
-      if(!jwtGenerator.validateToken(token) || token.isEmpty()){
+      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
         throw new TokenException(TOKEN_INVALID);
       }
 
@@ -133,7 +179,7 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try{
-      if(!jwtGenerator.validateToken(token) || token.isEmpty()){
+      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
         throw new TokenException(TOKEN_INVALID);
       }
 

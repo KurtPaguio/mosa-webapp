@@ -9,6 +9,7 @@ import com.example.mosawebapp.account.dto.AccountForm;
 import com.example.mosawebapp.account.dto.LoginForm;
 import com.example.mosawebapp.security.AuthResponseDto;
 import com.example.mosawebapp.security.JwtGenerator;
+import com.example.mosawebapp.security.domain.TokenBlacklistingService;
 import com.example.mosawebapp.validate.Validate;
 import java.util.List;
 import org.slf4j.Logger;

@@ -32,7 +32,7 @@ public class JwtGenerator {
         return claims.getSubject();
     }
 
-    public boolean validateToken(String token){
+    public boolean isTokenValid(String token){
         try {
             Jwts.parserBuilder().setSigningKey(SecurityConstants.SECRET_TOKEN).build().parseClaimsJws(token);
             return true;

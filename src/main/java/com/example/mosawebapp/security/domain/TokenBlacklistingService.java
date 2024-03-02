@@ -1,6 +1,6 @@
 package com.example.mosawebapp.security.domain;
 
-import com.example.mosawebapp.Exceptions.SecurityException;
+import com.example.mosawebapp.exceptions.SecurityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

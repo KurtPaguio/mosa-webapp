@@ -11,15 +11,18 @@ public class AccountDto {
   private String fullName;
   private String email;
   private String contactNumber;
+  private String address;
   private UserRole userRole;
 
   public AccountDto(){}
-  public AccountDto(String id, String username, String fullName, String email, String contactNumber, UserRole userRole) {
+  public AccountDto(String id, String username, String fullName, String email, String contactNumber, String address,
+      UserRole userRole) {
     this.id = id;
     this.username = username;
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
+    this.address = address;
     this.userRole = userRole;
   }
 
@@ -33,7 +36,7 @@ public class AccountDto {
 
   public static AccountDto buildFromEntity(Account account){
     return new AccountDto(account.getId(), account.getUsername(), account.getFullName(), account.getEmail(),
-        account.getContactNumber(), account.getRole());
+        account.getContactNumber(), account.getAddress(), account.getUserRole());
   }
 
   public static List<AccountDto> buildFromEntities(List<Account> accounts){
@@ -86,11 +89,19 @@ public class AccountDto {
     this.contactNumber = contactNumber;
   }
 
-  public UserRole getRole() {
+  public String getAddress() {
+    return address;
+  }
+
+  public void setAddress(String address) {
+    this.address = address;
+  }
+
+  public UserRole getUserRole() {
     return userRole;
   }
 
-  public void setRole(UserRole userRole) {
+  public void setUserRole(UserRole userRole) {
     this.userRole = userRole;
   }
 }

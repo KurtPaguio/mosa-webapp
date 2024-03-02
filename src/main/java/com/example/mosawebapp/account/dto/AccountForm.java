@@ -7,15 +7,18 @@ public class AccountForm {
   private String fullName;
   private String email;
   private String contactNumber;
+  private String address;
   private String password;
   private UserRole userRole;
 
-  public AccountForm(String username, String fullName, String email, String contactNumber,
+  public AccountForm(){}
+  public AccountForm(String username, String fullName, String email, String contactNumber, String address,
       String password, UserRole userRole) {
     this.username = username;
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
+    this.address = address;
     this.password = password;
     this.userRole = userRole;
   }
@@ -52,6 +55,14 @@ public class AccountForm {
     this.contactNumber = contactNumber;
   }
 
+  public String getAddress() {
+    return address;
+  }
+
+  public void setAddress(String address) {
+    this.address = address;
+  }
+
   public String getPassword() {
     return password;
   }
@@ -60,11 +71,11 @@ public class AccountForm {
     this.password = password;
   }
 
-  public UserRole getRole() {
+  public UserRole getUserRole() {
     return userRole;
   }
 
-  public void setRole(UserRole userRole) {
+  public void setUserRole(UserRole userRole) {
     this.userRole = userRole;
   }
 }

@@ -1,9 +1,7 @@
 package com.example.mosawebapp.validate;
-import com.example.mosawebapp.Exceptions.NotFoundException;
+import com.example.mosawebapp.exceptions.NotFoundException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
 import org.apache.commons.lang3.StringUtils;
 public class Validate {
     private Validate() {}
@@ -13,6 +11,10 @@ public class Validate {
         throw new NotFoundException("Object is null");
       }
     }
+
+  public static boolean IsNull(Object obj){
+    return obj == null;
+  }
 
     public static void notEmpty(String... str){
       for(String string: str){

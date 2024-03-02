@@ -36,7 +36,7 @@ public class SecurityConfiguration {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .authorizeRequests()
-            .antMatchers("/api/account/**").permitAll()
+            .antMatchers("/api/account/**", "/mail/**").permitAll()
             .anyRequest().authenticated()
             .and()
             .httpBasic();

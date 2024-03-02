@@ -1,8 +1,11 @@
 package com.example.mosawebapp.account.controller;
 
-import com.example.mosawebapp.Exceptions.NotFoundException;
-import com.example.mosawebapp.Exceptions.TokenException;
-import com.example.mosawebapp.Exceptions.ValidationException;
+import com.example.mosawebapp.account.domain.UserRole;
+import com.example.mosawebapp.account.dto.ChangePasswordForm;
+import com.example.mosawebapp.account.dto.EmailForm;
+import com.example.mosawebapp.account.dto.OtpForm;
+import com.example.mosawebapp.exceptions.SecurityException;
+import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.dto.AccountDto;
 import com.example.mosawebapp.account.dto.AccountForm;
@@ -55,10 +58,10 @@ public class AccountController {
         throw new TokenException(TOKEN_INVALID);
       }
 
-      return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllAccounts()));
-    } catch (TokenException te){
-      logger.error(ERROR_DUE, te.getMessage());
-      return new ResponseEntity<>(new ApiResponse(te.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllAccounts(token)));
+    } catch (Exception e){
+      logger.error(ERROR_DUE, e.getMessage());
+      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -72,11 +75,11 @@ public class AccountController {
         throw new TokenException(TOKEN_INVALID);
       }
 
-      AccountDto dto = AccountDto.buildFromEntity(accountService.findOne(id));
+      AccountDto dto = AccountDto.buildFromEntity(accountService.findOne(id, token));
 
       logger.info("done fetching account for {}", dto.getUsername());
       return ResponseEntity.ok(dto);
-    } catch (NotFoundException | TokenException e){
+    } catch (Exception e){
       logger.error(ERROR_DUE, e.getMessage());
       return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -114,7 +117,7 @@ public class AccountController {
       }
 
       String accId = jwtGenerator.getUserFromJWT(token);
-      Account account= accountService.findOne(accId);
+      Account account= accountService.findOne(accId, token);
 
       return ResponseEntity.ok(AccountDto.buildFromEntity(account));
     } catch (Exception e){
@@ -133,11 +136,41 @@ public class AccountController {
         throw new TokenException(TOKEN_INVALID);
       }
 
-      AccountDto dto = AccountDto.buildFromEntity(accountService.createAccount(form));
+      AccountDto dto = AccountDto.buildFromEntity(accountService.createAccount(form, "admin_create", token));
 
       logger.info("account created for {}", dto.getFullName());
       return ResponseEntity.ok(dto);
-    } catch (ValidationException | TokenException e){
+    } catch (Exception e){
+      logger.error(ERROR_DUE, e.getMessage());
+      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @PostMapping(value="/register")
+  public ResponseEntity<?> register(@RequestBody AccountForm form){
+    logger.info("creating account for customer with form {}", form);
+
+    try {
+      form.setUserRole(UserRole.CUSTOMER);
+
+      AccountDto dto = AccountDto.buildFromEntity(accountService.createAccount(form, "register", ""));
+
+      logger.info("account created for {}", dto.getFullName());
+      return ResponseEntity.ok(dto);
+    } catch (Exception e){
+      logger.error(ERROR_DUE, e.getMessage());
+      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @PostMapping(value="/registerOtp/{accId}")
+  public ResponseEntity<?> registerOtp(@PathVariable("accId") String id, @RequestBody OtpForm form){
+    try {
+      boolean isValid = accountService.isOtpCorrect(id, form.getOtp(), "register");
+
+      logger.info("Otp is {} for registration", isValid ? "valid" : "not valid");
+      return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid)));
+    } catch (Exception e){
       logger.error(ERROR_DUE, e.getMessage());
       return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -154,6 +187,81 @@ public class AccountController {
     }
   }
 
+  @PostMapping(value="/loginOtp/{accId}")
+  public ResponseEntity<?> loginOTP(@PathVariable("accId") String id, @RequestBody OtpForm form){
+    logger.info("validating login otp for account {}", id);
+
+    try{
+      boolean isValid = accountService.isOtpCorrect(id, form.getOtp(), "login");
+
+      logger.info("Otp is {} for logging in", isValid ? "valid" : "not valid");
+      return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid)));
+    } catch (Exception e){
+      logger.error(ERROR_DUE, e.getMessage());
+      return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @PostMapping(value="/validateEmail")
+  public ResponseEntity<?> validateEmailForChangePassword(@RequestBody EmailForm form){
+    logger.info("validating email {} for password reset", form.getEmail());
+    try{
+      Account account = accountService.validateEmailForChangePassword(form.getEmail());
+
+      return ResponseEntity.ok(AccountDto.buildFromEntity(account));
+    } catch (Exception e){
+      logger.error(ERROR_DUE, e.getMessage());
+      return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GetMapping(value="/resetOtp/{accId}/{action}")
+  public ResponseEntity<?> resetOtp(@PathVariable("accId") String id, @PathVariable("action") String action){
+    logger.info("resetting otp for {}", action);
+
+    try{
+      Account account = accountService.resetOtp(id, action);
+
+      return ResponseEntity.ok(new ApiResponse("New OTP sent to " + account.getEmail()));
+    } catch (Exception e){
+      return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  @PostMapping(value="/changePasswordOtp/{accId}")
+  public ResponseEntity<?> changePasswordOtp(@PathVariable("accId") String id, @RequestBody OtpForm form){
+    logger.info("validating login otp for account {}", id);
+
+    try{
+      boolean isValid = accountService.isOtpCorrect(id, form.getOtp(), "password change");
+
+      logger.info("Otp is {} for password change", isValid ? "valid" : "not valid");
+      return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid)));
+    } catch (Exception e){
+      logger.error(ERROR_DUE, e.getMessage());
+      return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @PostMapping(value="/changePassword/{accId}")
+  public ResponseEntity<?> changePassword(@PathVariable("accId") String id, @RequestBody ChangePasswordForm form){
+    logger.info("changing password for account {}", id);
+    try{
+      boolean withOldPassword = !form.getOldPassword().isEmpty();
+
+      accountService.changePassword(id, form, withOldPassword);
+
+      return ResponseEntity.ok(new ApiResponse("Password successfully changed"));
+    } catch (Exception e){
+      logger.error(ERROR_DUE, e.getMessage());
+      return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   @PutMapping(value="/updateAccount/{accId}")
   public ResponseEntity<?> updateAccount(@PathVariable("accId") String id, @RequestBody AccountForm form, @RequestHeader("Authorization") String header){
     logger.info("updating account with form {}", form);
@@ -164,11 +272,11 @@ public class AccountController {
         throw new TokenException(TOKEN_INVALID);
       }
 
-      AccountDto dto = AccountDto.buildFromEntity(accountService.updateAccount(id,form));
+      AccountDto dto = AccountDto.buildFromEntity(accountService.updateAccount(id, token, "admin_update", form));
 
       logger.info("account updated for {}", dto.getFullName());
       return ResponseEntity.ok(dto);
-    } catch (ValidationException | NotFoundException | TokenException e){
+    } catch (Exception e){
       logger.error(ERROR_DUE, e.getMessage());
       return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -183,11 +291,30 @@ public class AccountController {
         throw new TokenException(TOKEN_INVALID);
       }
 
-      accountService.deleteAccount(id);
+      accountService.deleteAccount(id, token, "admin_delete");
 
       logger.info("done deleting account");
       return new ResponseEntity<>(new ApiResponse("Account Deleted Successfully"), HttpStatus.OK);
-    } catch (NotFoundException | TokenException e){
+    } catch (Exception e){
+      logger.error(ERROR_DUE, e.getMessage());
+      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @DeleteMapping(value="/deleteMyAccount/{accId}")
+  public ResponseEntity<?> deleteMyAccount(@PathVariable("accId") String id, @RequestHeader("Authorization") String header){
+    String token = header.replace(BEARER, "");
+
+    try{
+      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
+        throw new TokenException(TOKEN_INVALID);
+      }
+
+      accountService.deleteAccount(id,  token, "");
+
+      logger.info("done deleting account");
+      return new ResponseEntity<>(new ApiResponse("Account Deleted Successfully"), HttpStatus.OK);
+    } catch (Exception e){
       logger.error(ERROR_DUE, e.getMessage());
       return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }

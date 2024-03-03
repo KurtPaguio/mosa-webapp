@@ -7,7 +7,9 @@ import com.example.mosawebapp.account.dto.EmailForm;
 import com.example.mosawebapp.account.dto.OtpForm;
 import com.example.mosawebapp.account.registration.dto.AccountRegistrationDto;
 import com.example.mosawebapp.account.registration.service.AccountRegistrationService;
+import com.example.mosawebapp.apiresponse.ApiErrorResponse;
 import com.example.mosawebapp.apiresponse.ApiObjectResponse;
+import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.SecurityException;
 import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.account.domain.Account;
@@ -16,13 +18,16 @@ import com.example.mosawebapp.account.dto.AccountForm;
 import com.example.mosawebapp.account.dto.LoginForm;
 import com.example.mosawebapp.account.service.AccountService;
 import com.example.mosawebapp.apiresponse.ApiResponse;
-import com.example.mosawebapp.security.ApiResponseDto;
+import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
+import com.example.mosawebapp.utils.DateTimeFormatter;
+import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,14 +39,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("api/account/")
+@RequestMapping("/api/account")
 public class AccountController {
   private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
-  private static final String TOKEN_INVALID = "Token not already valid. Please login again";
   private static final String BEARER = "Bearer ";
-  private static final String ERROR_DUE = "Error due to {}";
+  private static final String TOKEN_INVALID = "Token Invalid/Expired";
   private static final String VALID = "valid";
   private static final String NOT_VALID = "not valid";
+  private static final String NUMERIC_INPUTS_ONLY = "Numeric Inputs Only";
   private final AccountService accountService;
   private final AccountRegistrationService registrationService;
   private final TokenBlacklistingService tokenBlacklistingService;
@@ -56,6 +61,7 @@ public class AccountController {
     this.jwtGenerator = jwtGenerator;
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/getAccounts")
   public ResponseEntity<?> getAccounts(@RequestHeader("Authorization") String header){
     logger.info("getting all accounts");
@@ -67,12 +73,22 @@ public class AccountController {
       }
 
       return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllAccounts(token)));
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(SecurityException se){
+        return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+        return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+        return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+        return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/getAccount/{accId}")
   public ResponseEntity<?> getAccount(@PathVariable("accId") String id, @RequestHeader("Authorization") String header){
     logger.info("getting account with id {}", id);
@@ -85,14 +101,24 @@ public class AccountController {
 
       AccountDto dto = AccountDto.buildFromEntity(accountService.findOne(id, token));
 
-      logger.info("done fetching account for {}", dto.getUsername());
-      return ResponseEntity.ok(dto);
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+      logger.info("done fetching account for {}", dto.getEmail());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value()).body(dto);
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/logout")
   public ResponseEntity<?> logout(@RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");
@@ -103,18 +129,29 @@ public class AccountController {
       }
 
       if(tokenBlacklistingService.isTokenBlacklisted(token)) {
-        throw new SecurityException("Token is already blacklisted");
+        throw new SecurityException("Token can no longer be used");
       }
 
       tokenBlacklistingService.addTokenToBlacklist(token);
 
       logger.info("user logged out");
-      return ResponseEntity.ok(new ApiResponse("Logged out successfully"));
-    } catch (Exception e){
-      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.ok(new ApiResponse("Logged out successfully", HttpStatus.OK));
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/currentUser")
   public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");
@@ -128,12 +165,22 @@ public class AccountController {
       Account account= accountService.findOne(accId, token);
 
       return ResponseEntity.ok(AccountDto.buildFromEntity(account));
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/addAccount")
   public ResponseEntity<?> createAccount(@RequestBody AccountForm form, @RequestHeader("Authorization") String header){
     logger.info("creating account with form {}", form);
@@ -147,13 +194,23 @@ public class AccountController {
       AccountDto dto = AccountDto.buildFromEntity(accountService.createAccount(form, token));
 
       logger.info("account created for {}", dto.getFullName());
-      return ResponseEntity.ok(new ApiObjectResponse("Account created for " + dto.getUsername(), dto));
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Account created for " + dto.getEmail(), dto));
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/register")
   public ResponseEntity<?> register(@RequestBody AccountForm form){
     logger.info("creating account for customer with form {}", form);
@@ -164,41 +221,75 @@ public class AccountController {
       AccountRegistrationDto dto= AccountRegistrationDto.buildFromEntity(registrationService.register(form));
 
       logger.info("account created for {}", dto.getFullName());
-      return ResponseEntity.ok(new ApiObjectResponse("Account registered for " + dto.getUsername(), dto));
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Account registered for " + dto.getEmail(), dto));
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/registerOtp/{accId}")
   public ResponseEntity<?> registerOtp(@PathVariable("accId") String id, @RequestBody OtpForm form){
     try {
       Account account = registrationService.isRegisterOtpValid(id, form.getOtp());
 
       if(account == null){
-        return ResponseEntity.ok(new ApiResponse("OTP Incorrect. Try Again"));
+        throw new ValidationException("OTP Incorrect. Please Try Again");
       }
 
       AccountDto dto = AccountDto.buildFromEntity(account);
-      return ResponseEntity.ok(new ApiObjectResponse("Account created for " + dto.getUsername(), dto));
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Account created for " + dto.getEmail(), dto));
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(NumberFormatException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, NUMERIC_INPUTS_ONLY),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/login")
   public ResponseEntity<?> login(@RequestBody LoginForm loginForm){
     try{
+      logger.info("user {} attempting to login", loginForm.getEmail());
+      logger.info("user {} attempting to login", loginForm.getEmail());
       return accountService.login(loginForm);
-    } catch (Exception e){
-      logger.error("Error logging into the system: {}", e.getMessage());
-      return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, "Error logging in: " + e.getMessage()),
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
           HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/loginOtp/{accId}")
   public ResponseEntity<?> loginOTP(@PathVariable("accId") String id, @RequestBody OtpForm form){
     logger.info("validating login otp for account {}", id);
@@ -207,28 +298,49 @@ public class AccountController {
       boolean isValid = accountService.isOtpCorrect(id, form.getOtp(), "login");
 
       logger.info("Otp is {} for logging in", isValid ? VALID : NOT_VALID);
-      return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid)));
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
+      return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid), HttpStatus.OK));
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
           HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(NumberFormatException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, NUMERIC_INPUTS_ONLY),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
-  @PostMapping(value="/validateEmail")
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
+  @PostMapping(value="/forgotPassword")
   public ResponseEntity<?> validateEmailForChangePassword(@RequestBody EmailForm form){
     logger.info("validating email {} for password reset", form.getEmail());
     try{
       Account account = accountService.validateEmailForChangePassword(form.getEmail());
 
       return ResponseEntity.ok(AccountDto.buildFromEntity(account));
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
           HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/resetOtp/{accId}/{action}")
   public ResponseEntity<?> resetOtp(@PathVariable("accId") String id, @PathVariable("action") String action){
     logger.info("resetting otp for {}", action);
@@ -236,12 +348,26 @@ public class AccountController {
     try{
       String email = accountService.resetOtp(id, action);
 
-      return ResponseEntity.ok(new ApiResponse("New OTP sent to " + email));
-    } catch (Exception e){
-      return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
+      return ResponseEntity.ok(new ApiResponse("New OTP sent to " + email, HttpStatus.OK));
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
           HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(NumberFormatException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, NUMERIC_INPUTS_ONLY),
+          HttpStatus.BAD_REQUEST);
     }
   }
+
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/changePasswordOtp/{accId}")
   public ResponseEntity<?> changePasswordOtp(@PathVariable("accId") String id, @RequestBody OtpForm form){
     logger.info("validating login otp for account {}", id);
@@ -249,31 +375,56 @@ public class AccountController {
     try{
       boolean isValid = accountService.isOtpCorrect(id, form.getOtp(), "password change");
 
-      logger.info("Otp is {} for password change", isValid ? VALID : NOT_VALID);
-      return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid)));
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
+      if(!isValid){
+        throw new ValidationException("OTP Incorrect. Try Again");
+      }
+
+      logger.info("Otp is {} for password change", VALID);
+      return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid), HttpStatus.OK));
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
           HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(NumberFormatException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, NUMERIC_INPUTS_ONLY),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/changePassword/{accId}")
   public ResponseEntity<?> changePassword(@PathVariable("accId") String id, @RequestBody ChangePasswordForm form){
     logger.info("changing password for account {}", id);
     try{
-      boolean withOldPassword = !form.getOldPassword().isEmpty();
+      boolean withOldPassword = form.getOldPassword() != null;
 
       accountService.changePassword(id, form, withOldPassword);
 
-      return ResponseEntity.ok(new ApiResponse("Password successfully changed"));
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
+      return ResponseEntity.ok(new ApiResponse("Password successfully changed", HttpStatus.OK));
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
           HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PutMapping(value="/updateAccount/{accId}")
   public ResponseEntity<?> updateAccount(@PathVariable("accId") String id, @RequestBody AccountUpdateForm form, @RequestHeader("Authorization") String header){
     logger.info("updating account with form {}", form);
@@ -287,13 +438,23 @@ public class AccountController {
       AccountDto dto = AccountDto.buildFromEntity(accountService.updateAccount(id, token, "admin_update", form));
 
       logger.info("account updated for {}", dto.getFullName());
-      return ResponseEntity.ok(new ApiObjectResponse("Account updated for " + dto.getUsername(), dto));
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Account updated for " + dto.getEmail(), dto));
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PutMapping(value="/updateMyAccount/{accId}")
   public ResponseEntity<?> updateMyAccount(@PathVariable("accId") String id, @RequestBody AccountUpdateForm form, @RequestHeader("Authorization") String header){
     logger.info("updating account with form {}", form);
@@ -308,12 +469,22 @@ public class AccountController {
 
       logger.info("account updated for {}", dto.getFullName());
       return ResponseEntity.ok(dto);
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @DeleteMapping(value="/deleteAccount/{accId}")
   public ResponseEntity<?> deleteAccount(@PathVariable("accId") String id, @RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");
@@ -326,13 +497,23 @@ public class AccountController {
       accountService.deleteAccount(id, token, "admin_delete");
 
       logger.info("done deleting account");
-      return new ResponseEntity<>(new ApiResponse("Account Deleted Successfully"), HttpStatus.OK);
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+      return new ResponseEntity<>(new ApiResponse("Account Deleted Successfully", HttpStatus.OK), HttpStatus.OK);
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @DeleteMapping(value="/deleteMyAccount/{accId}")
   public ResponseEntity<?> deleteMyAccount(@PathVariable("accId") String id, @RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");
@@ -345,10 +526,19 @@ public class AccountController {
       accountService.deleteAccount(id,  token, "");
 
       logger.info("done deleting account");
-      return new ResponseEntity<>(new ApiResponse("Account Deleted Successfully"), HttpStatus.OK);
-    } catch (Exception e){
-      logger.error(ERROR_DUE, e.getMessage());
-      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+      return new ResponseEntity<>(new ApiResponse("Account Deleted Successfully", HttpStatus.OK), HttpStatus.OK);
+    } catch(SecurityException se){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch(NotFoundException | NullPointerException ne){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
+          HttpStatus.BAD_REQUEST);
+    } catch(TokenException te){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
+          HttpStatus.UNAUTHORIZED);
+    } catch(ValidationException ve){
+      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
+          HttpStatus.BAD_REQUEST);
     }
   }
 }

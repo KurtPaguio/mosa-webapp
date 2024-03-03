@@ -37,7 +37,6 @@ public class MailService {
         "\n\nAn account associated with you has been created in Mosa Tire Supply Website. If you did not request this account creation, inform us "
         + "immediately through this email, mosatiresupply@gmail.com. Otherwise, here are your account credentials."
         + "\n\nEmail: " + form.getEmail()
-        + "\nUsername: " + form.getUsername()
         + "\nPassword: " + form.getPassword()
         + "\n\nOnce you received this email, login and change your password immediately to avoid data breach. Keep this email confidential. Thank you!"
     );

@@ -9,7 +9,6 @@ import java.util.List;
 public class AccountRegistrationDto {
   private String id;
   private String dateCreated;
-  private String username;
   private String fullName;
   private String email;
   private String contactNumber;
@@ -18,11 +17,10 @@ public class AccountRegistrationDto {
   private AccountStatus status;
 
   public AccountRegistrationDto(){}
-  public AccountRegistrationDto(String id, String dateCreated, String username, String fullName, String email,
+  public AccountRegistrationDto(String id, String dateCreated, String fullName, String email,
       String contactNumber, String address, UserRole userRole, AccountStatus status) {
     this.id = id;
     this.dateCreated = dateCreated;
-    this.username = username;
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
@@ -32,7 +30,7 @@ public class AccountRegistrationDto {
   }
 
   public static AccountRegistrationDto buildFromEntity(AccountRegistration register){
-    return new AccountRegistrationDto(register.getId(), register.getDateCreated(), register.getUsername(), register.getFullName(), register.getEmail(),
+    return new AccountRegistrationDto(register.getId(), register.getDateCreated(), register.getFullName(), register.getEmail(),
         register.getContactNumber(), register.getAddress(), register.getUserRole(),
         register.getStatus());
   }
@@ -61,14 +59,6 @@ public class AccountRegistrationDto {
 
   public void setDateCreated(String dateCreated) {
     this.dateCreated = dateCreated;
-  }
-
-  public String getUsername() {
-    return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
   }
 
   public String getFullName() {

@@ -31,8 +31,6 @@ public class Account {
   @Column
   private String dateCreated;
   @Column
-  private String username;
-  @Column
   private String fullName;
   @Column
   private String email;
@@ -56,10 +54,9 @@ public class Account {
   private List<Role> roles;
 
   public Account(){}
-  public Account(String dateCreated, String username, String fullName, String email, String contactNumber, String address,
+  public Account(String dateCreated, String fullName, String email, String contactNumber, String address,
       String password, UserRole userRole) {
     this.dateCreated = dateCreated;
-    this.username = username;
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
@@ -68,8 +65,17 @@ public class Account {
     this.userRole = userRole;
   }
 
-  public Account(String username, String fullName, long loginOtp, long changePasswordOtp) {
-    this.username = username;
+  public Account(String dateCreated, String fullName, String email, String contactNumber,
+      String password, UserRole userRole) {
+    this.dateCreated = dateCreated;
+    this.fullName = fullName;
+    this.email = email;
+    this.contactNumber = contactNumber;
+    this.password = password;
+    this.userRole = userRole;
+  }
+
+  public Account(String fullName, long loginOtp, long changePasswordOtp) {
     this.fullName = fullName;
 
     if(loginOtp != 0)
@@ -93,14 +99,6 @@ public class Account {
 
   public void setDateCreated(String dateCreated) {
     this.dateCreated = dateCreated;
-  }
-
-  public String getUsername() {
-    return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
   }
 
   public String getFullName() {

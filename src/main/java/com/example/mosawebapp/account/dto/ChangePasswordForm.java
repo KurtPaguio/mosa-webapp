@@ -1,22 +1,26 @@
 package com.example.mosawebapp.account.dto;
 
+import org.springframework.lang.Nullable;
+
 public class ChangePasswordForm {
+  @Nullable
   private String oldPassword;
   private String newPassword;
-  private String finalPassword;
+  private String confirmPassword;
 
   public ChangePasswordForm(){}
-  public ChangePasswordForm(String oldPassword, String newPassword, String finalPassword) {
+  public ChangePasswordForm(@Nullable String oldPassword, String newPassword, String confirmPassword) {
     this.oldPassword = oldPassword;
     this.newPassword = newPassword;
-    this.finalPassword = finalPassword;
+    this.confirmPassword = confirmPassword;
   }
 
+  @Nullable
   public String getOldPassword() {
     return oldPassword;
   }
 
-  public void setOldPassword(String oldPassword) {
+  public void setOldPassword(@Nullable String oldPassword) {
     this.oldPassword = oldPassword;
   }
 
@@ -28,11 +32,11 @@ public class ChangePasswordForm {
     this.newPassword = newPassword;
   }
 
-  public String getFinalPassword() {
-    return finalPassword;
+  public String getConfirmPassword() {
+    return confirmPassword;
   }
 
-  public void setFinalPassword(String finalPassword) {
-    this.finalPassword = finalPassword;
+  public void setConfirmPassword(String confirmPassword) {
+    this.confirmPassword = confirmPassword;
   }
 }

@@ -22,8 +22,6 @@ public class AccountRegistration {
   @Column
   private String dateCreated;
   @Column
-  private String username;
-  @Column
   private String fullName;
   @Column
   private String email;
@@ -43,14 +41,22 @@ public class AccountRegistration {
   private AccountStatus status;
 
   public AccountRegistration(){}
-  public AccountRegistration(String dateCreated, String username, String fullName, String email, String contactNumber,
+  public AccountRegistration(String dateCreated, String fullName, String email, String contactNumber,
       String address, String password, UserRole userRole) {
     this.dateCreated = dateCreated;
-    this.username = username;
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
     this.address = address;
+    this.password = password;
+    this.userRole = userRole;
+  }
+
+  public AccountRegistration(String dateCreated, String fullName, String email, String contactNumber, String password, UserRole userRole) {
+    this.dateCreated = dateCreated;
+    this.fullName = fullName;
+    this.email = email;
+    this.contactNumber = contactNumber;
     this.password = password;
     this.userRole = userRole;
   }
@@ -69,14 +75,6 @@ public class AccountRegistration {
 
   public void setDateCreated(String dateCreated) {
     this.dateCreated = dateCreated;
-  }
-
-  public String getUsername() {
-    return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
   }
 
   public String getFullName() {

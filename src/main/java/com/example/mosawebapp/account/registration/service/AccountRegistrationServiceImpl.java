@@ -43,10 +43,10 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
   public AccountRegistration register(AccountForm form) {
     Validate.notNull(form);
     validateForm(form);
-    validateIfAccountAlreadyExists(form.getEmail(), form.getUsername());
+    validateIfAccountAlreadyExists(form.getEmail());
 
-    AccountRegistration registration = new AccountRegistration(DateTimeFormatter.get_MMDDYYY_Format(new Date()), form.getUsername(), form.getFullName(), form.getEmail(), form.getContactNumber(),
-        form.getAddress(), passwordEncoder.encode(form.getPassword()), form.getUserRole());
+    AccountRegistration registration = new AccountRegistration(DateTimeFormatter.get_MMDDYYY_Format(new Date()), form.getFullName(), form.getEmail(),
+        form.getContactNumber(), passwordEncoder.encode(form.getConfirmPassword()), form.getUserRole());
 
     long otp = rnd.nextInt(999999);
     registration.setRegisterOtp(otp);
@@ -71,8 +71,8 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
       registration.setStatus(AccountStatus.ACTIVE);
       registrationRepository.save(registration);
 
-      Account newAccount = new Account(DateTimeFormatter.get_MMDDYYY_Format(new Date()), registration.getUsername(), registration.getFullName(), registration.getEmail(), registration.getContactNumber(),
-          registration.getAddress(), registration.getPassword(), registration.getUserRole());
+      Account newAccount = new Account(DateTimeFormatter.get_MMDDYYY_Format(new Date()), registration.getFullName(), registration.getEmail(), registration.getContactNumber(),
+          registration.getPassword(), registration.getUserRole());
 
       mailService.sendEmailForAccountRegistration(newAccount);
       accountRepository.save(newAccount);
@@ -83,18 +83,13 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
     return null;
   }
 
-  private void validateIfAccountAlreadyExists(String email, String username){
+  private void validateIfAccountAlreadyExists(String email){
     logger.info("validating if account already exists");
 
-    boolean existsByEmail = accountRepository.existsByEmail(email);
-    boolean existsByUsername = accountRepository.existsByUsername(username);
+    boolean existsByEmail = registrationRepository.existsByEmail(email);
 
     if(existsByEmail){
       throw new ValidationException("Account associated with the email already exists");
-    }
-
-    if(existsByUsername){
-      throw new ValidationException("Account associated with the username already exists");
     }
   }
   private void validateForm(AccountForm form){
@@ -112,12 +107,12 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
       throw new ValidationException("Contact number must not have letters");
     }
 
-    if(form.getPassword().length() < 8){
+    if(form.getPassword().length() < 8 || form.getConfirmPassword().length() < 8){
       throw new ValidationException("Password must have at least 8 characters");
     }
 
-    if(form.getUsername().length() < 5){
-      throw new ValidationException("Username must have at least 5 characters");
+    if(!form.getPassword().equals(form.getConfirmPassword())){
+      throw new ValidationException("Passwords are not equal");
     }
   }
 }

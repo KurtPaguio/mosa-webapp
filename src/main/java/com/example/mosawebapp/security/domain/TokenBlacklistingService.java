@@ -19,7 +19,7 @@ public class TokenBlacklistingService {
     TokenBlacklist tokenBlacklist = tokenBlacklistRepository.findByToken(token);
 
     if(tokenBlacklist != null){
-      throw new SecurityException("Token already blacklisted");
+      throw new SecurityException("Token can no longer be used");
     } else {
       if(tokenBlacklistRepository.tokensAreOverThirty()){
         tokenBlacklistRepository.deleteAll();

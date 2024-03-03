@@ -8,7 +8,6 @@ import java.util.List;
 public class AccountDto {
   private String id;
   private String dateCreated;
-  private String username;
   private String fullName;
   private String email;
   private String contactNumber;
@@ -16,11 +15,10 @@ public class AccountDto {
   private UserRole userRole;
 
   public AccountDto(){}
-  public AccountDto(String id, String dateCreated, String username, String fullName, String email, String contactNumber, String address,
+  public AccountDto(String id, String dateCreated, String fullName, String email, String contactNumber, String address,
       UserRole userRole) {
     this.id = id;
     this.dateCreated = dateCreated;
-    this.username = username;
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
@@ -28,8 +26,17 @@ public class AccountDto {
     this.userRole = userRole;
   }
 
-  public AccountDto(String username, String fullName, String email, String contactNumber, UserRole userRole) {
-    this.username = username;
+  public AccountDto(Account account){
+    this.id = account.getId();
+    this.dateCreated = account.getDateCreated();
+    this.fullName = account.getFullName();
+    this.email = account.getEmail();
+    this.contactNumber = account.getContactNumber();
+    this.address = account.getAddress();
+    this.userRole = account.getUserRole();
+  }
+
+  public AccountDto(String fullName, String email, String contactNumber, UserRole userRole) {
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
@@ -37,7 +44,7 @@ public class AccountDto {
   }
 
   public static AccountDto buildFromEntity(Account account){
-    return new AccountDto(account.getId(), account.getDateCreated(), account.getUsername(), account.getFullName(), account.getEmail(),
+    return new AccountDto(account.getId(), account.getDateCreated(), account.getFullName(), account.getEmail(),
         account.getContactNumber(), account.getAddress(), account.getUserRole());
   }
 
@@ -65,14 +72,6 @@ public class AccountDto {
 
   public void setDateCreated(String dateCreated) {
     this.dateCreated = dateCreated;
-  }
-
-  public String getUsername() {
-    return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
   }
 
   public String getFullName() {

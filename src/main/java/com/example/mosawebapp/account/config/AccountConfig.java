@@ -33,7 +33,6 @@ public class AccountConfig {
       if(accountRepository.findByEmail("ktfpaguio2000@gmail.com") == null){
         Account account = new Account();
         account.setDateCreated(DateTimeFormatter.get_MMDDYYY_Format(new Date()));
-        account.setUsername("admin");
         account.setEmail("ktfpaguio2000@gmail.com");
         account.setPassword(passwordEncoder.encode("kurtp2000"));
         account.setUserRole(UserRole.ADMINISTRATOR);

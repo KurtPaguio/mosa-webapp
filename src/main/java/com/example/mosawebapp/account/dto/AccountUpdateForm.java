@@ -1,31 +1,24 @@
 package com.example.mosawebapp.account.dto;
 
 import com.example.mosawebapp.account.domain.UserRole;
+import org.springframework.lang.Nullable;
 
 public class AccountUpdateForm {
-  private String username;
   private String fullName;
   private String email;
   private String contactNumber;
+  @Nullable
   private String address;
+  @Nullable
   private UserRole userRole;
 
   public AccountUpdateForm(){}
-  public AccountUpdateForm(String username, String fullName, String email, String contactNumber, String address, UserRole userRole) {
-    this.username = username;
+  public AccountUpdateForm(String fullName, String email, String contactNumber, @Nullable String address, @Nullable UserRole userRole) {
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
     this.address = address;
     this.userRole = userRole;
-  }
-
-  public String getUsername() {
-    return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
   }
 
   public String getFullName() {
@@ -52,19 +45,21 @@ public class AccountUpdateForm {
     this.contactNumber = contactNumber;
   }
 
+  @Nullable
   public String getAddress() {
     return address;
   }
 
-  public void setAddress(String address) {
+  public void setAddress(@Nullable String address) {
     this.address = address;
   }
 
+  @Nullable
   public UserRole getUserRole() {
     return userRole;
   }
 
-  public void setUserRole(UserRole userRole) {
+  public void setUserRole(@Nullable UserRole userRole) {
     this.userRole = userRole;
   }
 }

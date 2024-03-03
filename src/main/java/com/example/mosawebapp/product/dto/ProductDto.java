@@ -1,7 +1,5 @@
 package com.example.mosawebapp.product.dto;
 
-import com.example.mosawebapp.account.domain.Account;
-import com.example.mosawebapp.account.dto.AccountDto;
 import com.example.mosawebapp.product.domain.Product;
 import java.util.ArrayList;
 import java.util.List;

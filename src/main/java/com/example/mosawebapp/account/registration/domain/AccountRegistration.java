@@ -2,6 +2,9 @@ package com.example.mosawebapp.account.registration.domain;
 
 import com.example.mosawebapp.account.domain.AccountStatus;
 import com.example.mosawebapp.account.domain.UserRole;
+import java.time.LocalDate;
+import java.util.Date;
+import java.util.Locale;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -16,6 +19,8 @@ public class AccountRegistration {
   @GeneratedValue(generator = "uuid")
   @GenericGenerator(name = "uuid", strategy = "uuid2")
   private String id;
+  @Column
+  private String dateCreated;
   @Column
   private String username;
   @Column
@@ -38,8 +43,9 @@ public class AccountRegistration {
   private AccountStatus status;
 
   public AccountRegistration(){}
-  public AccountRegistration(String username, String fullName, String email, String contactNumber,
+  public AccountRegistration(String dateCreated, String username, String fullName, String email, String contactNumber,
       String address, String password, UserRole userRole) {
+    this.dateCreated = dateCreated;
     this.username = username;
     this.fullName = fullName;
     this.email = email;
@@ -55,6 +61,14 @@ public class AccountRegistration {
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public String getDateCreated() {
+    return dateCreated;
+  }
+
+  public void setDateCreated(String dateCreated) {
+    this.dateCreated = dateCreated;
   }
 
   public String getUsername() {

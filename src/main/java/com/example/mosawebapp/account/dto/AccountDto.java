@@ -7,6 +7,7 @@ import java.util.List;
 
 public class AccountDto {
   private String id;
+  private String dateCreated;
   private String username;
   private String fullName;
   private String email;
@@ -15,9 +16,10 @@ public class AccountDto {
   private UserRole userRole;
 
   public AccountDto(){}
-  public AccountDto(String id, String username, String fullName, String email, String contactNumber, String address,
+  public AccountDto(String id, String dateCreated, String username, String fullName, String email, String contactNumber, String address,
       UserRole userRole) {
     this.id = id;
+    this.dateCreated = dateCreated;
     this.username = username;
     this.fullName = fullName;
     this.email = email;
@@ -35,7 +37,7 @@ public class AccountDto {
   }
 
   public static AccountDto buildFromEntity(Account account){
-    return new AccountDto(account.getId(), account.getUsername(), account.getFullName(), account.getEmail(),
+    return new AccountDto(account.getId(), String.valueOf(account.getDateCreated()), account.getUsername(), account.getFullName(), account.getEmail(),
         account.getContactNumber(), account.getAddress(), account.getUserRole());
   }
 
@@ -55,6 +57,14 @@ public class AccountDto {
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public String getDateCreated() {
+    return dateCreated;
+  }
+
+  public void setDateCreated(String dateCreated) {
+    this.dateCreated = dateCreated;
   }
 
   public String getUsername() {

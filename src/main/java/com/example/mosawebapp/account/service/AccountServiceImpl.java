@@ -14,8 +14,10 @@ import com.example.mosawebapp.account.dto.LoginForm;
 import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.security.AuthResponseDto;
 import com.example.mosawebapp.security.JwtGenerator;
+import com.example.mosawebapp.utils.DateTimeFormatter;
 import com.example.mosawebapp.validate.Validate;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +83,7 @@ public class AccountServiceImpl implements AccountService{
     validateForm(form);
     validateIfAccountAlreadyExists(form.getEmail(), form.getUsername());
 
-    Account account = new Account(form.getUsername(), form.getFullName(), form.getEmail(), form.getContactNumber(), form.getAddress(),
+    Account account = new Account(DateTimeFormatter.get_MMDDYYY_Format(new Date()), form.getUsername(), form.getFullName(), form.getEmail(), form.getContactNumber(), form.getAddress(),
         passwordEncoder.encode(form.getPassword()), form.getUserRole());
     account.setRoles(Collections.singletonList(roleRepository.findByName(form.getUserRole().name())));
 

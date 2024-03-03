@@ -3,6 +3,8 @@ package com.example.mosawebapp.account.config;
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.domain.UserRole;
+import com.example.mosawebapp.utils.DateTimeFormatter;
+import java.util.Date;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +27,7 @@ public class AccountConfig {
     return args -> {
       if(accountRepository.findByEmail("ktfpaguio2000@gmail.com") == null){
         Account account = new Account();
+        account.setDateCreated(DateTimeFormatter.get_MMDDYYY_Format(new Date()));
         account.setUsername("admin");
         account.setEmail("ktfpaguio2000@gmail.com");
         account.setPassword(passwordEncoder.encode("kurtp2000"));

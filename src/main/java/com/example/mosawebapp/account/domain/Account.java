@@ -2,6 +2,7 @@ package com.example.mosawebapp.account.domain;
 
 import com.example.mosawebapp.validate.Validate;
 import java.math.BigInteger;
+import java.util.Date;
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -26,6 +27,8 @@ public class Account {
   @GeneratedValue(generator = "uuid")
   @GenericGenerator(name = "uuid", strategy = "uuid2")
   private String id;
+  @Column
+  private String dateCreated;
   @Column
   private String username;
   @Column
@@ -52,8 +55,9 @@ public class Account {
   private List<Role> roles;
 
   public Account(){}
-  public Account(String username, String fullName, String email, String contactNumber, String address,
+  public Account(String dateCreated, String username, String fullName, String email, String contactNumber, String address,
       String password, UserRole userRole) {
+    this.dateCreated = dateCreated;
     this.username = username;
     this.fullName = fullName;
     this.email = email;
@@ -80,6 +84,14 @@ public class Account {
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public String getDateCreated() {
+    return dateCreated;
+  }
+
+  public void setDateCreated(String dateCreated) {
+    this.dateCreated = dateCreated;
   }
 
   public String getUsername() {

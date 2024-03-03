@@ -9,7 +9,9 @@ import com.example.mosawebapp.account.registration.domain.AccountRegistrationRep
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.security.JwtGenerator;
+import com.example.mosawebapp.utils.DateTimeFormatter;
 import com.example.mosawebapp.validate.Validate;
+import java.util.Date;
 import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +45,7 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
     validateForm(form);
     validateIfAccountAlreadyExists(form.getEmail(), form.getUsername());
 
-    AccountRegistration registration = new AccountRegistration(form.getUsername(), form.getFullName(), form.getEmail(), form.getContactNumber(),
+    AccountRegistration registration = new AccountRegistration(DateTimeFormatter.get_MMDDYYY_Format(new Date()), form.getUsername(), form.getFullName(), form.getEmail(), form.getContactNumber(),
         form.getAddress(), passwordEncoder.encode(form.getPassword()), form.getUserRole());
 
     long otp = rnd.nextInt(999999);
@@ -58,7 +60,7 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
   }
 
   @Override
-  public boolean isRegisterOtpValid(String id, String otp) {
+  public Account isRegisterOtpValid(String id, String otp) {
     logger.info("validating otp for registration account {}", id);
     AccountRegistration registration = registrationRepository.findById(id).orElseThrow(() -> new NotAcceptableStatusException("Account does not exists"));
 
@@ -69,14 +71,16 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
       registration.setStatus(AccountStatus.ACTIVE);
       registrationRepository.save(registration);
 
-      Account newAccount = new Account(registration.getUsername(), registration.getFullName(), registration.getEmail(), registration.getContactNumber(),
+      Account newAccount = new Account(DateTimeFormatter.get_MMDDYYY_Format(new Date()), registration.getUsername(), registration.getFullName(), registration.getEmail(), registration.getContactNumber(),
           registration.getAddress(), registration.getPassword(), registration.getUserRole());
 
       mailService.sendEmailForAccountRegistration(newAccount);
       accountRepository.save(newAccount);
+
+      return newAccount;
     }
 
-    return isValid;
+    return null;
   }
 
   private void validateIfAccountAlreadyExists(String email, String username){

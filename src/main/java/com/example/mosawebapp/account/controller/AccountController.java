@@ -6,6 +6,7 @@ import com.example.mosawebapp.account.dto.EmailForm;
 import com.example.mosawebapp.account.dto.OtpForm;
 import com.example.mosawebapp.account.registration.dto.AccountRegistrationDto;
 import com.example.mosawebapp.account.registration.service.AccountRegistrationService;
+import com.example.mosawebapp.apiresponse.ApiObjectResponse;
 import com.example.mosawebapp.exceptions.SecurityException;
 import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.account.domain.Account;
@@ -172,10 +173,13 @@ public class AccountController {
   @PostMapping(value="/registerOtp/{accId}")
   public ResponseEntity<?> registerOtp(@PathVariable("accId") String id, @RequestBody OtpForm form){
     try {
-      boolean isValid = registrationService.isRegisterOtpValid(id, form.getOtp());
+      Account account = registrationService.isRegisterOtpValid(id, form.getOtp());
 
-      logger.info("otp is {} for registration", isValid ? VALID : NOT_VALID);
-      return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid)));
+      if(account == null){
+        return ResponseEntity.ok(new ApiResponse("OTP Incorrect. Try Again"));
+      }
+
+      return ResponseEntity.ok(new ApiObjectResponse("Account created", AccountDto.buildFromEntity(account)));
     } catch (Exception e){
       logger.error(ERROR_DUE, e.getMessage());
       return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);

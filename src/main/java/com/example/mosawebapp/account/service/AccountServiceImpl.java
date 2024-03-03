@@ -1,10 +1,10 @@
 package com.example.mosawebapp.account.service;
 
 import com.example.mosawebapp.account.domain.RoleRepository;
-import com.example.mosawebapp.account.domain.Status;
-import com.example.mosawebapp.account.domain.StatusRepository;
 import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.account.dto.ChangePasswordForm;
+import com.example.mosawebapp.account.registration.domain.AccountRegistration;
+import com.example.mosawebapp.account.registration.domain.AccountRegistrationRepository;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.account.domain.Account;
@@ -37,10 +37,9 @@ public class AccountServiceImpl implements AccountService{
 
   private static final String ACCOUNT_NOT_EXIST = "Account does not exist";
   private static final String REGISTER = "register";
-  private static final String ACTIVE = "ACTIVE";
   private final AccountRepository accountRepository;
-  private final StatusRepository statusRepository;
   private final RoleRepository roleRepository;
+  private final AccountRegistrationRepository registrationRepository;
   private final AuthenticationManager authenticationManager;
   private final PasswordEncoder passwordEncoder;
   private final JwtGenerator jwtGenerator;
@@ -48,12 +47,12 @@ public class AccountServiceImpl implements AccountService{
   private final Random rnd = new Random();
 
   @Autowired
-  public AccountServiceImpl(AccountRepository accountRepository,
-      StatusRepository statusRepository, RoleRepository roleRepository, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder,
+  public AccountServiceImpl(AccountRepository accountRepository, RoleRepository roleRepository,
+      AccountRegistrationRepository registrationRepository, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder,
       JwtGenerator jwtGenerator, MailService mailService) {
     this.accountRepository = accountRepository;
-    this.statusRepository = statusRepository;
     this.roleRepository = roleRepository;
+    this.registrationRepository = registrationRepository;
     this.authenticationManager = authenticationManager;
     this.passwordEncoder = passwordEncoder;
     this.jwtGenerator = jwtGenerator;
@@ -76,43 +75,30 @@ public class AccountServiceImpl implements AccountService{
 
   @Override
   @Transactional
-  public Account createAccount(AccountForm form, String action, String token) {
+  public Account createAccount(AccountForm form, String token) {
+    validateIfAccountIsAdmin(token);
     Validate.notNull(form);
     validateForm(form);
     validateIfAccountAlreadyExists(form.getEmail(), form.getUsername());
 
-    if(action.equalsIgnoreCase("admin_create"))
-      validateIfAccountIsAdmin(token);
-
     Account account = new Account(form.getUsername(), form.getFullName(), form.getEmail(), form.getContactNumber(), form.getAddress(),
         passwordEncoder.encode(form.getPassword()), form.getUserRole());
     account.setRoles(Collections.singletonList(roleRepository.findByName(form.getUserRole().name())));
-    account.setStatus(statusRepository.findByStatusIgnoreCase(ACTIVE));
-
-    if(action.equalsIgnoreCase(REGISTER)){
-      long otp = rnd.nextInt(999999);
-      account.setRegisterOtp(otp);
-      account.setStatus(statusRepository.findByStatusIgnoreCase("FOR REGISTRATION"));
-      mailService.sendEmailForRegistration(account.getEmail(), otp);
-      logger.info("otp sent to {}", account.getEmail());
-    }
 
     accountRepository.save(account);
-    if(!action.equalsIgnoreCase(REGISTER))
-      mailService.sendEmailForAccountCreation(form);
-
+    mailService.sendEmailForAccountCreation(form);
     return account;
   }
 
   @Override
   @Transactional
   public Account updateAccount(String id, String token, String action, AccountForm form){
-    Validate.notNull(form);
-    validateForm(form);
-
     if(action.equalsIgnoreCase("admin_update")){
       validateIfAccountIsAdmin(token);
     }
+
+    Validate.notNull(form);
+    validateForm(form);
 
     Account updatedAccount = accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
 
@@ -133,11 +119,11 @@ public class AccountServiceImpl implements AccountService{
   @Override
   @Transactional
   public void deleteAccount(String id, String token, String action){
-    Account account = accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
-
     if(action.equalsIgnoreCase("admin_delete")){
       validateIfAccountIsAdmin(token);
     }
+
+    Account account = accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
 
     logger.info("deleting account of {}", account.getUsername());
 
@@ -183,14 +169,7 @@ public class AccountServiceImpl implements AccountService{
 
     boolean isValid = determineActionAndOtpValidation(account, otp, action);
 
-    if(isValid && action.equalsIgnoreCase(REGISTER)){ // For Registration
-      account.setRegisterOtp(0);
-      account.setStatus(statusRepository.findByStatusIgnoreCase(ACTIVE));
-      mailService.sendEmailForAccountRegistration(account);
-      accountRepository.save(account);
-    } else if(isValid && !action.equalsIgnoreCase(REGISTER)){ // For Account Creation and Password Change
-      account.setStatus(statusRepository.findByStatusIgnoreCase(ACTIVE));
-      account.setRegisterOtp(0);
+    if(isValid){ // For Account Creation and Password Change
       account.setLoginOtp(0);
       account.setChangePasswordOtp(0);
       accountRepository.save(account);
@@ -206,9 +185,8 @@ public class AccountServiceImpl implements AccountService{
       isValid = account.getLoginOtp() == Long.parseLong(otp);
     } else if(action.equalsIgnoreCase("password change")){
       isValid = account.getChangePasswordOtp() == Long.parseLong(otp);
-    } else if(action.equalsIgnoreCase(REGISTER)){
-      isValid = account.getRegisterOtp() == Long.parseLong(otp);
     }
+
     return isValid;
   }
 
@@ -236,6 +214,10 @@ public class AccountServiceImpl implements AccountService{
   public void changePassword(String accId, ChangePasswordForm form, boolean withOldPassword) {
     Account account = accountRepository.findById(accId).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
 
+    if(account.getChangePasswordOtp() != 0){
+      throw new ValidationException("Enter OTP for password reset before proceeding");
+    }
+
     validatePasswordChanges(account, form, withOldPassword);
 
     account.setPassword(passwordEncoder.encode(form.getFinalPassword()));
@@ -244,37 +226,57 @@ public class AccountServiceImpl implements AccountService{
 
   @Override
   @Transactional
-  public Account resetOtp(String id, String action){
-    Account account = accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
-
+  public String resetOtp(String id, String action){
     long otp = rnd.nextInt(999999);
+    String email = "";
 
     if(action.equalsIgnoreCase(REGISTER)){
-      account.setRegisterOtp(otp);
-      mailService.sendEmailForChangePassword(account.getEmail(), otp);
+      AccountRegistration registration = registrationRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
+      registration.setRegisterOtp(otp);
+
+      mailService.sendEmailForRegistration(registration.getEmail(), otp);
+      registrationRepository.save(registration);
+
+      email = registration.getEmail();
     } else if(action.equalsIgnoreCase("change password")){
+      Account account = accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
       account.setChangePasswordOtp(otp);
+
       mailService.sendEmailForChangePassword(account.getEmail(), otp);
+      accountRepository.save(account);
+
+      email = account.getEmail();
     }
 
-    logger.info("otp sent to {} for {}", account.getEmail(), action);
+    logger.info("otp sent to {} for {}", email, action);
 
-    return account;
+    return email;
   }
   private void validatePasswordChanges(Account account, ChangePasswordForm form, boolean withOldPassword){
     if(!withOldPassword){
-      boolean isPasswordSame = passwordEncoder.matches(form.getFinalPassword(), account.getPassword());
+      boolean isCurrentAndNewPasswordSame = passwordEncoder.matches(form.getNewPassword(), account.getPassword());
+      boolean isCurrentAndFinalPasswordSame = passwordEncoder.matches(form.getFinalPassword(), account.getPassword());
+
+      if(isCurrentAndFinalPasswordSame || isCurrentAndNewPasswordSame){
+        throw new ValidationException("New Password is same with the Old Password");
+      }
 
       if(!form.getNewPassword().equals(form.getFinalPassword())){
         throw new ValidationException("Passwords must be equal");
       }
-
-      if(isPasswordSame){
-        throw new ValidationException("New Password is same with the Old Password");
-      }
     } else {
+      boolean isCurrentAndOldPasswordSame = passwordEncoder.matches(form.getOldPassword(), account.getPassword());
+
+      if(!isCurrentAndOldPasswordSame){
+        throw new ValidationException("Old Password is not the same with the Current Password");
+      }
+
       if(form.getOldPassword().equals(form.getNewPassword()) || form.getOldPassword().equals(form.getFinalPassword())){
         throw new ValidationException("New Password is same with the Old Password");
+      }
+
+      if(!form.getNewPassword().equals(form.getFinalPassword())){
+        throw new ValidationException("Passwords must be equal");
       }
     }
   }

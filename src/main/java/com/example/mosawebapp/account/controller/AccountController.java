@@ -4,6 +4,8 @@ import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.account.dto.ChangePasswordForm;
 import com.example.mosawebapp.account.dto.EmailForm;
 import com.example.mosawebapp.account.dto.OtpForm;
+import com.example.mosawebapp.account.registration.dto.AccountRegistrationDto;
+import com.example.mosawebapp.account.registration.service.AccountRegistrationService;
 import com.example.mosawebapp.exceptions.SecurityException;
 import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.account.domain.Account;
@@ -36,14 +38,18 @@ public class AccountController {
   private static final String TOKEN_INVALID = "Token not already valid. Please login again";
   private static final String BEARER = "Bearer ";
   private static final String ERROR_DUE = "Error due to {}";
+  private static final String VALID = "valid";
+  private static final String NOT_VALID = "not valid";
   private final AccountService accountService;
+  private final AccountRegistrationService registrationService;
   private final TokenBlacklistingService tokenBlacklistingService;
   private final JwtGenerator jwtGenerator;
 
 
   public AccountController(AccountService accountService,
-      TokenBlacklistingService tokenBlacklistingService, JwtGenerator jwtGenerator) {
+      AccountRegistrationService registrationService, TokenBlacklistingService tokenBlacklistingService, JwtGenerator jwtGenerator) {
     this.accountService = accountService;
+    this.registrationService = registrationService;
     this.tokenBlacklistingService = tokenBlacklistingService;
     this.jwtGenerator = jwtGenerator;
   }
@@ -136,7 +142,7 @@ public class AccountController {
         throw new TokenException(TOKEN_INVALID);
       }
 
-      AccountDto dto = AccountDto.buildFromEntity(accountService.createAccount(form, "admin_create", token));
+      AccountDto dto = AccountDto.buildFromEntity(accountService.createAccount(form, token));
 
       logger.info("account created for {}", dto.getFullName());
       return ResponseEntity.ok(dto);
@@ -153,7 +159,7 @@ public class AccountController {
     try {
       form.setUserRole(UserRole.CUSTOMER);
 
-      AccountDto dto = AccountDto.buildFromEntity(accountService.createAccount(form, "register", ""));
+      AccountRegistrationDto dto= AccountRegistrationDto.buildFromEntity(registrationService.register(form));
 
       logger.info("account created for {}", dto.getFullName());
       return ResponseEntity.ok(dto);
@@ -166,9 +172,9 @@ public class AccountController {
   @PostMapping(value="/registerOtp/{accId}")
   public ResponseEntity<?> registerOtp(@PathVariable("accId") String id, @RequestBody OtpForm form){
     try {
-      boolean isValid = accountService.isOtpCorrect(id, form.getOtp(), "register");
+      boolean isValid = registrationService.isRegisterOtpValid(id, form.getOtp());
 
-      logger.info("Otp is {} for registration", isValid ? "valid" : "not valid");
+      logger.info("otp is {} for registration", isValid ? VALID : NOT_VALID);
       return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid)));
     } catch (Exception e){
       logger.error(ERROR_DUE, e.getMessage());
@@ -194,7 +200,7 @@ public class AccountController {
     try{
       boolean isValid = accountService.isOtpCorrect(id, form.getOtp(), "login");
 
-      logger.info("Otp is {} for logging in", isValid ? "valid" : "not valid");
+      logger.info("Otp is {} for logging in", isValid ? VALID : NOT_VALID);
       return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid)));
     } catch (Exception e){
       logger.error(ERROR_DUE, e.getMessage());
@@ -222,9 +228,9 @@ public class AccountController {
     logger.info("resetting otp for {}", action);
 
     try{
-      Account account = accountService.resetOtp(id, action);
+      String email = accountService.resetOtp(id, action);
 
-      return ResponseEntity.ok(new ApiResponse("New OTP sent to " + account.getEmail()));
+      return ResponseEntity.ok(new ApiResponse("New OTP sent to " + email));
     } catch (Exception e){
       return new ResponseEntity<>(new ApiResponseDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()),
           HttpStatus.INTERNAL_SERVER_ERROR);
@@ -237,7 +243,7 @@ public class AccountController {
     try{
       boolean isValid = accountService.isOtpCorrect(id, form.getOtp(), "password change");
 
-      logger.info("Otp is {} for password change", isValid ? "valid" : "not valid");
+      logger.info("Otp is {} for password change", isValid ? VALID : NOT_VALID);
       return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid)));
     } catch (Exception e){
       logger.error(ERROR_DUE, e.getMessage());

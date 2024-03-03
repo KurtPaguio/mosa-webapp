@@ -2,7 +2,6 @@ package com.example.mosawebapp.account.config;
 
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.AccountRepository;
-import com.example.mosawebapp.account.domain.StatusRepository;
 import com.example.mosawebapp.account.domain.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -14,14 +13,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class AccountConfig {
   private final AccountRepository accountRepository;
   private final PasswordEncoder passwordEncoder;
-  private final StatusRepository statusRepository;
 
   @Autowired
-  public AccountConfig(AccountRepository accountRepository, PasswordEncoder passwordEncoder,
-      StatusRepository statusRepository) {
+  public AccountConfig(AccountRepository accountRepository, PasswordEncoder passwordEncoder) {
     this.accountRepository = accountRepository;
     this.passwordEncoder = passwordEncoder;
-    this.statusRepository = statusRepository;
   }
 
   @Bean
@@ -33,7 +29,6 @@ public class AccountConfig {
         account.setEmail("ktfpaguio2000@gmail.com");
         account.setPassword(passwordEncoder.encode("kurtp2000"));
         account.setUserRole(UserRole.ADMINISTRATOR);
-        account.setStatus(statusRepository.findByStatusIgnoreCase("ACTIVE"));
         accountRepository.save(account);
       }
     };

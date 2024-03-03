@@ -3,6 +3,7 @@ package com.example.mosawebapp.account.service;
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.dto.AccountDto;
 import com.example.mosawebapp.account.dto.AccountForm;
+import com.example.mosawebapp.account.dto.AccountUpdateForm;
 import com.example.mosawebapp.account.dto.ChangePasswordForm;
 import com.example.mosawebapp.account.dto.LoginForm;
 import com.example.mosawebapp.security.AuthResponseDto;
@@ -13,7 +14,7 @@ public interface AccountService {
   List<Account> findAllAccounts(String token);
   Account findOne(String id, String token);
   Account createAccount(AccountForm form, String token);
-  Account updateAccount(String id, String token, String action, AccountForm form);
+  Account updateAccount(String id, String token, String action, AccountUpdateForm form);
   void deleteAccount(String id, String token, String action);
   ResponseEntity<AuthResponseDto> login(LoginForm form);
   boolean isOtpCorrect(String accId, String otp, String action);

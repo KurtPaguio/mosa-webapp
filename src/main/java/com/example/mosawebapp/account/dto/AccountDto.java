@@ -37,7 +37,7 @@ public class AccountDto {
   }
 
   public static AccountDto buildFromEntity(Account account){
-    return new AccountDto(account.getId(), String.valueOf(account.getDateCreated()), account.getUsername(), account.getFullName(), account.getEmail(),
+    return new AccountDto(account.getId(), account.getDateCreated(), account.getUsername(), account.getFullName(), account.getEmail(),
         account.getContactNumber(), account.getAddress(), account.getUserRole());
   }
 

@@ -2,8 +2,10 @@ package com.example.mosawebapp.account.config;
 
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.AccountRepository;
+import com.example.mosawebapp.account.domain.RoleRepository;
 import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.utils.DateTimeFormatter;
+import java.util.Collections;
 import java.util.Date;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -15,11 +17,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class AccountConfig {
   private final AccountRepository accountRepository;
   private final PasswordEncoder passwordEncoder;
+  private final RoleRepository roleRepository;
 
   @Autowired
-  public AccountConfig(AccountRepository accountRepository, PasswordEncoder passwordEncoder) {
+  public AccountConfig(AccountRepository accountRepository, PasswordEncoder passwordEncoder,
+      RoleRepository roleRepository) {
     this.accountRepository = accountRepository;
     this.passwordEncoder = passwordEncoder;
+    this.roleRepository = roleRepository;
   }
 
   @Bean
@@ -32,6 +37,7 @@ public class AccountConfig {
         account.setEmail("ktfpaguio2000@gmail.com");
         account.setPassword(passwordEncoder.encode("kurtp2000"));
         account.setUserRole(UserRole.ADMINISTRATOR);
+        account.setRoles(Collections.singletonList(roleRepository.findByName(UserRole.ADMINISTRATOR.name())));
         accountRepository.save(account);
       }
     };

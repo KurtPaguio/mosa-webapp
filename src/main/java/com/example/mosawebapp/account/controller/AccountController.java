@@ -1,6 +1,7 @@
 package com.example.mosawebapp.account.controller;
 
 import com.example.mosawebapp.account.domain.UserRole;
+import com.example.mosawebapp.account.dto.AccountUpdateForm;
 import com.example.mosawebapp.account.dto.ChangePasswordForm;
 import com.example.mosawebapp.account.dto.EmailForm;
 import com.example.mosawebapp.account.dto.OtpForm;
@@ -146,7 +147,7 @@ public class AccountController {
       AccountDto dto = AccountDto.buildFromEntity(accountService.createAccount(form, token));
 
       logger.info("account created for {}", dto.getFullName());
-      return ResponseEntity.ok(dto);
+      return ResponseEntity.ok(new ApiObjectResponse("Account created for " + dto.getUsername(), dto));
     } catch (Exception e){
       logger.error(ERROR_DUE, e.getMessage());
       return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -163,7 +164,7 @@ public class AccountController {
       AccountRegistrationDto dto= AccountRegistrationDto.buildFromEntity(registrationService.register(form));
 
       logger.info("account created for {}", dto.getFullName());
-      return ResponseEntity.ok(dto);
+      return ResponseEntity.ok(new ApiObjectResponse("Account registered for " + dto.getUsername(), dto));
     } catch (Exception e){
       logger.error(ERROR_DUE, e.getMessage());
       return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -179,7 +180,8 @@ public class AccountController {
         return ResponseEntity.ok(new ApiResponse("OTP Incorrect. Try Again"));
       }
 
-      return ResponseEntity.ok(new ApiObjectResponse("Account created", AccountDto.buildFromEntity(account)));
+      AccountDto dto = AccountDto.buildFromEntity(account);
+      return ResponseEntity.ok(new ApiObjectResponse("Account created for " + dto.getUsername(), dto));
     } catch (Exception e){
       logger.error(ERROR_DUE, e.getMessage());
       return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -273,7 +275,7 @@ public class AccountController {
   }
 
   @PutMapping(value="/updateAccount/{accId}")
-  public ResponseEntity<?> updateAccount(@PathVariable("accId") String id, @RequestBody AccountForm form, @RequestHeader("Authorization") String header){
+  public ResponseEntity<?> updateAccount(@PathVariable("accId") String id, @RequestBody AccountUpdateForm form, @RequestHeader("Authorization") String header){
     logger.info("updating account with form {}", form);
     String token = header.replace(BEARER, "");
 
@@ -283,6 +285,26 @@ public class AccountController {
       }
 
       AccountDto dto = AccountDto.buildFromEntity(accountService.updateAccount(id, token, "admin_update", form));
+
+      logger.info("account updated for {}", dto.getFullName());
+      return ResponseEntity.ok(new ApiObjectResponse("Account updated for " + dto.getUsername(), dto));
+    } catch (Exception e){
+      logger.error(ERROR_DUE, e.getMessage());
+      return new ResponseEntity<>(new ApiResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @PutMapping(value="/updateMyAccount/{accId}")
+  public ResponseEntity<?> updateMyAccount(@PathVariable("accId") String id, @RequestBody AccountUpdateForm form, @RequestHeader("Authorization") String header){
+    logger.info("updating account with form {}", form);
+    String token = header.replace(BEARER, "");
+
+    try {
+      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
+        throw new TokenException(TOKEN_INVALID);
+      }
+
+      AccountDto dto = AccountDto.buildFromEntity(accountService.updateAccount(id, token, "", form));
 
       logger.info("account updated for {}", dto.getFullName());
       return ResponseEntity.ok(dto);

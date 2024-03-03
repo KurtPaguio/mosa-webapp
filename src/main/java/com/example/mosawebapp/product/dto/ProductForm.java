@@ -1,34 +1,17 @@
-package com.example.mosawebapp.product.domain;
+package com.example.mosawebapp.product.dto;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import org.hibernate.annotations.GenericGenerator;
-
-@Entity
-public class Product {
-  @Id
-  @GeneratedValue(generator = "uuid")
-  @GenericGenerator(name = "uuid", strategy = "uuid2")
-  private String id;
-  @Column
+public class ProductForm {
   private String dateCreated;
-  @Column
   private String name;
-  @Column
   private long grossPrice;
-  @Column
   private String size;
-  @Column
   private String plyRating;
-  @Column
   private String threadType;
-  @Column
   private long stocks;
 
-  public Product(){}
-  public Product(String dateCreated, String name, long grossPrice, String size, String plyRating,
+  private ProductForm(){}
+  public ProductForm(String dateCreated, String name, long grossPrice, String size,
+      String plyRating,
       String threadType, long stocks) {
     this.dateCreated = dateCreated;
     this.name = name;
@@ -37,14 +20,6 @@ public class Product {
     this.plyRating = plyRating;
     this.threadType = threadType;
     this.stocks = stocks;
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
   }
 
   public String getDateCreated() {

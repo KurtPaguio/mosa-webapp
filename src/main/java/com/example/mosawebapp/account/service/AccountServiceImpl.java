@@ -1,7 +1,9 @@
 package com.example.mosawebapp.account.service;
 
+import com.example.mosawebapp.account.domain.Role;
 import com.example.mosawebapp.account.domain.RoleRepository;
 import com.example.mosawebapp.account.domain.UserRole;
+import com.example.mosawebapp.account.dto.AccountUpdateForm;
 import com.example.mosawebapp.account.dto.ChangePasswordForm;
 import com.example.mosawebapp.account.registration.domain.AccountRegistration;
 import com.example.mosawebapp.account.registration.domain.AccountRegistrationRepository;
@@ -94,13 +96,13 @@ public class AccountServiceImpl implements AccountService{
 
   @Override
   @Transactional
-  public Account updateAccount(String id, String token, String action, AccountForm form){
+  public Account updateAccount(String id, String token, String action, AccountUpdateForm form){
     if(action.equalsIgnoreCase("admin_update")){
       validateIfAccountIsAdmin(token);
     }
 
     Validate.notNull(form);
-    validateForm(form);
+    validateUpdateForm(form);
 
     Account updatedAccount = accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
 
@@ -110,10 +112,8 @@ public class AccountServiceImpl implements AccountService{
     updatedAccount.setContactNumber(form.getContactNumber());
     updatedAccount.setAddress(form.getAddress());
     //updatedAccount.setPassword(passwordEncoder.encode(form.getPassword())); Can be changed in Change Password Feature
-    updatedAccount.setUserRole(form.getUserRole());
-    updatedAccount.setRoles(Collections.singletonList(roleRepository.findByName(form.getUserRole().name())));
 
-    accountRepository.save(updatedAccount);
+    updatedAccount = accountRepository.save(updatedAccount);
 
     return updatedAccount;
   }
@@ -126,10 +126,16 @@ public class AccountServiceImpl implements AccountService{
     }
 
     Account account = accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
+    AccountRegistration registration = registrationRepository.findByEmail(account.getEmail());
+
+    if(registration == null){
+      registration = registrationRepository.findByUsername(account.getUsername());
+    }
 
     logger.info("deleting account of {}", account.getUsername());
 
     accountRepository.delete(account);
+    registrationRepository.delete(registration);
   }
 
   @Override
@@ -255,31 +261,43 @@ public class AccountServiceImpl implements AccountService{
     return email;
   }
   private void validatePasswordChanges(Account account, ChangePasswordForm form, boolean withOldPassword){
+    if(form.getNewPassword().length() < 8 || form.getFinalPassword().length() < 8){
+      throw new ValidationException("Password must have at least 8 characters");
+    }
+
     if(!withOldPassword){
-      boolean isCurrentAndNewPasswordSame = passwordEncoder.matches(form.getNewPassword(), account.getPassword());
-      boolean isCurrentAndFinalPasswordSame = passwordEncoder.matches(form.getFinalPassword(), account.getPassword());
-
-      if(isCurrentAndFinalPasswordSame || isCurrentAndNewPasswordSame){
-        throw new ValidationException("New Password is same with the Old Password");
-      }
-
-      if(!form.getNewPassword().equals(form.getFinalPassword())){
-        throw new ValidationException("Passwords must be equal");
-      }
+      validateWithoutOldPassword(account, form);
     } else {
-      boolean isCurrentAndOldPasswordSame = passwordEncoder.matches(form.getOldPassword(), account.getPassword());
+      validateWithOldPassword(account, form);
+    }
+  }
 
-      if(!isCurrentAndOldPasswordSame){
-        throw new ValidationException("Old Password is not the same with the Current Password");
-      }
+  private void validateWithoutOldPassword(Account account, ChangePasswordForm form){
+    boolean isCurrentAndNewPasswordSame = passwordEncoder.matches(form.getNewPassword(), account.getPassword());
+    boolean isCurrentAndFinalPasswordSame = passwordEncoder.matches(form.getFinalPassword(), account.getPassword());
 
-      if(form.getOldPassword().equals(form.getNewPassword()) || form.getOldPassword().equals(form.getFinalPassword())){
-        throw new ValidationException("New Password is same with the Old Password");
-      }
+    if(isCurrentAndFinalPasswordSame || isCurrentAndNewPasswordSame){
+      throw new ValidationException("New Password is same with the Old Password");
+    }
 
-      if(!form.getNewPassword().equals(form.getFinalPassword())){
-        throw new ValidationException("Passwords must be equal");
-      }
+    if(!form.getNewPassword().equals(form.getFinalPassword())){
+      throw new ValidationException("Passwords must be equal");
+    }
+  }
+
+  private void validateWithOldPassword(Account account, ChangePasswordForm form){
+    boolean isCurrentAndOldPasswordSame = passwordEncoder.matches(form.getOldPassword(), account.getPassword());
+
+    if(!isCurrentAndOldPasswordSame){
+      throw new ValidationException("Old Password is not the same with the Current Password");
+    }
+
+    if(form.getOldPassword().equals(form.getNewPassword()) || form.getOldPassword().equals(form.getFinalPassword())){
+      throw new ValidationException("New Password is same with the Old Password");
+    }
+
+    if(!form.getNewPassword().equals(form.getFinalPassword())){
+      throw new ValidationException("Passwords must be equal");
     }
   }
 
@@ -297,6 +315,27 @@ public class AccountServiceImpl implements AccountService{
       throw new ValidationException("Account associated with the username already exists");
     }
   }
+
+  private void validateUpdateForm(AccountUpdateForm form){
+    logger.info("validating update form");
+
+    if(Validate.hasIntegersAndSpecialCharacters(form.getFullName())){
+      throw new ValidationException("Name should only consists of letters");
+    }
+
+    if(!Validate.hasCorrectEmailFormat(form.getEmail())){
+      throw new ValidationException("Email format not valid");
+    }
+
+    if(Validate.hasLettersInNumberInput(form.getContactNumber())){
+      throw new ValidationException("Contact number must not have letters");
+    }
+
+    if(form.getUsername().length() < 5){
+      throw new ValidationException("Username must have at least 5 characters");
+    }
+  }
+
   private void validateForm(AccountForm form){
     logger.info("validating form");
 
@@ -325,7 +364,7 @@ public class AccountServiceImpl implements AccountService{
       String accId = jwtGenerator.getUserFromJWT(token);
       Account adminAccount = accountRepository.findById(accId).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
 
-      if(adminAccount.getUserRole().equals(UserRole.CUSTOMER)){
+      if(!adminAccount.getUserRole().equals(UserRole.ADMINISTRATOR)){
         throw new ValidationException("Only Administrators have access to this feature");
       }
   }

@@ -9,6 +9,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -48,7 +49,7 @@ public class Account {
   private long loginOtp;
   @Column
   private long changePasswordOtp;
-  @OneToMany(cascade = CascadeType.REMOVE)
+  @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
   @JoinTable(name = "accounts_roles", joinColumns = @JoinColumn(name = "account_id", referencedColumnName = "id"),
       inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
   @LazyCollection(LazyCollectionOption.FALSE)
@@ -67,7 +68,7 @@ public class Account {
     this.userRole = userRole;
   }
 
-  public Account(String username, String fullName, long loginOtp, long changePasswordOtp, long registerOtp) {
+  public Account(String username, String fullName, long loginOtp, long changePasswordOtp) {
     this.username = username;
     this.fullName = fullName;
 

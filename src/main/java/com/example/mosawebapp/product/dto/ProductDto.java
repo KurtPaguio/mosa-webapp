@@ -1,35 +1,26 @@
-package com.example.mosawebapp.product.domain;
+package com.example.mosawebapp.product.dto;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import org.hibernate.annotations.GenericGenerator;
+import com.example.mosawebapp.account.domain.Account;
+import com.example.mosawebapp.account.dto.AccountDto;
+import com.example.mosawebapp.product.domain.Product;
+import java.util.ArrayList;
+import java.util.List;
 
-@Entity
-public class Product {
-  @Id
-  @GeneratedValue(generator = "uuid")
-  @GenericGenerator(name = "uuid", strategy = "uuid2")
+public class ProductDto {
   private String id;
-  @Column
   private String dateCreated;
-  @Column
   private String name;
-  @Column
   private long grossPrice;
-  @Column
   private String size;
-  @Column
   private String plyRating;
-  @Column
   private String threadType;
-  @Column
   private long stocks;
 
-  public Product(){}
-  public Product(String dateCreated, String name, long grossPrice, String size, String plyRating,
-      String threadType, long stocks) {
+  public ProductDto(){}
+
+  public ProductDto(String id, String dateCreated, String name, long grossPrice, String size,
+      String plyRating, String threadType, long stocks) {
+    this.id = id;
     this.dateCreated = dateCreated;
     this.name = name;
     this.grossPrice = grossPrice;
@@ -37,6 +28,21 @@ public class Product {
     this.plyRating = plyRating;
     this.threadType = threadType;
     this.stocks = stocks;
+  }
+
+  public static ProductDto buildFromEntity(Product product){
+    return new ProductDto(product.getId(), product.getDateCreated(), product.getName(),
+        product.getGrossPrice(), product.getSize(), product.getPlyRating(), product.getThreadType(), product.getStocks());
+  }
+
+  public static List<ProductDto> buildFromEntities(List<Product> products){
+    List<ProductDto> dtos = new ArrayList<>();
+
+    for(Product product: products){
+      dtos.add(buildFromEntity(product));
+    }
+
+    return dtos;
   }
 
   public String getId() {

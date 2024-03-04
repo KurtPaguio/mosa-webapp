@@ -3,6 +3,7 @@ package com.example.mosawebapp.account.registration.dto;
 import com.example.mosawebapp.account.domain.AccountStatus;
 import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.account.registration.domain.AccountRegistration;
+import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class AccountRegistrationDto {
   }
 
   public static AccountRegistrationDto buildFromEntity(AccountRegistration register){
-    return new AccountRegistrationDto(register.getId(), register.getDateCreated(), register.getFullName(), register.getEmail(),
+    return new AccountRegistrationDto(register.getId(), DateTimeFormatter.get_MMDDYYY_Format(register.getDateCreated()), register.getFullName(), register.getEmail(),
         register.getContactNumber(), register.getAddress(), register.getUserRole(),
         register.getStatus());
   }

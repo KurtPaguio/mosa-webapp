@@ -11,6 +11,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
 @Entity
@@ -19,8 +20,8 @@ public class AccountRegistration {
   @GeneratedValue(generator = "uuid")
   @GenericGenerator(name = "uuid", strategy = "uuid2")
   private String id;
-  @Column
-  private String dateCreated;
+  @CreationTimestamp
+  private Date dateCreated;
   @Column
   private String fullName;
   @Column
@@ -41,9 +42,8 @@ public class AccountRegistration {
   private AccountStatus status;
 
   public AccountRegistration(){}
-  public AccountRegistration(String dateCreated, String fullName, String email, String contactNumber,
+  public AccountRegistration(String fullName, String email, String contactNumber,
       String address, String password, UserRole userRole) {
-    this.dateCreated = dateCreated;
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
@@ -52,8 +52,7 @@ public class AccountRegistration {
     this.userRole = userRole;
   }
 
-  public AccountRegistration(String dateCreated, String fullName, String email, String contactNumber, String password, UserRole userRole) {
-    this.dateCreated = dateCreated;
+  public AccountRegistration(String fullName, String email, String contactNumber, String password, UserRole userRole) {
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
@@ -69,11 +68,11 @@ public class AccountRegistration {
     this.id = id;
   }
 
-  public String getDateCreated() {
+  public Date getDateCreated() {
     return dateCreated;
   }
 
-  public void setDateCreated(String dateCreated) {
+  public void setDateCreated(Date dateCreated) {
     this.dateCreated = dateCreated;
   }
 

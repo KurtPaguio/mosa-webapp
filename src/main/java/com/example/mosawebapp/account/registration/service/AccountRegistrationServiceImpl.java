@@ -45,8 +45,8 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
     validateForm(form);
     validateIfAccountAlreadyExists(form.getEmail());
 
-    AccountRegistration registration = new AccountRegistration(DateTimeFormatter.get_MMDDYYY_Format(new Date()), form.getFullName(), form.getEmail(),
-        form.getContactNumber(), passwordEncoder.encode(form.getConfirmPassword()), form.getUserRole());
+    AccountRegistration registration = new AccountRegistration(form.getFullName(), form.getEmail(),
+        form.getContactNumber(), form.getAddress(), passwordEncoder.encode(form.getConfirmPassword()), form.getUserRole());
 
     long otp = rnd.nextInt(999999);
     registration.setRegisterOtp(otp);
@@ -71,8 +71,8 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
       registration.setStatus(AccountStatus.ACTIVE);
       registrationRepository.save(registration);
 
-      Account newAccount = new Account(DateTimeFormatter.get_MMDDYYY_Format(new Date()), registration.getFullName(), registration.getEmail(), registration.getContactNumber(),
-          registration.getPassword(), registration.getUserRole());
+      Account newAccount = new Account(registration.getFullName(), registration.getEmail(), registration.getContactNumber(),
+          registration.getAddress(), registration.getPassword(), registration.getUserRole());
 
       mailService.sendEmailForAccountRegistration(newAccount);
       accountRepository.save(newAccount);

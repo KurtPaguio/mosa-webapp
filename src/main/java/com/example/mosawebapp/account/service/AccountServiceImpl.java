@@ -85,7 +85,7 @@ public class AccountServiceImpl implements AccountService{
     validateForm(form);
     validateIfAccountAlreadyExists(form.getEmail());
 
-    Account account = new Account(DateTimeFormatter.get_MMDDYYY_Format(new Date()), form.getFullName(), form.getEmail(), form.getContactNumber(), form.getAddress(),
+    Account account = new Account( form.getFullName(), form.getEmail(), form.getContactNumber(), form.getAddress(),
         passwordEncoder.encode(form.getPassword()), form.getUserRole());
     account.setRoles(Collections.singletonList(roleRepository.findByName(form.getUserRole().name())));
 

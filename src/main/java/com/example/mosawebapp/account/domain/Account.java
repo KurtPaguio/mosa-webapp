@@ -17,6 +17,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -28,8 +29,8 @@ public class Account {
   @GeneratedValue(generator = "uuid")
   @GenericGenerator(name = "uuid", strategy = "uuid2")
   private String id;
-  @Column
-  private String dateCreated;
+  @CreationTimestamp
+  private Date dateCreated;
   @Column
   private String fullName;
   @Column
@@ -54,9 +55,8 @@ public class Account {
   private List<Role> roles;
 
   public Account(){}
-  public Account(String dateCreated, String fullName, String email, String contactNumber, String address,
+  public Account(String fullName, String email, String contactNumber, String address,
       String password, UserRole userRole) {
-    this.dateCreated = dateCreated;
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
@@ -65,9 +65,8 @@ public class Account {
     this.userRole = userRole;
   }
 
-  public Account(String dateCreated, String fullName, String email, String contactNumber,
+  public Account(String fullName, String email, String contactNumber,
       String password, UserRole userRole) {
-    this.dateCreated = dateCreated;
     this.fullName = fullName;
     this.email = email;
     this.contactNumber = contactNumber;
@@ -93,11 +92,11 @@ public class Account {
     this.id = id;
   }
 
-  public String getDateCreated() {
+  public Date getDateCreated() {
     return dateCreated;
   }
 
-  public void setDateCreated(String dateCreated) {
+  public void setDateCreated(Date dateCreated) {
     this.dateCreated = dateCreated;
   }
 

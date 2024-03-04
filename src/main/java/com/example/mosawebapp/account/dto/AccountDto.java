@@ -2,6 +2,7 @@ package com.example.mosawebapp.account.dto;
 
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.UserRole;
+import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class AccountDto {
 
   public AccountDto(Account account){
     this.id = account.getId();
-    this.dateCreated = account.getDateCreated();
+    this.dateCreated = DateTimeFormatter.get_MMDDYYY_Format(account.getDateCreated());
     this.fullName = account.getFullName();
     this.email = account.getEmail();
     this.contactNumber = account.getContactNumber();
@@ -44,7 +45,7 @@ public class AccountDto {
   }
 
   public static AccountDto buildFromEntity(Account account){
-    return new AccountDto(account.getId(), account.getDateCreated(), account.getFullName(), account.getEmail(),
+    return new AccountDto(account.getId(), DateTimeFormatter.get_MMDDYYY_Format(account.getDateCreated()), account.getFullName(), account.getEmail(),
         account.getContactNumber(), account.getAddress(), account.getUserRole());
   }
 

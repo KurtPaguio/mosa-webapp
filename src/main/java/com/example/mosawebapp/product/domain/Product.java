@@ -1,9 +1,11 @@
 package com.example.mosawebapp.product.domain;
 
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
 @Entity
@@ -12,12 +14,12 @@ public class Product {
   @GeneratedValue(generator = "uuid")
   @GenericGenerator(name = "uuid", strategy = "uuid2")
   private String id;
-  @Column
-  private String dateCreated;
+  @CreationTimestamp
+  private Date dateCreated;
   @Column
   private String name;
   @Column
-  private long grossPrice;
+  private Long grossPrice;
   @Column
   private String size;
   @Column
@@ -25,12 +27,11 @@ public class Product {
   @Column
   private String threadType;
   @Column
-  private long stocks;
+  private Long stocks;
 
   public Product(){}
-  public Product(String dateCreated, String name, long grossPrice, String size, String plyRating,
-      String threadType, long stocks) {
-    this.dateCreated = dateCreated;
+  public Product(String name, Long grossPrice, String size, String plyRating,
+      String threadType, Long stocks) {
     this.name = name;
     this.grossPrice = grossPrice;
     this.size = size;
@@ -47,11 +48,11 @@ public class Product {
     this.id = id;
   }
 
-  public String getDateCreated() {
+  public Date getDateCreated() {
     return dateCreated;
   }
 
-  public void setDateCreated(String dateCreated) {
+  public void setDateCreated(Date dateCreated) {
     this.dateCreated = dateCreated;
   }
 
@@ -63,11 +64,11 @@ public class Product {
     this.name = name;
   }
 
-  public long getGrossPrice() {
+  public Long getGrossPrice() {
     return grossPrice;
   }
 
-  public void setGrossPrice(long grossPrice) {
+  public void setGrossPrice(Long grossPrice) {
     this.grossPrice = grossPrice;
   }
 
@@ -95,11 +96,11 @@ public class Product {
     this.threadType = threadType;
   }
 
-  public long getStocks() {
+  public Long getStocks() {
     return stocks;
   }
 
-  public void setStocks(long stocks) {
+  public void setStocks(Long stocks) {
     this.stocks = stocks;
   }
 }

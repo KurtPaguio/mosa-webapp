@@ -20,4 +20,6 @@ public interface AccountService {
   Account validateEmailForChangePassword(String email);
   void changePassword(String accId, ChangePasswordForm form, boolean withOldPassword);
   String resetOtp(String id, String action);
+
+  void validateIfAccountIsAdmin(String token);
 }

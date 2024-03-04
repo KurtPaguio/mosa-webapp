@@ -1,33 +1,26 @@
 package com.example.mosawebapp.product.dto;
 
+import org.springframework.lang.Nullable;
+
 public class ProductForm {
-  private String dateCreated;
   private String name;
-  private long grossPrice;
+  @Nullable
+  private Long grossPrice;
   private String size;
   private String plyRating;
   private String threadType;
-  private long stocks;
+  @Nullable
+  private Long stocks;
 
   private ProductForm(){}
-  public ProductForm(String dateCreated, String name, long grossPrice, String size,
-      String plyRating,
-      String threadType, long stocks) {
-    this.dateCreated = dateCreated;
+  public ProductForm(String name, @Nullable Long grossPrice, String size,
+      String plyRating, String threadType, @Nullable Long stocks) {
     this.name = name;
-    this.grossPrice = grossPrice;
+    this.grossPrice = grossPrice == null ? 0 : grossPrice;
     this.size = size;
     this.plyRating = plyRating;
     this.threadType = threadType;
-    this.stocks = stocks;
-  }
-
-  public String getDateCreated() {
-    return dateCreated;
-  }
-
-  public void setDateCreated(String dateCreated) {
-    this.dateCreated = dateCreated;
+    this.stocks = stocks == null ? 0 : stocks;
   }
 
   public String getName() {
@@ -38,11 +31,12 @@ public class ProductForm {
     this.name = name;
   }
 
-  public long getGrossPrice() {
+  @Nullable
+  public Long getGrossPrice() {
     return grossPrice;
   }
 
-  public void setGrossPrice(long grossPrice) {
+  public void setGrossPrice(@Nullable Long grossPrice) {
     this.grossPrice = grossPrice;
   }
 
@@ -70,11 +64,12 @@ public class ProductForm {
     this.threadType = threadType;
   }
 
-  public long getStocks() {
+  @Nullable
+  public Long getStocks() {
     return stocks;
   }
 
-  public void setStocks(long stocks) {
+  public void setStocks(@Nullable Long stocks) {
     this.stocks = stocks;
   }
 }

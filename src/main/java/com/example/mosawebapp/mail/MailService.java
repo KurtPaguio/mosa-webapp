@@ -2,8 +2,14 @@ package com.example.mosawebapp.mail;
 
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.dto.AccountForm;
+import com.example.mosawebapp.product.domain.Product;
+import com.example.mosawebapp.product.dto.ProductForm;
+import com.example.mosawebapp.utils.DateTimeFormatter;
 import jakarta.mail.internet.MimeMessage;
 import java.math.BigInteger;
+import java.text.DateFormat;
+import java.util.Date;
+import javax.swing.text.DateFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -89,6 +95,22 @@ public class MailService {
     );
     simpleMailMessage.setTo(mail);
 
+    javaMailSender.send(simpleMailMessage);
+  }
+
+  public void sendEmailForNewProduct(String mail, ProductForm form){
+    simpleMailMessage.setFrom(fromEmail);
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply New Product");
+    simpleMailMessage.setText("We've received a notification of a new product added and available at Mosa Tire Supply. "
+        + "\nIf this is just a mistake, please make a necessary action to solve the problem. Otherwise, here are the details:"
+        + "\n\nBrand/Name: " + form.getName()
+        + "\nSize: " + form.getSize()
+        + "\nPly Rating: " + form.getPlyRating()
+        + "\nThread Type/Design: " + form.getThreadType()
+        + "\nDate Added: " + DateTimeFormatter.get_MMDDYYY_Format(new Date())
+    );
+
+    simpleMailMessage.setTo(mail);
     javaMailSender.send(simpleMailMessage);
   }
 }

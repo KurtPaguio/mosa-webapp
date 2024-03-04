@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface ProductRepository extends JpaRepository<Product, String>,
     JpaSpecificationExecutor<Product> {
 
+  Product findByNameAndThreadType(String name, String threadType);
 }

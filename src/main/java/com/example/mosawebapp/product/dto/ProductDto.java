@@ -1,6 +1,7 @@
 package com.example.mosawebapp.product.dto;
 
 import com.example.mosawebapp.product.domain.Product;
+import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,20 +9,20 @@ public class ProductDto {
   private String id;
   private String dateCreated;
   private String name;
-  private long grossPrice;
+  private Long grossPrice;
   private String size;
   private String plyRating;
   private String threadType;
-  private long stocks;
+  private Long stocks;
 
   public ProductDto(){}
 
-  public ProductDto(String id, String dateCreated, String name, long grossPrice, String size,
-      String plyRating, String threadType, long stocks) {
+  public ProductDto(String id, String dateCreated, String name, Long grossPrice, String size,
+      String plyRating, String threadType, Long stocks) {
     this.id = id;
     this.dateCreated = dateCreated;
     this.name = name;
-    this.grossPrice = grossPrice;
+    this.grossPrice = grossPrice == null ? 0 : grossPrice;
     this.size = size;
     this.plyRating = plyRating;
     this.threadType = threadType;
@@ -29,7 +30,7 @@ public class ProductDto {
   }
 
   public static ProductDto buildFromEntity(Product product){
-    return new ProductDto(product.getId(), product.getDateCreated(), product.getName(),
+    return new ProductDto(product.getId(), DateTimeFormatter.get_MMDDYYY_Format(product.getDateCreated()), product.getName(),
         product.getGrossPrice(), product.getSize(), product.getPlyRating(), product.getThreadType(), product.getStocks());
   }
 
@@ -67,11 +68,11 @@ public class ProductDto {
     this.name = name;
   }
 
-  public long getGrossPrice() {
+  public Long getGrossPrice() {
     return grossPrice;
   }
 
-  public void setGrossPrice(long grossPrice) {
+  public void setGrossPrice(Long grossPrice) {
     this.grossPrice = grossPrice;
   }
 
@@ -99,11 +100,11 @@ public class ProductDto {
     this.threadType = threadType;
   }
 
-  public long getStocks() {
+  public Long getStocks() {
     return stocks;
   }
 
-  public void setStocks(long stocks) {
+  public void setStocks(Long stocks) {
     this.stocks = stocks;
   }
 }

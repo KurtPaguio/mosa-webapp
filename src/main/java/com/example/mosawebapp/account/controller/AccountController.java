@@ -68,9 +68,7 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try{
-      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
-        throw new TokenException(TOKEN_INVALID);
-      }
+      validateTokenValidity(token);
 
       return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllAccounts(token)));
     } catch(SecurityException se){
@@ -95,14 +93,12 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try{
-      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
-        throw new TokenException(TOKEN_INVALID);
-      }
+      validateTokenValidity(token);
 
       AccountDto dto = AccountDto.buildFromEntity(accountService.findOne(id, token));
 
       logger.info("done fetching account for {}", dto.getEmail());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value()).body(dto);
+      return ResponseEntity.ok(dto);
     } catch(SecurityException se){
       return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
           HttpStatus.INTERNAL_SERVER_ERROR);
@@ -157,9 +153,7 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try{
-      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
-        throw new TokenException(TOKEN_INVALID);
-      }
+      validateTokenValidity(token);
 
       String accId = jwtGenerator.getUserFromJWT(token);
       Account account= accountService.findOne(accId, token);
@@ -187,9 +181,7 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try {
-      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
-        throw new TokenException(TOKEN_INVALID);
-      }
+      validateTokenValidity(token);
 
       AccountDto dto = AccountDto.buildFromEntity(accountService.createAccount(form, token));
 
@@ -272,7 +264,7 @@ public class AccountController {
   public ResponseEntity<?> login(@RequestBody LoginForm loginForm){
     try{
       logger.info("user {} attempting to login", loginForm.getEmail());
-      logger.info("user {} attempting to login", loginForm.getEmail());
+
       return accountService.login(loginForm);
     } catch(SecurityException se){
       return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
@@ -380,7 +372,7 @@ public class AccountController {
       }
 
       logger.info("Otp is {} for password change", VALID);
-      return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid), HttpStatus.OK));
+      return ResponseEntity.ok(new ApiResponse(String.valueOf(true), HttpStatus.OK));
     } catch(SecurityException se){
       return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
           HttpStatus.INTERNAL_SERVER_ERROR);
@@ -403,6 +395,7 @@ public class AccountController {
   @PostMapping(value="/changePassword/{accId}")
   public ResponseEntity<?> changePassword(@PathVariable("accId") String id, @RequestBody ChangePasswordForm form){
     logger.info("changing password for account {}", id);
+
     try{
       boolean withOldPassword = form.getOldPassword() != null;
 
@@ -431,9 +424,7 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try {
-      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
-        throw new TokenException(TOKEN_INVALID);
-      }
+      validateTokenValidity(token);
 
       AccountDto dto = AccountDto.buildFromEntity(accountService.updateAccount(id, token, "admin_update", form));
 
@@ -461,9 +452,7 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try {
-      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
-        throw new TokenException(TOKEN_INVALID);
-      }
+      validateTokenValidity(token);
 
       AccountDto dto = AccountDto.buildFromEntity(accountService.updateAccount(id, token, "", form));
 
@@ -490,9 +479,7 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try{
-      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
-        throw new TokenException(TOKEN_INVALID);
-      }
+      validateTokenValidity(token);
 
       accountService.deleteAccount(id, token, "admin_delete");
 
@@ -519,9 +506,7 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     try{
-      if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
-        throw new TokenException(TOKEN_INVALID);
-      }
+      validateTokenValidity(token);
 
       accountService.deleteAccount(id,  token, "");
 
@@ -539,6 +524,12 @@ public class AccountController {
     } catch(ValidationException ve){
       return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
           HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  private void validateTokenValidity(String token){
+    if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
+      throw new TokenException(TOKEN_INVALID);
     }
   }
 }

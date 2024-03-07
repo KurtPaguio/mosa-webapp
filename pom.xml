@@ -113,7 +113,7 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		<finalName>store-management</finalName>
+		<finalName>mosa-webapp</finalName>
 	</build>
 
 </project>

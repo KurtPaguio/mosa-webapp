@@ -209,7 +209,7 @@ public class AccountServiceImpl implements AccountService{
       throw new ValidationException("Account with email " + email + " does not exist");
     }
 
-    long otp = rnd.nextInt(999999);
+    long otp = 100000 + rnd.nextInt(999999);
     account.setChangePasswordOtp(otp);
     accountRepository.save(account);
 
@@ -278,8 +278,12 @@ public class AccountServiceImpl implements AccountService{
     boolean isCurrentAndNewPasswordSame = passwordEncoder.matches(form.getNewPassword(), account.getPassword());
     boolean isCurrentAndFinalPasswordSame = passwordEncoder.matches(form.getConfirmPassword(), account.getPassword());
 
-    if(isCurrentAndFinalPasswordSame || isCurrentAndNewPasswordSame){
+    if(isCurrentAndNewPasswordSame){
       throw new ValidationException("New Password is same with the Old Password");
+    }
+
+    if(isCurrentAndFinalPasswordSame){
+      throw new ValidationException("Confirmed Password is same with the Old Password");
     }
 
     if(!form.getNewPassword().equals(form.getConfirmPassword())){
@@ -294,8 +298,12 @@ public class AccountServiceImpl implements AccountService{
       throw new ValidationException("Old Password is not the same with the Current Password");
     }
 
-    if(form.getOldPassword().equals(form.getNewPassword()) || form.getOldPassword().equals(form.getConfirmPassword())){
+    if(form.getOldPassword().equals(form.getNewPassword())){
       throw new ValidationException("New Password is same with the Old Password");
+    }
+
+    if(form.getOldPassword().equals(form.getConfirmPassword())){
+      throw new ValidationException("Confirmed Password is same with the Old Password");
     }
 
     if(!form.getNewPassword().equals(form.getConfirmPassword())){

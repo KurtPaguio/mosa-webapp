@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  app:
+    image: 'docker-spring-boot-postgres:latest'
+    build:
+      context: .
+    container_name: app
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=kurtp2000
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/mosa-webapp
+
+    ports:
+      - "8001:8080"
+
+  db:
+    image: postgres
+    container_name: db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=kurtp2000
+      - POSTGRES_DB=mosa-webapp
+    ports:
+      - "8002:8080"

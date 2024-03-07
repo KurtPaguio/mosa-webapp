@@ -5,15 +5,15 @@ import org.springframework.http.HttpStatus;
 
 public class AuthResponseDto {
     private HttpStatus status;
-    private String remarks;
+    private String message;
     private String accessToken;
     private AccountDto account;
 
-    public AuthResponseDto(HttpStatus status, AccountDto account, String accessToken, String remarks) {
+    public AuthResponseDto(HttpStatus status, AccountDto account, String accessToken, String message) {
         this.status = status;
         this.account = account;
         this.accessToken = accessToken;
-        this.remarks = remarks;
+        this.message = message;
     }
 
     public String getAccessToken() {
@@ -32,12 +32,12 @@ public class AuthResponseDto {
         this.status = status;
     }
 
-    public String getRemarks() {
-        return remarks;
+    public String getMessage() {
+        return message;
     }
 
-    public void setRemarks(String remarks) {
-        this.remarks = remarks;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public AccountDto getAccountDto() {

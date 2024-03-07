@@ -12,7 +12,7 @@ public interface AccountRegistrationRepository extends JpaRepository<AccountRegi
     JpaSpecificationExecutor<AccountRegistration> {
 
     AccountRegistration findByEmail(String email);
-
+    AccountRegistration findByEmailIgnoreCase(String email);
     @Query("SELECT CASE WHEN COUNT(acc) > 0 THEN true ELSE false END FROM AccountRegistration acc WHERE acc.email = :email")
     boolean existsByEmail(@Param("email") String email);
 }

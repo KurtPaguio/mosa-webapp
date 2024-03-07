@@ -48,12 +48,16 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
     AccountRegistration registration = new AccountRegistration(form.getFullName(), form.getEmail(),
         form.getContactNumber(), form.getAddress(), passwordEncoder.encode(form.getConfirmPassword()), form.getUserRole());
 
-    long otp = rnd.nextInt(999999);
+    long otp = 100000 + rnd.nextInt(999999);
     registration.setRegisterOtp(otp);
     registration.setStatus(AccountStatus.FOR_REGISTRATION);
     mailService.sendEmailForRegistration(registration.getEmail(), otp);
 
     logger.info("otp sent to {}", registration.getEmail());
+
+    if(registrationRepository.findByEmailIgnoreCase(form.getEmail()) != null){
+      throw new ValidationException("Email is already for account registration");
+    }
 
     registrationRepository.save(registration);
     return registration;
@@ -75,6 +79,11 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
           registration.getAddress(), registration.getPassword(), registration.getUserRole());
 
       mailService.sendEmailForAccountRegistration(newAccount);
+
+      if(accountRepository.findByEmailIgnoreCase(registration.getEmail()) != null){
+        throw new ValidationException("An account associated with the email already exists");
+      }
+
       accountRepository.save(newAccount);
 
       return newAccount;

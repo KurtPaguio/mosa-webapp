@@ -13,6 +13,7 @@ import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.dto.AccountForm;
 import com.example.mosawebapp.account.dto.LoginForm;
+import com.example.mosawebapp.logs.service.ActivityLogsService;
 import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.apiresponse.AuthResponseDto;
 import com.example.mosawebapp.security.JwtGenerator;
@@ -42,6 +43,7 @@ public class AccountServiceImpl implements AccountService{
   private final AccountRepository accountRepository;
   private final RoleRepository roleRepository;
   private final AccountRegistrationRepository registrationRepository;
+  private final ActivityLogsService activityLogsService;
   private final AuthenticationManager authenticationManager;
   private final PasswordEncoder passwordEncoder;
   private final JwtGenerator jwtGenerator;
@@ -50,11 +52,13 @@ public class AccountServiceImpl implements AccountService{
 
   @Autowired
   public AccountServiceImpl(AccountRepository accountRepository, RoleRepository roleRepository,
-      AccountRegistrationRepository registrationRepository, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder,
+      AccountRegistrationRepository registrationRepository, ActivityLogsService activityLogsService,
+      AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder,
       JwtGenerator jwtGenerator, MailService mailService) {
     this.accountRepository = accountRepository;
     this.roleRepository = roleRepository;
     this.registrationRepository = registrationRepository;
+    this.activityLogsService = activityLogsService;
     this.authenticationManager = authenticationManager;
     this.passwordEncoder = passwordEncoder;
     this.jwtGenerator = jwtGenerator;
@@ -83,12 +87,16 @@ public class AccountServiceImpl implements AccountService{
     validateForm(form);
     validateIfAccountAlreadyExists(form.getEmail());
 
+    String id = jwtGenerator.getUserFromJWT(token);
+    Account staff = accountRepository.findById(id).orElseThrow(() -> new NotFoundException("Account does not exists"));
+
     Account account = new Account( form.getFullName(), form.getEmail(), form.getContactNumber(), form.getAddress(),
         passwordEncoder.encode(form.getPassword()), form.getUserRole());
     account.setRoles(Collections.singletonList(roleRepository.findByName(form.getUserRole().name())));
 
     accountRepository.save(account);
     mailService.sendEmailForAccountCreation(form);
+    activityLogsService.adminCreateAccountActivity(staff, account);
     return account;
   }
 
@@ -117,6 +125,16 @@ public class AccountServiceImpl implements AccountService{
 
     updatedAccount = accountRepository.save(updatedAccount);
 
+    if(action.equalsIgnoreCase("admin_update")){
+      String adminId = jwtGenerator.getUserFromJWT(token);
+      Account staff = accountRepository.findById(adminId).orElseThrow(() -> new NotFoundException("Account does not exists"));
+
+      activityLogsService.adminUpdateAccountActivity(staff, updatedAccount);
+    } else {
+      activityLogsService.userUpdateAccountActivity(updatedAccount);
+
+    }
+
     return updatedAccount;
   }
 
@@ -135,6 +153,15 @@ public class AccountServiceImpl implements AccountService{
     }
 
     logger.info("deleting account of {}", account.getEmail());
+
+    if(action.equalsIgnoreCase("admin_delete")){
+      String adminId = jwtGenerator.getUserFromJWT(token);
+      Account staff = accountRepository.findById(adminId).orElseThrow(() -> new NotFoundException("Account does not exists"));
+
+      activityLogsService.adminDeleteAccountActivity(staff, account);
+    } else {
+      activityLogsService.userDeleteAccountActivity(account);
+    }
 
     accountRepository.delete(account);
     registrationRepository.delete(registration);
@@ -169,6 +196,7 @@ public class AccountServiceImpl implements AccountService{
     mailService.sendEmailForLogin(account.getEmail(), otp);*/
 
     logger.info("Account for {} found. Redirecting to otp form", form.getEmail());
+    activityLogsService.loginActivity(account);
     return new ResponseEntity<>(new AuthResponseDto(HttpStatus.ACCEPTED, dto, token, "Successfully logged in"), HttpStatus.ACCEPTED);
   }
 

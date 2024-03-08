@@ -1,10 +1,7 @@
 package com.example.mosawebapp.account.controller;
 
 import com.example.mosawebapp.account.domain.UserRole;
-import com.example.mosawebapp.account.dto.AccountUpdateForm;
-import com.example.mosawebapp.account.dto.ChangePasswordForm;
-import com.example.mosawebapp.account.dto.EmailForm;
-import com.example.mosawebapp.account.dto.OtpForm;
+import com.example.mosawebapp.account.dto.*;
 import com.example.mosawebapp.account.registration.dto.AccountRegistrationDto;
 import com.example.mosawebapp.account.registration.service.AccountRegistrationService;
 import com.example.mosawebapp.apiresponse.ApiErrorResponse;
@@ -13,9 +10,6 @@ import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.SecurityException;
 import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.account.domain.Account;
-import com.example.mosawebapp.account.dto.AccountDto;
-import com.example.mosawebapp.account.dto.AccountForm;
-import com.example.mosawebapp.account.dto.LoginForm;
 import com.example.mosawebapp.account.service.AccountService;
 import com.example.mosawebapp.apiresponse.ApiResponse;
 import com.example.mosawebapp.exceptions.ValidationException;
@@ -333,12 +327,13 @@ public class AccountController {
   }
 
   @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
-  @GetMapping(value="/resetOtp/{accId}/{action}")
-  public ResponseEntity<?> resetOtp(@PathVariable("accId") String id, @PathVariable("action") String action){
+  @GetMapping(value="/resetOtp")
+  public ResponseEntity<?> resetOtp(@RequestBody ResetOtpForm form){
+    String action = form.isRegister() ? "register" : "change password";
     logger.info("resetting otp for {}", action);
 
     try{
-      String email = accountService.resetOtp(id, action);
+      String email = accountService.resetOtp(form.getId(), action);
 
       return ResponseEntity.ok(new ApiResponse("New OTP sent to " + email, HttpStatus.OK));
     } catch(SecurityException se){
@@ -446,13 +441,14 @@ public class AccountController {
   }
 
   @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
-  @PutMapping(value="/updateMyAccount/{accId}")
-  public ResponseEntity<?> updateMyAccount(@PathVariable("accId") String id, @RequestBody AccountUpdateForm form, @RequestHeader("Authorization") String header){
+  @PutMapping(value="/updateMyAccount")
+  public ResponseEntity<?> updateMyAccount(@RequestBody AccountUpdateForm form, @RequestHeader("Authorization") String header){
     logger.info("updating account with form {}", form);
     String token = header.replace(BEARER, "");
 
     try {
       validateTokenValidity(token);
+      String id = jwtGenerator.getUserFromJWT(token);
 
       AccountDto dto = AccountDto.buildFromEntity(accountService.updateAccount(id, token, "", form));
 
@@ -501,12 +497,13 @@ public class AccountController {
   }
 
   @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
-  @DeleteMapping(value="/deleteMyAccount/{accId}")
-  public ResponseEntity<?> deleteMyAccount(@PathVariable("accId") String id, @RequestHeader("Authorization") String header){
+  @DeleteMapping(value="/deleteMyAccount")
+  public ResponseEntity<?> deleteMyAccount(@RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");
 
     try{
       validateTokenValidity(token);
+      String id = jwtGenerator.getUserFromJWT(token);
 
       accountService.deleteAccount(id,  token, "");
 

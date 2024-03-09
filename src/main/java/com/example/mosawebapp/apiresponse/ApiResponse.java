@@ -3,8 +3,8 @@ package com.example.mosawebapp.apiresponse;
 import org.springframework.http.HttpStatus;
 
 public class ApiResponse {
-  private String message;
   private HttpStatus status;
+  private String message;
   public ApiResponse(String message, HttpStatus status){
     this.message = message;
     this.status = status;

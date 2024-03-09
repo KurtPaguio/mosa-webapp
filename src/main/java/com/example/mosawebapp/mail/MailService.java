@@ -2,20 +2,18 @@ package com.example.mosawebapp.mail;
 
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.dto.AccountForm;
-import com.example.mosawebapp.product.domain.Product;
-import com.example.mosawebapp.product.dto.ProductForm;
+import com.example.mosawebapp.product.brand.domain.Brand;
+import com.example.mosawebapp.product.brand.dto.BrandDto;
+import com.example.mosawebapp.product.threadtype.domain.ThreadType;
+import com.example.mosawebapp.product.threadtype.dto.ThreadTypeDto;
+import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
+import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.utils.DateTimeFormatter;
-import jakarta.mail.internet.MimeMessage;
-import java.math.BigInteger;
-import java.text.DateFormat;
 import java.util.Date;
-import javax.swing.text.DateFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMailMessage;
-import org.springframework.mail.javamail.MimeMessagePreparator;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -98,16 +96,83 @@ public class MailService {
     javaMailSender.send(simpleMailMessage);
   }
 
-  public void sendEmailForNewProduct(String mail, ProductForm form){
+  public void sendEmailForBrand(String mail, Brand brand, String action){
+    String word = "";
+    if (action.equalsIgnoreCase("Added")){
+      word = "new brand added";
+    }
+
+    if(action.equalsIgnoreCase("Updated")){
+      word = "brand updated";
+    }
+
+    if(action.equalsIgnoreCase("Deleted")){
+      word = "brand deleted";
+    }
+
     simpleMailMessage.setFrom(fromEmail);
     simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply New Product");
-    simpleMailMessage.setText("We've received a notification of a new product added and available at Mosa Tire Supply. "
+    simpleMailMessage.setText("We've received a notification of a " + word + " at Mosa Tire Supply. "
         + "\nIf this is just a mistake, please make a necessary action to solve the problem. Otherwise, here are the details:"
-        + "\n\nBrand/Name: " + form.getName()
-        + "\nSize: " + form.getSize()
-        + "\nPly Rating: " + form.getPlyRating()
-        + "\nThread Type/Design: " + form.getThreadType()
-        + "\nDate Added: " + DateTimeFormatter.get_MMDDYYY_Format(new Date())
+        + "\n\nBrand Name: " + brand.getName()
+        + "\nDate " + action + ": " + new Date()
+    );
+
+    simpleMailMessage.setTo(mail);
+    javaMailSender.send(simpleMailMessage);
+  }
+
+
+  public void sendEmailForThreadType(String mail, Brand brand, ThreadType type, String action){
+    String word = "";
+    if (action.equalsIgnoreCase("Added")){
+      word = "new thread type added";
+    }
+
+    if(action.equalsIgnoreCase("Updated")){
+      word = "thread type updated";
+    }
+
+    if(action.equalsIgnoreCase("Deleted")){
+      word = "thread type deleted";
+    }
+
+    simpleMailMessage.setFrom(fromEmail);
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply New Product");
+    simpleMailMessage.setText("We've received a notification of a " + word + " at Mosa Tire Supply. "
+        + "\nIf this is just a mistake, please make a necessary action to solve the problem. Otherwise, here are the details:"
+        + "\n\nBrand: " + brand.getName()
+        + "\nThread Type: " + type.getType()
+        + "\nDate " + action + ": " + new Date()
+    );
+
+    simpleMailMessage.setTo(mail);
+    javaMailSender.send(simpleMailMessage);
+  }
+
+  public void sendEmailForThreadTypeDetails(String mail, ThreadTypeDetails details, String action){
+    String word = "";
+    if (action.equalsIgnoreCase("Added")){
+      word = "new thread type details added";
+    }
+
+    if(action.equalsIgnoreCase("Updated")){
+      word = "thread type details updated";
+    }
+
+    if(action.equalsIgnoreCase("Deleted")){
+      word = "thread type details deleted";
+    }
+
+    simpleMailMessage.setFrom(fromEmail);
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply New Product");
+    simpleMailMessage.setText("We've received a notification of a " + word + " at Mosa Tire Supply. "
+        + "\nIf this is just a mistake, please make a necessary action to solve the problem. Otherwise, here are the details:"
+        + "\n\nBrand: " + details.getThreadType().getType()
+        + "\nThread Type: " + details.getThreadType().getType()
+        + "\nWidth/Aspect Ratio/Diameter: " + details.getWidth() + "/" + details.getAspectRatio() + "/" + details.getDiameter()
+        + "\nPrice: " + details.getPrice()
+        + "\nDate " + action + ": " + new Date()
     );
 
     simpleMailMessage.setTo(mail);

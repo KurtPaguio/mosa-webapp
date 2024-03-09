@@ -1,7 +1,6 @@
 package com.example.mosawebapp.cart.domain;
 
 import com.example.mosawebapp.account.domain.Account;
-import com.example.mosawebapp.product.domain.Product;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -16,22 +15,19 @@ public class Cart {
     private String id;
     @CreationTimestamp
     private Date dateCreated;
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name="product_id")
-    private Product product;
-
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "customer_id")
     private Account account;
     @Column
-    private long quantity;
+    private long deliveryFee;
+    @Column
+    private boolean isActive;
 
     public Cart(){}
-    public Cart(Date dateCreated, Product product, Account account, long quantity) {
-        this.dateCreated = dateCreated;
-        this.product = product;
+
+    public Cart(Account account, boolean isActive) {
         this.account = account;
-        this.quantity = quantity;
+        this.isActive = isActive;
     }
 
     public String getId() {
@@ -49,15 +45,6 @@ public class Cart {
     public void setDateCreated(Date dateCreated) {
         this.dateCreated = dateCreated;
     }
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public void setProduct(Product product) {
-        this.product = product;
-    }
-
     public Account getAccount() {
         return account;
     }
@@ -66,15 +53,19 @@ public class Cart {
         this.account = account;
     }
 
-    public long isQuantity() {
-        return quantity;
+    public long getDeliveryFee() {
+        return deliveryFee;
     }
 
-    public void setQuantity(long quantity) {
-        this.quantity = quantity;
+    public void setDeliveryFee(long deliveryFee) {
+        this.deliveryFee = deliveryFee;
     }
 
-    public long getTotalPrice(){
-        return product.getGrossPrice() * quantity;
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 }

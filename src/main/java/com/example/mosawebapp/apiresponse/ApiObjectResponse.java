@@ -5,11 +5,11 @@ import org.springframework.http.HttpStatus;
 public class ApiObjectResponse {
   private HttpStatus status;
   private String message;
-  private Object object;
-  public ApiObjectResponse(HttpStatus status, String message, Object object){
+  private Object data;
+  public ApiObjectResponse(HttpStatus status, String message, Object data){
     this.status = status;
     this.message = message;
-    this.object = object;
+    this.data = data;
   }
 
   public String getMessage() {
@@ -20,12 +20,12 @@ public class ApiObjectResponse {
     this.message = message;
   }
 
-  public Object getObject() {
-    return object;
+  public Object getData() {
+    return data;
   }
 
-  public void setObject(Object object) {
-    this.object = object;
+  public void setData(Object data) {
+    this.data = data;
   }
 
   public HttpStatus getStatus() {

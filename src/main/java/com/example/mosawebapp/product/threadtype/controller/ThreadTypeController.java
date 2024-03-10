@@ -14,6 +14,7 @@ import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
 import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.util.Date;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,14 +70,14 @@ public class ThreadTypeController {
 
   @PostMapping(value = "/addThreadType")
   public ResponseEntity<?> addBrand(@RequestHeader("Authorization") String header, @RequestBody
-  ThreadTypeForm form){
+  List<ThreadTypeForm> forms){
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
 
-    ThreadTypeDto dto = threadTypeService.addThreadType(token,form);
+    List<ThreadTypeDto> dtos = threadTypeService.addThreadType(token,forms);
 
-    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Thread Type " + dto.getType() + " created" , dto));
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, forms.size()+ " Thread Type/s added" , dtos));
   }
 
   @PutMapping(value = "/updateThreadType/{id}")

@@ -142,22 +142,28 @@ public class ActivityLogsService {
     }
   }
 
-  public void brandActivity(Account account, Brand brand, String action){
+  public void brandActivity(Account account, List<Brand> brands, String action){
     String actor = account.getFullName();
-    String message = actor + " just " + action + " the brand " + brand.getName() +
-        " in Mosa Tire Supply";
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
-    activityLogsRepository.save(log);
+    for(Brand brand: brands){
+      String message = actor + " just " + action + " the brand " + brand.getName() +
+          " in Mosa Tire Supply";
+
+      ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+      activityLogsRepository.save(log);
+    }
   }
 
-  public void threadTypeActivity(Account account, ThreadType type, String action){
+  public void threadTypeActivity(Account account, List<ThreadType> types, String action){
     String actor = account.getFullName();
-    String message = actor + " just " + action + " the Thread Type " + type.getType() +
-        " with brand " + type.getBrand().getName() + " in Mosa Tire Supply";
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
-    activityLogsRepository.save(log);
+    for(ThreadType type: types){
+      String message = actor + " just " + action + " the Thread Type " + type.getType() +
+          " with brand " + type.getBrand().getName() + " in Mosa Tire Supply";
+
+      ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+      activityLogsRepository.save(log);
+    }
   }
 
   public void threadTypeDetailsActivity(Account account, ThreadTypeDetails details, String action){

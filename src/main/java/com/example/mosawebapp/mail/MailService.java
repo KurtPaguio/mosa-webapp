@@ -44,7 +44,8 @@ public class MailService {
         "\n\nAn account associated with you has been created in Mosa Tire Supply Website. If you did not request this account creation, inform us "
         + "immediately through this email, mosatiresupply@gmail.com. Otherwise, here are your account credentials."
         + "\n\nEmail: " + form.getEmail()
-        + "\nPassword: " + form.getPassword()
+        + "\nFull Name: " + form.getFullName()
+        + "\nContact Number: " + form.getContactNumber()
         + "\n\nOnce you received this email, login and change your password immediately to avoid data breach. Keep this email confidential. Thank you!"
     );
     simpleMailMessage.setTo(form.getEmail());
@@ -90,9 +91,21 @@ public class MailService {
   public void sendEmailForChangePassword(String mail, long otp){
     simpleMailMessage.setFrom(fromEmail);
     simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Change Password OTP");
-    simpleMailMessage.setText("We've received a notification of your password reset attempt in Mosa Tire Supply. "
+    simpleMailMessage.setText("We've received a notification of your password change attempt in Mosa Tire Supply. "
             + "If it's not you who requested it, please ignore this message."
-            + "\n\nHere's your reset password OTP: " + otp
+            + "\n\nHere's your change password OTP: " + otp
+    );
+    simpleMailMessage.setTo(mail);
+
+    javaMailSender.send(simpleMailMessage);
+  }
+
+  public void sendEmailForResetPasswordLink(String mail, String url, String token){
+    simpleMailMessage.setFrom(fromEmail);
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Change Password OTP");
+    simpleMailMessage.setText("We've received a notification of your password reset attempt in Mosa Tire Supply. "
+        + "If it's not you who requested it, please ignore this message."
+        + "\n\nHere's the link for reset password: " + url + "?resetToken=" + token
     );
     simpleMailMessage.setTo(mail);
 

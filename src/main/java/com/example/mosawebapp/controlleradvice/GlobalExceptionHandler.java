@@ -6,6 +6,7 @@ import com.example.mosawebapp.exceptions.SecurityException;
 import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.utils.DateTimeFormatter;
+import java.io.IOException;
 import java.util.Date;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,18 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(java.lang.SecurityException.class)
   public ResponseEntity<?> handleSecurityException(java.lang.SecurityException se) {
     return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
+        HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ie) {
+    return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, ie.getMessage()),
+        HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(IOException.class)
+  public ResponseEntity<?> handleIOException(IOException ioe) {
+    return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, ioe.getMessage()),
         HttpStatus.INTERNAL_SERVER_ERROR);
   }
 

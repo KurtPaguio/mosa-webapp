@@ -25,6 +25,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,7 +40,8 @@ import java.util.Random;
 @Service
 public class AccountServiceImpl implements AccountService{
   private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
-
+  @Value("${reset.password.page}")
+  private String resetPasswordPage;
   private static final String ACCOUNT_NOT_EXIST = "Account does not exists";
   private static final String REGISTER = "register";
   private final AccountRepository accountRepository;
@@ -77,6 +79,20 @@ public class AccountServiceImpl implements AccountService{
   }
 
   @Override
+  public List<Account> findAllStaffAccounts(String token){
+    validateIfAccountIsAdmin(token);
+
+    return accountRepository.findStaffAccounts();
+  }
+
+  @Override
+  public List<Account> findAllCustomerAccounts(String token){
+    validateIfAccountIsAdmin(token);
+
+    return accountRepository.findCustomerAccounts();
+  }
+
+  @Override
   public Account findOne(String id, String token) {
     validateIfAccountIsAdmin(token);
 
@@ -107,6 +123,10 @@ public class AccountServiceImpl implements AccountService{
     validateForm(form);
     validateIfAccountAlreadyExists(form.getEmail());
 
+    if(form.getUserRole() == null){
+      form.setUserRole(UserRole.CUSTOMER);
+    }
+
     String id = jwtGenerator.getUserFromJWT(token);
     Account staff = accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
 
@@ -117,6 +137,7 @@ public class AccountServiceImpl implements AccountService{
     accountRepository.save(account);
     mailService.sendEmailForAccountCreation(form);
     activityLogsService.adminCreateAccountActivity(staff, account);
+
     return account;
   }
 
@@ -226,12 +247,14 @@ public class AccountServiceImpl implements AccountService{
 
     boolean isValid = determineActionAndOtpValidation(account, otp, action);
 
-    if(isValid){ // For Account Creation and Password Change
+    if(isValid){ // For Account Creation and Password Change/Reset
       String changePasswordToken = RandomStringUtils.randomAlphanumeric(30);
 
       account.setLoginOtp(0);
       account.setChangePasswordOtp(0);
       account.setChangePasswordToken(changePasswordToken);
+
+      mailService.sendEmailForResetPasswordLink(account.getEmail(), resetPasswordPage, changePasswordToken);
       accountRepository.save(account);
     }
 

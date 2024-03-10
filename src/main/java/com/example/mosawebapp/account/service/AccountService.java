@@ -11,6 +11,11 @@ import org.springframework.http.ResponseEntity;
 
 public interface AccountService {
   List<Account> findAllAccounts(String token);
+
+  List<Account> findAllStaffAccounts(String token);
+
+  List<Account> findAllCustomerAccounts(String token);
+
   Account findOne(String id, String token);
 
   Account findAccountByChangePasswordToken(String token);

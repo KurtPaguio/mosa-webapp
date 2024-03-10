@@ -8,7 +8,7 @@ import java.util.List;
 public interface ThreadTypeService {
   ThreadTypeDto findThreadType(String id);
   List<ThreadTypeDto> findAllThreadTypes();
-  ThreadTypeDto addThreadType(String token, ThreadTypeForm form);
+  List<ThreadTypeDto> addThreadType(String token, List<ThreadTypeForm> forms);
   ThreadTypeDto updateThreadType(String token, String id, ThreadTypeForm form);
   void deleteThreadType(String token, String id);
 }

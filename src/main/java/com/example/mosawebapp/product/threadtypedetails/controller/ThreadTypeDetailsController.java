@@ -13,6 +13,7 @@ import com.example.mosawebapp.product.threadtypedetails.service.ThreadTypeDetail
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
 import com.example.mosawebapp.utils.DateTimeFormatter;
+import java.io.IOException;
 import java.util.Date;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/threadTypeDetails")
@@ -73,6 +76,17 @@ public class ThreadTypeDetailsController {
     ThreadTypeDetailsDto dto = threadTypeDetailsService.addThreadTypeDetails(token, form);
 
     return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Thread Type Details for " + dto.getThreadType() + " created" , dto));
+  }
+
+  @PostMapping(value = "/addFileDetails")
+  public ResponseEntity<?> addThreadTypeDetailsFromFile(@RequestHeader("Authorization") String header, @RequestParam("file") MultipartFile file)
+      throws IOException {
+    String token = header.replace(BEARER, "");
+    validateTokenValidity(token);
+
+    int addCount = threadTypeDetailsService.addThreadTypeDetailsFromFile(token, file);
+
+    return ResponseEntity.ok(new ApiResponse("Added " + addCount + " Thread Type Details successfully", HttpStatus.CREATED));
   }
 
   @PutMapping(value = "/updateDetails/{id}")

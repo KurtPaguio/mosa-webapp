@@ -86,28 +86,30 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
   }
 
   @Override
-  public ThreadTypeDto addThreadType(String token, ThreadTypeForm form) {
+  public List<ThreadTypeDto> addThreadType(String token, List<ThreadTypeForm> forms) {
     Account account = getAccountFromToken(token);
     validateIfAccountIsAdmin(account);
-    Validate.notNull(form);
+    Validate.notNull(forms);
 
-    if(form.getImageUrl().isEmpty()){
-      form.setImageUrl(BLANK_IMAGE);
+    List<ThreadType> types = new ArrayList<>();
+
+    for(ThreadTypeForm form: forms){
+      if(form.getImageUrl().isEmpty()){
+        form.setImageUrl(BLANK_IMAGE);
+      }
+
+      Brand brand = brandRepository.findByNameIgnoreCase(form.getBrand());
+
+      if(brand == null){
+        brand = brandRepository.findById(form.getBrand()).orElseThrow(() -> new NotFoundException(form.getBrand() + " Brand does not exists"));
+      }
+
+      types.add(new ThreadType(form.getType(), form.getImageUrl(), form.getDescription(), brand));
     }
 
-    Brand brand = brandRepository.findByNameIgnoreCase(form.getBrand());
-
-    if(brand == null){
-      brand = brandRepository.findById(form.getBrand()).orElseThrow(() -> new NotFoundException("Brand does not exists"));
-    }
-
-    ThreadType threadType = new ThreadType(form.getType(), form.getImageUrl(), form.getDescription(), brand);
-
-    mailService.sendEmailForThreadType(MOSA_TIRE_SUPPLY_EMAIL, brand, threadType, ADDED);
-    threadTypeRepository.save(threadType);
-    activityLogsService.threadTypeActivity(account, threadType, ADDED);
-
-    return new ThreadTypeDto(threadType);
+    threadTypeRepository.saveAll(types);
+    activityLogsService.threadTypeActivity(account, types, ADDED);
+    return ThreadTypeDto.buildFromEntitiesV2(types);
   }
 
   @Override
@@ -134,7 +136,7 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
 
     mailService.sendEmailForThreadType(MOSA_TIRE_SUPPLY_EMAIL, brand, threadType, UPDATED);
     threadTypeRepository.save(threadType);
-    activityLogsService.threadTypeActivity(account, threadType, UPDATED);
+    activityLogsService.threadTypeActivity(account, List.of(threadType), UPDATED);
 
     return new ThreadTypeDto(threadType);
   }
@@ -148,7 +150,7 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
 
     mailService.sendEmailForThreadType(MOSA_TIRE_SUPPLY_EMAIL, threadType.getBrand(),threadType, DELETED);
     threadTypeRepository.delete(threadType);
-    activityLogsService.threadTypeActivity(account, threadType, DELETED);
+    activityLogsService.threadTypeActivity(account, List.of(threadType), DELETED);
   }
 
   private Account getAccountFromToken(String token){

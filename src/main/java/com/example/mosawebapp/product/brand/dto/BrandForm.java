@@ -2,10 +2,13 @@ package com.example.mosawebapp.product.brand.dto;
 
 public class BrandForm {
   private String brandName;
+  private String imageUrl;
 
   public BrandForm(){}
-  public BrandForm(String brandName) {
+
+  public BrandForm(String brandName, String imageUrl) {
     this.brandName = brandName;
+    this.imageUrl = imageUrl;
   }
 
   public String getBrandName() {
@@ -14,5 +17,13 @@ public class BrandForm {
 
   public void setBrandName(String brandName) {
     this.brandName = brandName;
+  }
+
+  public String getImageUrl() {
+    return imageUrl;
+  }
+
+  public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
   }
 }

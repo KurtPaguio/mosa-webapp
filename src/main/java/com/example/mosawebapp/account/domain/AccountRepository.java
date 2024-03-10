@@ -1,5 +1,6 @@
 package com.example.mosawebapp.account.domain;
 
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -14,4 +15,10 @@ public interface AccountRepository extends JpaRepository<Account, String>,
   Account findByChangePasswordToken(String token);
   @Query("SELECT CASE WHEN COUNT(acc) > 0 THEN true ELSE false END FROM Account acc WHERE lower(acc.email) = lower(:email)")
   boolean existsByEmail(@Param("email") String email);
+
+  @Query("SELECT acc FROM Account acc WHERE acc.userRole = 'ADMINISTRATOR'")
+  List<Account> findStaffAccounts();
+
+  @Query("SELECT acc FROM Account acc WHERE acc.userRole = 'CUSTOMER'")
+  List<Account> findCustomerAccounts();
 }

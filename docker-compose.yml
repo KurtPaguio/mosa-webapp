@@ -24,4 +24,4 @@ services:
       - POSTGRES_PASSWORD=kurtp2000
       - POSTGRES_DB=mosa-webapp
     ports:
-      - "8002:8080"
+      - "5432:5432"

@@ -6,6 +6,7 @@ import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
+import com.example.mosawebapp.fileuploadservice.FileUploadService;
 import com.example.mosawebapp.logs.service.ActivityLogsService;
 import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.product.brand.domain.Brand;
@@ -17,11 +18,14 @@ import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtype.dto.ThreadTypeDtoV2;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.validate.Validate;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class BrandServiceImpl implements BrandService {
@@ -31,6 +35,8 @@ public class BrandServiceImpl implements BrandService {
   private static final String DELETED = "Deleted";
   @Value("${mosatiresupply.official.email}")
   private String MOSA_TIRE_SUPPLY_EMAIL;
+  @Value("${default.blank.image.cdn}")
+  private String BLANK_IMAGE;
   private final BrandRepository brandRepository;
   private final ThreadTypeRepository threadTypeRepository;
   private final JwtGenerator jwtGenerator;
@@ -77,17 +83,37 @@ public class BrandServiceImpl implements BrandService {
   }
 
   @Override
-  public Brand addBrand(String token, BrandForm form) {
+  public List<Brand> addBrand(String token, List<BrandForm> forms) {
     Account account = getAccountFromToken(token);
 
     validateIfAccountIsAdmin(account);
-    Validate.notNull(form);
+    Validate.notNull(forms);
 
-    Brand brand = new Brand(form.getBrandName());
-    brandRepository.save(brand);
-    mailService.sendEmailForBrand(MOSA_TIRE_SUPPLY_EMAIL, brand, ADDED);
-    activityLogsService.brandActivity(account, brand, ADDED);
-    return brand;
+    List<Brand> brands = new ArrayList<>();
+    for(BrandForm form: forms){
+      if(form.getImageUrl().isEmpty()){
+        form.setImageUrl(BLANK_IMAGE);
+      }
+
+      brands.add(new Brand(form.getBrandName(), form.getImageUrl()));
+    }
+
+    brandRepository.saveAll(brands);
+    activityLogsService.brandActivity(account, brands, ADDED);
+
+    return brands;
+  }
+
+  @Override
+  public int addBrands(String token, MultipartFile file) throws IOException {
+    if(!FileUploadService.isFileValid(file)){
+      throw new ValidationException("File uploaded not valid. Please upload a CSV or Excel file");
+    }
+
+    List<Brand> brands = FileUploadService.getBrandsFromFile(file.getInputStream());
+    this.brandRepository.saveAll(brands);
+
+    return brands.size();
   }
 
   @Override
@@ -102,7 +128,7 @@ public class BrandServiceImpl implements BrandService {
 
     brandRepository.save(brand);
     mailService.sendEmailForBrand(MOSA_TIRE_SUPPLY_EMAIL, brand,UPDATED);
-    activityLogsService.brandActivity(account, brand, UPDATED);
+    activityLogsService.brandActivity(account, List.of(brand), UPDATED);
     return brand;
   }
 
@@ -115,7 +141,7 @@ public class BrandServiceImpl implements BrandService {
     Brand brand = brandRepository.findById(id).orElseThrow(() -> new NotFoundException(BRAND_NOT_EXIST));
 
     mailService.sendEmailForBrand(MOSA_TIRE_SUPPLY_EMAIL, brand, DELETED);
-    activityLogsService.brandActivity(account, brand, DELETED);
+    activityLogsService.brandActivity(account, List.of(brand), DELETED);
     brandRepository.delete(brand);
   }
 

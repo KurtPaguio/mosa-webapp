@@ -72,6 +72,28 @@ public class AccountController {
   }
 
   @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
+  @GetMapping(value="/getStaffAccounts")
+  public ResponseEntity<?> getStaffAccounts(@RequestHeader("Authorization") String header){
+    logger.info("getting all staff accounts");
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllStaffAccounts(token)));
+  }
+
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
+  @GetMapping(value="/getCustomerAccounts")
+  public ResponseEntity<?> getCustomerAccounts(@RequestHeader("Authorization") String header){
+    logger.info("getting all customer accounts");
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllCustomerAccounts(token)));
+  }
+
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/getAccount/{accId}")
   public ResponseEntity<?> getAccount(@PathVariable("accId") String id, @RequestHeader("Authorization") String header){
     logger.info("getting account with id {}", id);
@@ -197,26 +219,6 @@ public class AccountController {
   }
 
   @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
-  @PostMapping(value="/resetPasswordOtp/{accId}")
-  public RedirectView resetPasswordOtp(@PathVariable("accId") String id, @RequestBody OtpForm form){
-    logger.info("validating login otp for account {}", id);
-
-    boolean isValid = accountService.isOtpCorrect(id, form.getOtp(), "password change");
-
-    if(!isValid){
-      throw new ValidationException("OTP Incorrect. Try Again");
-    }
-
-    Account account = accountService.findAccount(id);
-
-    String redirectUrl = resetPasswordPage + "?resetToken=" + account.getChangePasswordToken();
-
-    logger.info("Otp is {} for password change", VALID);
-
-    return new RedirectView(redirectUrl);
-  }
-
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/changePassword")
   public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String header, @RequestBody ChangePasswordForm form){
     String token = header.replace(BEARER, "");
@@ -231,15 +233,30 @@ public class AccountController {
     accountService.changePassword(account.getId(), form, false);
 
     return ResponseEntity.ok(new ApiResponse("Password successfully changed", HttpStatus.OK));
-
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
-  @PostMapping(value="/resetPassword")
-  public ResponseEntity<?> resetPassword(@RequestHeader("Authorization") String header, @RequestBody ChangePasswordForm form){
-    String token = header.replace(BEARER, "");
+  @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
+  @PostMapping(value="/resetPasswordOtp/{accId}")
+  public ResponseEntity<?> resetPasswordOtp(@PathVariable("accId") String id, @RequestBody OtpForm form){
+    logger.info("validating login otp for account {}", id);
 
-    Account account = accountService.findAccountByChangePasswordToken(token);
+    boolean isValid = accountService.isOtpCorrect(id, form.getOtp(), "password change");
+
+    if(!isValid){
+      throw new ValidationException("OTP Incorrect. Try Again");
+    }
+
+    Account account = accountService.findAccount(id);
+
+    logger.info("Otp is {} for password change", VALID);
+    return ResponseEntity.ok(new ApiResponse("Link for reset password is sent to " + account.getEmail(), HttpStatus.OK));
+  }
+
+
+  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
+  @PostMapping(value= "/resetPassword/{resetToken}")
+  public ResponseEntity<?> resetPassword(@PathVariable("resetToken") String resetToken, @RequestBody ChangePasswordForm form){
+    Account account = accountService.findAccountByChangePasswordToken(resetToken);
 
     logger.info("resetting password for {}", account.getEmail());
 

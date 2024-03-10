@@ -13,7 +13,9 @@ import com.example.mosawebapp.product.brand.service.BrandService;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
 import com.example.mosawebapp.utils.DateTimeFormatter;
+import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +27,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/brand")
@@ -67,14 +71,25 @@ public class BrandController {
 
   @PostMapping(value = "/addBrand")
   public ResponseEntity<?> addBrand(@RequestHeader("Authorization") String header, @RequestBody
-      BrandForm form){
+    List<BrandForm> form){
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
 
-    BrandDto dto = BrandDto.buildFromEntity(brandService.addBrand(token,form));
+    List<BrandDto> dtos = BrandDto.buildFromEntities(brandService.addBrand(token,form));
 
-    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Brand " + dto.getName() + " created" , dto));
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, form.size() + " Brand/s added" , dtos));
+  }
+
+  @PostMapping(value = "/addBrands")
+  public ResponseEntity<?> addBrands(@RequestHeader("Authorization") String header, @RequestParam("file") MultipartFile file)
+      throws IOException {
+    String token = header.replace(BEARER, "");
+    validateTokenValidity(token);
+
+    int addCount = brandService.addBrands(token, file);
+
+    return ResponseEntity.ok(new ApiResponse("Added " + addCount + " brands successfully", HttpStatus.CREATED));
   }
 
   @PutMapping(value = "/updateBrand/{id}")

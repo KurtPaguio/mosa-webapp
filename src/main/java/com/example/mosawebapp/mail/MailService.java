@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class MailService {
+  private static final String ADDED = "Added";
+  private static final String UPDATED = "Updated";
+  private static final String DELETED = "Deleted";
   @Autowired
   private JavaMailSender javaMailSender;
   @Value("${spring.mail.username}")
@@ -98,20 +101,20 @@ public class MailService {
 
   public void sendEmailForBrand(String mail, Brand brand, String action){
     String word = "";
-    if (action.equalsIgnoreCase("Added")){
+    if (action.equalsIgnoreCase(ADDED)){
       word = "new brand added";
     }
 
-    if(action.equalsIgnoreCase("Updated")){
+    if(action.equalsIgnoreCase(UPDATED)){
       word = "brand updated";
     }
 
-    if(action.equalsIgnoreCase("Deleted")){
+    if(action.equalsIgnoreCase(DELETED)){
       word = "brand deleted";
     }
 
     simpleMailMessage.setFrom(fromEmail);
-    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply New Product");
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply New Brand");
     simpleMailMessage.setText("We've received a notification of a " + word + " at Mosa Tire Supply. "
         + "\nIf this is just a mistake, please make a necessary action to solve the problem. Otherwise, here are the details:"
         + "\n\nBrand Name: " + brand.getName()
@@ -125,20 +128,20 @@ public class MailService {
 
   public void sendEmailForThreadType(String mail, Brand brand, ThreadType type, String action){
     String word = "";
-    if (action.equalsIgnoreCase("Added")){
+    if (action.equalsIgnoreCase(ADDED)){
       word = "new thread type added";
     }
 
-    if(action.equalsIgnoreCase("Updated")){
+    if(action.equalsIgnoreCase(UPDATED)){
       word = "thread type updated";
     }
 
-    if(action.equalsIgnoreCase("Deleted")){
+    if(action.equalsIgnoreCase(DELETED)){
       word = "thread type deleted";
     }
 
     simpleMailMessage.setFrom(fromEmail);
-    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply New Product");
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply New Thread Type");
     simpleMailMessage.setText("We've received a notification of a " + word + " at Mosa Tire Supply. "
         + "\nIf this is just a mistake, please make a necessary action to solve the problem. Otherwise, here are the details:"
         + "\n\nBrand: " + brand.getName()
@@ -152,24 +155,23 @@ public class MailService {
 
   public void sendEmailForThreadTypeDetails(String mail, ThreadTypeDetails details, String action){
     String word = "";
-    if (action.equalsIgnoreCase("Added")){
+    if (action.equalsIgnoreCase(ADDED)){
       word = "new thread type details added";
     }
 
-    if(action.equalsIgnoreCase("Updated")){
+    if(action.equalsIgnoreCase(UPDATED)){
       word = "thread type details updated";
     }
 
-    if(action.equalsIgnoreCase("Deleted")){
+    if(action.equalsIgnoreCase(DELETED)){
       word = "thread type details deleted";
     }
 
     simpleMailMessage.setFrom(fromEmail);
-    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply New Product");
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply New Thread Type Details");
     simpleMailMessage.setText("We've received a notification of a " + word + " at Mosa Tire Supply. "
         + "\nIf this is just a mistake, please make a necessary action to solve the problem. Otherwise, here are the details:"
-        + "\n\nBrand: " + details.getThreadType().getType()
-        + "\nThread Type: " + details.getThreadType().getType()
+        + "\n\nThread Type: " + details.getThreadType().getType()
         + "\nWidth/Aspect Ratio/Diameter: " + details.getWidth() + "/" + details.getAspectRatio() + "/" + details.getDiameter()
         + "\nPrice: " + details.getPrice()
         + "\nDate " + action + ": " + new Date()

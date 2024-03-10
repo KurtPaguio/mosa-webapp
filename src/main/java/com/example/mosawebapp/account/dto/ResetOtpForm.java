@@ -2,7 +2,7 @@ package com.example.mosawebapp.account.dto;
 
 public class ResetOtpForm {
     private String id;
-    private boolean isRegister;
+    private boolean isRegister; // for frontend, just "register" as the key
 
     public ResetOtpForm(){}
 

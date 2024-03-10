@@ -51,30 +51,15 @@ public class CartController {
     logger.info("getting cart");
     String token = header.replace(BEARER, "");
 
-    try{
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      CartDto dto = cartService.getCart(token);
+    CartDto dto = cartService.getCart(token);
 
-      if(dto == null){
-        return ResponseEntity.ok(new ApiResponse("No cart yet", HttpStatus.OK));
-      }
-
-      return ResponseEntity.ok(dto);
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException | NumberFormatException e){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, e.getMessage()),
-          HttpStatus.BAD_REQUEST);
+    if(dto == null){
+      return ResponseEntity.ok(new ApiResponse("No cart yet", HttpStatus.OK));
     }
+
+    return ResponseEntity.ok(dto);
   }
   @PostMapping(value = "/addItem")
   public ResponseEntity<?> addItemToCart(@RequestHeader("Authorization") String header, @RequestBody
@@ -82,27 +67,12 @@ public class CartController {
     logger.info("adding item {}", form.getProductId());
     String token = header.replace(BEARER, "");
 
-    try{
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      CartItemDto dto = CartItemDto.buildFromEntity(cartService.addCartItem(token, form));
+    CartItemDto dto = CartItemDto.buildFromEntity(cartService.addCartItem(token, form));
 
-      //logger.info("item {} - {} added to cart", dto.getProduct().getBrand(), dto.getProduct().getThreadType());
-      return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Item added to cart", dto));
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException | NumberFormatException e){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, e.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
+    //logger.info("item {} - {} added to cart", dto.getProduct().getBrand(), dto.getProduct().getThreadType());
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Item added to cart", dto));
   }
 
   @DeleteMapping(value = "/removeItem/{itemId}")
@@ -110,27 +80,12 @@ public class CartController {
     logger.info("removing item {}", id);
     String token = header.replace(BEARER, "");
 
-    try{
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      cartService.removeCartItem(token, id);
+    cartService.removeCartItem(token, id);
 
-      logger.info("Cart Item removed from the cart");
-      return ResponseEntity.ok(new ApiResponse("Cart Item removed from the cart", HttpStatus.OK));
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException | NumberFormatException e){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, e.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
+    logger.info("Cart Item removed from the cart");
+    return ResponseEntity.ok(new ApiResponse("Cart Item removed from the cart", HttpStatus.OK));
   }
 
   private void validateTokenValidity(String token){

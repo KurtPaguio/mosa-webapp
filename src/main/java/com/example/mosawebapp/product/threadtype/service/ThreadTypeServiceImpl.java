@@ -5,6 +5,7 @@ import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
+import com.example.mosawebapp.logs.service.ActivityLogsService;
 import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.product.brand.domain.Brand;
 import com.example.mosawebapp.product.brand.domain.BrandRepository;
@@ -25,6 +26,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class ThreadTypeServiceImpl implements ThreadTypeService{
   private static final String TYPE_NOT_EXIST = "Thread Type does not exists";
+  private static final String ADDED = "Added";
+  private static final String UPDATED = "Updated";
+  private static final String DELETED = "Deleted";
   @Value("${mosatiresupply.official.email}")
   private String MOSA_TIRE_SUPPLY_EMAIL;
   @Value("${default.blank.image.cdn}")
@@ -35,18 +39,20 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
   private final AccountRepository accountRepository;
   private final JwtGenerator jwtGenerator;
   private final MailService mailService;
+  private final ActivityLogsService activityLogsService;
 
   @Autowired
   public ThreadTypeServiceImpl(BrandRepository brandRepository,
       ThreadTypeRepository threadTypeRepository,
       ThreadTypeDetailsRepository threadTypeDetailsRepository, AccountRepository accountRepository,
-      JwtGenerator jwtGenerator, MailService mailService) {
+      JwtGenerator jwtGenerator, MailService mailService, ActivityLogsService activityLogsService) {
     this.brandRepository = brandRepository;
     this.threadTypeRepository = threadTypeRepository;
     this.threadTypeDetailsRepository = threadTypeDetailsRepository;
     this.accountRepository = accountRepository;
     this.jwtGenerator = jwtGenerator;
     this.mailService = mailService;
+    this.activityLogsService = activityLogsService;
   }
 
   @Override
@@ -97,8 +103,9 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
 
     ThreadType threadType = new ThreadType(form.getType(), form.getImageUrl(), form.getDescription(), brand);
 
-    mailService.sendEmailForThreadType(MOSA_TIRE_SUPPLY_EMAIL, brand, threadType, "Added");
+    mailService.sendEmailForThreadType(MOSA_TIRE_SUPPLY_EMAIL, brand, threadType, ADDED);
     threadTypeRepository.save(threadType);
+    activityLogsService.threadTypeActivity(account, threadType, ADDED);
 
     return new ThreadTypeDto(threadType);
   }
@@ -125,8 +132,9 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
     threadType.setImageUrl(form.getImageUrl());
     threadType.setDescription(form.getDescription());
 
-    mailService.sendEmailForThreadType(MOSA_TIRE_SUPPLY_EMAIL, brand, threadType, "Updated");
+    mailService.sendEmailForThreadType(MOSA_TIRE_SUPPLY_EMAIL, brand, threadType, UPDATED);
     threadTypeRepository.save(threadType);
+    activityLogsService.threadTypeActivity(account, threadType, UPDATED);
 
     return new ThreadTypeDto(threadType);
   }
@@ -138,8 +146,9 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
 
     ThreadType threadType = threadTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("Thread type does not exists"));
 
-    mailService.sendEmailForThreadType(MOSA_TIRE_SUPPLY_EMAIL, threadType.getBrand(),threadType, "Deleted");
+    mailService.sendEmailForThreadType(MOSA_TIRE_SUPPLY_EMAIL, threadType.getBrand(),threadType, DELETED);
     threadTypeRepository.delete(threadType);
+    activityLogsService.threadTypeActivity(account, threadType, DELETED);
   }
 
   private Account getAccountFromToken(String token){

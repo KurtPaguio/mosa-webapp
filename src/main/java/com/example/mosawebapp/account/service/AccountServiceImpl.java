@@ -17,9 +17,11 @@ import com.example.mosawebapp.logs.service.ActivityLogsService;
 import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.apiresponse.AuthResponseDto;
 import com.example.mosawebapp.security.JwtGenerator;
+import com.example.mosawebapp.security.domain.TokenBlacklistingService;
 import com.example.mosawebapp.validate.Validate;
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +40,7 @@ import java.util.Random;
 public class AccountServiceImpl implements AccountService{
   private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
-  private static final String ACCOUNT_NOT_EXIST = "Account does not exist";
+  private static final String ACCOUNT_NOT_EXIST = "Account does not exists";
   private static final String REGISTER = "register";
   private final AccountRepository accountRepository;
   private final RoleRepository roleRepository;
@@ -46,6 +48,7 @@ public class AccountServiceImpl implements AccountService{
   private final ActivityLogsService activityLogsService;
   private final AuthenticationManager authenticationManager;
   private final PasswordEncoder passwordEncoder;
+  private final TokenBlacklistingService tokenBlacklistingService;
   private final JwtGenerator jwtGenerator;
   private final MailService mailService;
   private final Random rnd = new Random();
@@ -54,13 +57,14 @@ public class AccountServiceImpl implements AccountService{
   public AccountServiceImpl(AccountRepository accountRepository, RoleRepository roleRepository,
       AccountRegistrationRepository registrationRepository, ActivityLogsService activityLogsService,
       AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder,
-      JwtGenerator jwtGenerator, MailService mailService) {
+      TokenBlacklistingService tokenBlacklistingService, JwtGenerator jwtGenerator, MailService mailService) {
     this.accountRepository = accountRepository;
     this.roleRepository = roleRepository;
     this.registrationRepository = registrationRepository;
     this.activityLogsService = activityLogsService;
     this.authenticationManager = authenticationManager;
     this.passwordEncoder = passwordEncoder;
+    this.tokenBlacklistingService = tokenBlacklistingService;
     this.jwtGenerator = jwtGenerator;
     this.mailService = mailService;
   }
@@ -80,6 +84,22 @@ public class AccountServiceImpl implements AccountService{
   }
 
   @Override
+  public Account findAccountByChangePasswordToken(String token){
+    Account account = accountRepository.findByChangePasswordToken(token);
+
+    if(account == null){
+      throw new NotFoundException(ACCOUNT_NOT_EXIST);
+    }
+
+    return account;
+  }
+
+  @Override
+  public Account findAccount(String id){
+    return accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
+  }
+
+  @Override
   @Transactional
   public Account createAccount(AccountForm form, String token) {
     validateIfAccountIsAdmin(token);
@@ -88,7 +108,7 @@ public class AccountServiceImpl implements AccountService{
     validateIfAccountAlreadyExists(form.getEmail());
 
     String id = jwtGenerator.getUserFromJWT(token);
-    Account staff = accountRepository.findById(id).orElseThrow(() -> new NotFoundException("Account does not exists"));
+    Account staff = accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
 
     Account account = new Account( form.getFullName(), form.getEmail(), form.getContactNumber(), form.getAddress(),
         passwordEncoder.encode(form.getPassword()), form.getUserRole());
@@ -148,10 +168,6 @@ public class AccountServiceImpl implements AccountService{
     Account account = accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
     AccountRegistration registration = registrationRepository.findByEmail(account.getEmail());
 
-    if(registration == null){
-      registration = registrationRepository.findByEmail(account.getEmail());
-    }
-
     logger.info("deleting account of {}", account.getEmail());
 
     if(action.equalsIgnoreCase("admin_delete")){
@@ -163,8 +179,11 @@ public class AccountServiceImpl implements AccountService{
       activityLogsService.userDeleteAccountActivity(account);
     }
 
+    tokenBlacklistingService.addTokenToBlacklist(token);
     accountRepository.delete(account);
-    registrationRepository.delete(registration);
+    if(registration != null){
+      registrationRepository.delete(registration);
+    }
   }
 
   @Override
@@ -208,8 +227,11 @@ public class AccountServiceImpl implements AccountService{
     boolean isValid = determineActionAndOtpValidation(account, otp, action);
 
     if(isValid){ // For Account Creation and Password Change
+      String changePasswordToken = RandomStringUtils.randomAlphanumeric(30);
+
       account.setLoginOtp(0);
       account.setChangePasswordOtp(0);
+      account.setChangePasswordToken(changePasswordToken);
       accountRepository.save(account);
     }
 
@@ -237,7 +259,7 @@ public class AccountServiceImpl implements AccountService{
       throw new ValidationException("Account with email " + email + " does not exist");
     }
 
-    long otp = 100000 + rnd.nextInt(999999);
+    long otp = 100000 + rnd.nextInt(900000);
     account.setChangePasswordOtp(otp);
     accountRepository.save(account);
 
@@ -249,26 +271,28 @@ public class AccountServiceImpl implements AccountService{
 
   @Override
   @Transactional
-  public void changePassword(String accId, ChangePasswordForm form, boolean withOldPassword) {
+  public void changePassword(String accId, ChangePasswordForm form, boolean isReset) {
     Account account = accountRepository.findById(accId).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
 
     if(account.getChangePasswordOtp() != 0){
       throw new ValidationException("Enter OTP for password reset before proceeding");
     }
 
-    validatePasswordChanges(account, form, withOldPassword);
+    validatePasswordChanges(account, form, isReset);
 
     account.setPassword(passwordEncoder.encode(form.getConfirmPassword()));
+    account.setChangePasswordToken("");
     accountRepository.save(account);
   }
 
   @Override
   @Transactional
-  public String resetOtp(String id, String action){
-    long otp = rnd.nextInt(999999);
-    String email = "";
+  public String resetOtp(String id, boolean isRegister){
+    long otp = rnd.nextInt(900000);
+    String email;
 
-    if(action.equalsIgnoreCase(REGISTER)){
+    if(isRegister){
+      logger.info("Id {} | isRegister {}", id, isRegister);
       AccountRegistration registration = registrationRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
       registration.setRegisterOtp(otp);
 
@@ -276,7 +300,8 @@ public class AccountServiceImpl implements AccountService{
       registrationRepository.save(registration);
 
       email = registration.getEmail();
-    } else if(action.equalsIgnoreCase("change password")){
+    } else{
+      logger.info("Id {} | isRegister {}", id, isRegister);
       Account account = accountRepository.findById(id).orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_EXIST));
       account.setChangePasswordOtp(otp);
 
@@ -286,16 +311,16 @@ public class AccountServiceImpl implements AccountService{
       email = account.getEmail();
     }
 
-    logger.info("otp sent to {} for {}", email, action);
+    logger.info("reset otp sent to {}", email);
 
     return email;
   }
-  private void validatePasswordChanges(Account account, ChangePasswordForm form, boolean withOldPassword){
+  private void validatePasswordChanges(Account account, ChangePasswordForm form, boolean isReset){
     if(form.getNewPassword().length() < 8 || form.getConfirmPassword().length() < 8){
       throw new ValidationException("Password must have at least 8 characters");
     }
 
-    if(!withOldPassword){
+    if(isReset){
       validateWithoutOldPassword(account, form);
     } else {
       validateWithOldPassword(account, form);

@@ -11,6 +11,7 @@ public interface AccountRepository extends JpaRepository<Account, String>,
     JpaSpecificationExecutor<Account> {
   Account findByEmail(String email);
   Account findByEmailIgnoreCase(String email);
+  Account findByChangePasswordToken(String token);
   @Query("SELECT CASE WHEN COUNT(acc) > 0 THEN true ELSE false END FROM Account acc WHERE lower(acc.email) = lower(:email)")
   boolean existsByEmail(@Param("email") String email);
 }

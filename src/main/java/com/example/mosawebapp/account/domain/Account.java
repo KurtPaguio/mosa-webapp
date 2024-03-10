@@ -48,6 +48,9 @@ public class Account {
   private long loginOtp;
   @Column
   private long changePasswordOtp;
+  @Column
+  private String changePasswordToken;
+
   @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
   @JoinTable(name = "accounts_roles", joinColumns = @JoinColumn(name = "account_id", referencedColumnName = "id"),
       inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
@@ -169,5 +172,13 @@ public class Account {
 
   public void setRoles(List<Role> roles) {
     this.roles = roles;
+  }
+
+  public String getChangePasswordToken() {
+    return changePasswordToken;
+  }
+
+  public void setChangePasswordToken(String changePasswordToken) {
+    this.changePasswordToken = changePasswordToken;
   }
 }

@@ -49,48 +49,18 @@ public class ThreadTypeDetailsController {
   public ResponseEntity<?> getAllThreadTypesDetails(@RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");
 
-    try{
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      return ResponseEntity.ok(threadTypeDetailsService.findAllThreadTypesDetails());
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException ve){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
+    return ResponseEntity.ok(threadTypeDetailsService.findAllThreadTypesDetails());
   }
 
   @GetMapping(value = "/getDetails/{id}")
   public ResponseEntity<?> getThreadTypeDetails(@RequestHeader("Authorization") String header, @PathVariable("id") String id){
     String token = header.replace(BEARER, "");
 
-    try {
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      return ResponseEntity.ok(threadTypeDetailsService.findThreadTypeDetails(id));
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException ve){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
+    return ResponseEntity.ok(threadTypeDetailsService.findThreadTypeDetails(id));
   }
 
   @PostMapping(value = "/addDetails")
@@ -98,26 +68,11 @@ public class ThreadTypeDetailsController {
   ThreadTypeDetailsForm form){
     String token = header.replace(BEARER, "");
 
-    try {
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      ThreadTypeDetailsDto dto = threadTypeDetailsService.addThreadTypeDetails(token, form);
+    ThreadTypeDetailsDto dto = threadTypeDetailsService.addThreadTypeDetails(token, form);
 
-      return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Thread Type Details for " + dto.getThreadType() + " created" , dto));
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException | NumberFormatException e){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, e.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Thread Type Details for " + dto.getThreadType() + " created" , dto));
   }
 
   @PutMapping(value = "/updateDetails/{id}")
@@ -125,52 +80,22 @@ public class ThreadTypeDetailsController {
     ThreadTypeDetailsForm form, @PathVariable("id") String id){
     String token = header.replace(BEARER, "");
 
-    try {
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      ThreadTypeDetailsDto dto = threadTypeDetailsService.updateThreadTypeDetails(token, id, form);
+    ThreadTypeDetailsDto dto = threadTypeDetailsService.updateThreadTypeDetails(token, id, form);
 
-      return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Thread Type Details " + dto.getThreadType() + " updated" , dto));
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException | NumberFormatException e){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, e.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Thread Type Details " + dto.getThreadType() + " updated" , dto));
   }
 
   @DeleteMapping(value = "/deleteDetails/{id}")
   public ResponseEntity<?> updateBrand(@RequestHeader("Authorization") String header, @PathVariable("id") String id){
     String token = header.replace(BEARER, "");
 
-    try {
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      threadTypeDetailsService.deleteThreadTypeDetails(token,id);
+    threadTypeDetailsService.deleteThreadTypeDetails(token,id);
 
-      return ResponseEntity.ok(new ApiResponse("Thread Type Details Deleted", HttpStatus.OK));
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException ve){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
+    return ResponseEntity.ok(new ApiResponse("Thread Type Details Deleted", HttpStatus.OK));
   }
 
   private void validateTokenValidity(String token){

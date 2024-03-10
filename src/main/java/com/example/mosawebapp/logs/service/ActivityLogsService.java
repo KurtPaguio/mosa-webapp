@@ -8,6 +8,9 @@ import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.logs.domain.ActivityLogs;
 import com.example.mosawebapp.logs.domain.ActivityLogsRepository;
+import com.example.mosawebapp.product.brand.domain.Brand;
+import com.example.mosawebapp.product.threadtype.domain.ThreadType;
+import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.scheduling.domain.Schedule;
 import com.example.mosawebapp.security.JwtGenerator;
 import java.util.Date;
@@ -137,5 +140,31 @@ public class ActivityLogsService {
     if(!adminAccount.getUserRole().equals(UserRole.ADMINISTRATOR)){
       throw new ValidationException("Only Administrators have access to this feature");
     }
+  }
+
+  public void brandActivity(Account account, Brand brand, String action){
+    String actor = account.getFullName();
+    String message = actor + " just " + action + " the brand " + brand.getName() +
+        " in Mosa Tire Supply";
+
+    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    activityLogsRepository.save(log);
+  }
+
+  public void threadTypeActivity(Account account, ThreadType type, String action){
+    String actor = account.getFullName();
+    String message = actor + " just " + action + " the Thread Type " + type.getType() +
+        " with brand " + type.getBrand().getName() + " in Mosa Tire Supply";
+
+    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    activityLogsRepository.save(log);
+  }
+
+  public void threadTypeDetailsActivity(Account account, ThreadTypeDetails details, String action){
+    String actor = account.getFullName();
+    String message = actor + " just " + action + " a Thread Type details for " + details.getThreadType().getType() + " in Mosa Tire Supply";
+
+    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    activityLogsRepository.save(log);
   }
 }

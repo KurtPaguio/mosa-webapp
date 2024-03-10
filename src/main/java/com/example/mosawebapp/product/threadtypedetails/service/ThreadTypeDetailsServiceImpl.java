@@ -5,6 +5,7 @@ import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
+import com.example.mosawebapp.logs.service.ActivityLogsService;
 import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.product.brand.domain.BrandRepository;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
@@ -17,7 +18,6 @@ import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.validate.Validate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,6 +25,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
   private static final String TYPE_DETAILS_NOT_EXIST = "Thread Type Detai;s does not exists";
+  private static final String ADDED = "Added";
+  private static final String UPDATED = "Updated";
+  private static final String DELETED = "Deleted";
   @Value("${mosatiresupply.official.email}")
   private String MOSA_TIRE_SUPPLY_EMAIL;
   @Value("${default.blank.image.cdn}")
@@ -35,18 +38,21 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
   private final AccountRepository accountRepository;
   private final JwtGenerator jwtGenerator;
   private final MailService mailService;
+  private final ActivityLogsService activityLogsService;
+
 
   @Autowired
   public ThreadTypeDetailsServiceImpl(BrandRepository brandRepository,
       ThreadTypeRepository threadTypeRepository,
       ThreadTypeDetailsRepository threadTypeDetailsRepository, AccountRepository accountRepository,
-      JwtGenerator jwtGenerator, MailService mailService) {
+      JwtGenerator jwtGenerator, MailService mailService, ActivityLogsService activityLogsService) {
     this.brandRepository = brandRepository;
     this.threadTypeRepository = threadTypeRepository;
     this.threadTypeDetailsRepository = threadTypeDetailsRepository;
     this.accountRepository = accountRepository;
     this.jwtGenerator = jwtGenerator;
     this.mailService = mailService;
+    this.activityLogsService = activityLogsService;
   }
 
   @Override
@@ -95,9 +101,9 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
 
     ThreadTypeDetails details = new ThreadTypeDetails(form.getWidth(), form.getAspectRatio(), form.getDiameter(), form.getPrice(), form.getStocks(), threadType);
 
-    mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, "Added");
+    mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, ADDED);
     threadTypeDetailsRepository.save(details);
-
+    activityLogsService.threadTypeDetailsActivity(account, details, ADDED);
 
     return new ThreadTypeDetailsDto(threadType, details);
   }
@@ -126,8 +132,9 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
       details.setStocks(form.getStocks());
     }
 
-    mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, "Updated");
+    mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, UPDATED);
     threadTypeDetailsRepository.save(details);
+    activityLogsService.threadTypeDetailsActivity(account, details, UPDATED);
 
     return new ThreadTypeDetailsDto(threadType, details);
   }
@@ -139,8 +146,9 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
 
     ThreadTypeDetails details = threadTypeDetailsRepository.findById(id).orElseThrow(() -> new NotFoundException("Thread Type Details does not exists"));
 
-    mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, "Deleted");
+    mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, DELETED);
     threadTypeDetailsRepository.delete(details);
+    activityLogsService.threadTypeDetailsActivity(account, details, DELETED);
   }
 
   private void validateForm(ThreadTypeDetailsForm form){

@@ -12,14 +12,18 @@ import org.springframework.http.ResponseEntity;
 public interface AccountService {
   List<Account> findAllAccounts(String token);
   Account findOne(String id, String token);
+
+  Account findAccountByChangePasswordToken(String token);
+
+  Account findAccount(String id);
+
   Account createAccount(AccountForm form, String token);
   Account updateAccount(String id, String token, String action, AccountUpdateForm form);
   void deleteAccount(String id, String token, String action);
   ResponseEntity<AuthResponseDto> login(LoginForm form);
   boolean isOtpCorrect(String accId, String otp, String action);
   Account validateEmailForChangePassword(String email);
-  void changePassword(String accId, ChangePasswordForm form, boolean withOldPassword);
-  String resetOtp(String id, String action);
-
+  void changePassword(String accId, ChangePasswordForm form, boolean isReset);
+  String resetOtp(String id, boolean isRegister);
   void validateIfAccountIsAdmin(String token);
 }

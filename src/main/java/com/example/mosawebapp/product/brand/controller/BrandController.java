@@ -49,51 +49,20 @@ public class BrandController {
 
   @GetMapping(value = "/getAllBrands")
   public ResponseEntity<?> getAllBrands(@RequestHeader("Authorization") String header){
-    String token = header.replace(BEARER, "");
+      String token = header.replace(BEARER, "");
 
-    try{
       validateTokenValidity(token);
 
-
       return ResponseEntity.ok(brandService.findAllBrands());
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException ve){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
   }
 
 @GetMapping(value = "/getBrand/{id}")
   public ResponseEntity<?> getBrand(@RequestHeader("Authorization") String header, @PathVariable("id") String id){
-  String token = header.replace(BEARER, "");
+    String token = header.replace(BEARER, "");
 
-  try {
     validateTokenValidity(token);
 
     return ResponseEntity.ok(brandService.findBrand(id));
-  } catch(SecurityException se){
-    return new ResponseEntity<>(new ApiErrorResponse(
-        DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-        HttpStatus.INTERNAL_SERVER_ERROR);
-  } catch(NotFoundException | NullPointerException ne){
-    return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-        HttpStatus.BAD_REQUEST);
-  } catch(TokenException te){
-    return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-        HttpStatus.UNAUTHORIZED);
-  } catch(ValidationException ve){
-    return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
-        HttpStatus.BAD_REQUEST);
-  }
 }
 
   @PostMapping(value = "/addBrand")
@@ -101,26 +70,11 @@ public class BrandController {
       BrandForm form){
     String token = header.replace(BEARER, "");
 
-    try {
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      BrandDto dto = BrandDto.buildFromEntity(brandService.addBrand(token,form));
+    BrandDto dto = BrandDto.buildFromEntity(brandService.addBrand(token,form));
 
-      return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Brand " + dto.getName() + " created" , dto));
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException ve){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Brand " + dto.getName() + " created" , dto));
   }
 
   @PutMapping(value = "/updateBrand/{id}")
@@ -128,52 +82,22 @@ public class BrandController {
   BrandForm form, @PathVariable("id") String id){
     String token = header.replace(BEARER, "");
 
-    try {
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      BrandDto dto = BrandDto.buildFromEntity(brandService.updateBrand(token,id,form));
+    BrandDto dto = BrandDto.buildFromEntity(brandService.updateBrand(token,id,form));
 
-      return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Brand " + dto.getName() + " updated" , dto));
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException ve){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Brand " + dto.getName() + " updated" , dto));
   }
 
   @DeleteMapping(value = "/deleteBrand/{id}")
   public ResponseEntity<?> updateBrand(@RequestHeader("Authorization") String header, @PathVariable("id") String id){
     String token = header.replace(BEARER, "");
 
-    try {
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      brandService.deleteBrand(token,id);
+    brandService.deleteBrand(token,id);
 
-      return ResponseEntity.ok(new ApiResponse("Brand Deleted", HttpStatus.OK));
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"404", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException ve){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
+    return ResponseEntity.ok(new ApiResponse("Brand Deleted", HttpStatus.OK));
   }
 
   private void validateTokenValidity(String token){

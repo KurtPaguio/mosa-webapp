@@ -1,4 +1,5 @@
-FROM openjdk:17-jdk-alpine
-ARG JAR_FILE=target/*.jar
-COPY target/mosa-webapp.jar app.jar
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+FROM openjdk:17
+VOLUME /tmp
+EXPOSE 8080
+COPY target/mosa-webapp.jar mosa-webapp.jar
+ENTRYPOINT ["java", "-jar", "/mosa-webapp.jar"]

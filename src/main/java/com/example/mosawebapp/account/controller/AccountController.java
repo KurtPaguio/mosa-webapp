@@ -37,6 +37,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 @RestController
 @RequestMapping("/api/account")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
 public class AccountController {
   private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
   @Value("${reset.password.page}")
@@ -60,7 +61,6 @@ public class AccountController {
     this.jwtGenerator = jwtGenerator;
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/getAccounts")
   public ResponseEntity<?> getAccounts(@RequestHeader("Authorization") String header){
     logger.info("getting all accounts");
@@ -71,7 +71,6 @@ public class AccountController {
     return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllAccounts(token)));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/getStaffAccounts")
   public ResponseEntity<?> getStaffAccounts(@RequestHeader("Authorization") String header){
     logger.info("getting all staff accounts");
@@ -82,7 +81,6 @@ public class AccountController {
     return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllStaffAccounts(token)));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/getCustomerAccounts")
   public ResponseEntity<?> getCustomerAccounts(@RequestHeader("Authorization") String header){
     logger.info("getting all customer accounts");
@@ -93,7 +91,6 @@ public class AccountController {
     return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllCustomerAccounts(token)));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/getAccount/{accId}")
   public ResponseEntity<?> getAccount(@PathVariable("accId") String id, @RequestHeader("Authorization") String header){
     logger.info("getting account with id {}", id);
@@ -107,7 +104,6 @@ public class AccountController {
     return ResponseEntity.ok(dto);
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/logout")
   public ResponseEntity<?> logout(@RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");
@@ -126,7 +122,6 @@ public class AccountController {
     return new ResponseEntity<>(new ApiResponse("Logged out successfully", HttpStatus.OK), HttpStatus.OK);
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/currentUser")
   public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");
@@ -139,7 +134,6 @@ public class AccountController {
     return ResponseEntity.ok(AccountDto.buildFromEntity(account));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/addAccount")
   public ResponseEntity<?> createAccount(@RequestBody AccountForm form, @RequestHeader("Authorization") String header){
     logger.info("creating account with form {}", form);
@@ -153,7 +147,6 @@ public class AccountController {
     return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Account created for " + dto.getEmail(), dto));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/register")
   public ResponseEntity<?> register(@RequestBody AccountForm form){
     logger.info("creating account for customer with form {}", form);
@@ -166,7 +159,6 @@ public class AccountController {
     return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Account registered for " + dto.getEmail(), dto));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/registerOtp/{accId}")
   public ResponseEntity<?> registerOtp(@PathVariable("accId") String id, @RequestBody OtpForm form){
     Account account = registrationService.isRegisterOtpValid(id, form.getOtp());
@@ -179,7 +171,6 @@ public class AccountController {
     return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Account created for " + dto.getEmail(), dto));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/login")
   public ResponseEntity<?> login(@RequestBody LoginForm loginForm){
     logger.info("user {} attempting to login", loginForm.getEmail());
@@ -187,7 +178,6 @@ public class AccountController {
     return accountService.login(loginForm);
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/loginOtp/{accId}")
   public ResponseEntity<?> loginOTP(@PathVariable("accId") String id, @RequestBody OtpForm form){
     logger.info("validating login otp for account {}", id);
@@ -198,7 +188,6 @@ public class AccountController {
     return ResponseEntity.ok(new ApiResponse(String.valueOf(isValid), HttpStatus.OK));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/forgotPassword")
   public ResponseEntity<?> validateEmailForChangePassword(@RequestBody EmailForm form){
     logger.info("validating email {} for password reset", form.getEmail());
@@ -207,7 +196,6 @@ public class AccountController {
     return ResponseEntity.ok(AccountDto.buildFromEntity(account));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @GetMapping(value="/resetOtp")
   public ResponseEntity<?> resetOtp(@RequestBody ResetOtpForm form){
     String action = form.isRegister() ? " for registration" : " for change password";
@@ -218,7 +206,6 @@ public class AccountController {
     return ResponseEntity.ok(new ApiResponse("New OTP sent to " + email + action, HttpStatus.OK));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value="/changePassword")
   public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String header, @RequestBody ChangePasswordForm form){
     String token = header.replace(BEARER, "");
@@ -235,7 +222,6 @@ public class AccountController {
     return ResponseEntity.ok(new ApiResponse("Password successfully changed", HttpStatus.OK));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
   @PostMapping(value="/resetPasswordOtp/{accId}")
   public ResponseEntity<?> resetPasswordOtp(@PathVariable("accId") String id, @RequestBody OtpForm form){
     logger.info("validating login otp for account {}", id);
@@ -253,7 +239,6 @@ public class AccountController {
   }
 
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PostMapping(value= "/resetPassword/{resetToken}")
   public ResponseEntity<?> resetPassword(@PathVariable("resetToken") String resetToken, @RequestBody ChangePasswordForm form){
     Account account = accountService.findAccountByChangePasswordToken(resetToken);
@@ -265,7 +250,6 @@ public class AccountController {
     return ResponseEntity.ok(new ApiResponse("Password successfully changed", HttpStatus.OK));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PutMapping(value="/updateAccount/{accId}")
   public ResponseEntity<?> updateAccount(@PathVariable("accId") String id, @RequestBody AccountUpdateForm form, @RequestHeader("Authorization") String header){
     logger.info("updating account with form {}", form);
@@ -279,7 +263,6 @@ public class AccountController {
     return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Account updated for " + dto.getEmail(), dto));
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @PutMapping(value="/updateMyAccount")
   public ResponseEntity<?> updateMyAccount(@RequestBody AccountUpdateForm form, @RequestHeader("Authorization") String header){
     logger.info("updating account with form {}", form);
@@ -294,7 +277,6 @@ public class AccountController {
     return ResponseEntity.ok(dto);
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @DeleteMapping(value="/deleteAccount/{accId}")
   public ResponseEntity<?> deleteAccount(@PathVariable("accId") String id, @RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");
@@ -307,7 +289,6 @@ public class AccountController {
     return new ResponseEntity<>(new ApiResponse("Account Deleted Successfully", HttpStatus.OK), HttpStatus.OK);
   }
 
-  @CrossOrigin(origins = {"http://localhost:5173/", "http://localhost:8080"})
   @DeleteMapping(value="/deleteMyAccount")
   public ResponseEntity<?> deleteMyAccount(@RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");

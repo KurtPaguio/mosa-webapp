@@ -1,27 +1,28 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  app:
-    image: 'docker-spring-boot-postgres:latest'
-    build:
-      context: .
-    container_name: app
-    depends_on:
-      - db
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=kurtp2000
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/mosa-webapp
-
-    ports:
-      - "8001:8080"
-
-  db:
+  psql-db:
     image: postgres
-    container_name: db
+    container_name: psql-db
+    restart: always
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=kurtp2000
       - POSTGRES_DB=mosa-webapp
     ports:
-      - "5432:5432"
+      - '5432:5432'
+
+  recipe:
+    container_name: mosa-webapp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8081:8080'
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://psql-db:5432/mosa-webapp
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=kurtp2000
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - psql-db

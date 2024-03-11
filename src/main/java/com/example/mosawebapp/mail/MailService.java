@@ -105,7 +105,7 @@ public class MailService {
     simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Change Password OTP");
     simpleMailMessage.setText("We've received a notification of your password reset attempt in Mosa Tire Supply. "
         + "If it's not you who requested it, please ignore this message."
-        + "\n\nHere's the link for reset password: " + url + "?resetToken=" + token
+        + "\n\nHere's the link for reset password: " + url + token
     );
     simpleMailMessage.setTo(mail);
 

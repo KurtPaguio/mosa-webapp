@@ -11,26 +11,29 @@ public class BrandDto {
   private String id;
   private String dateCreated;
   private String name;
+  private String imageUrl;
   private List<ThreadTypeDtoV2> threadType;
 
   public BrandDto(){}
 
-  public BrandDto(String id, String dateCreated, String name) {
+  public BrandDto(String id, String dateCreated, String name, String imageUrl) {
     this.id = id;
     this.dateCreated = dateCreated;
     this.name = name;
+    this.imageUrl = imageUrl;
   }
 
   public BrandDto(Brand brand, List<ThreadTypeDtoV2> threadType){
     this.id = brand.getId();
     this.dateCreated = DateTimeFormatter.get_MMDDYYY_Format(brand.getDateCreated());
     this.name = brand.getName();
+    this.imageUrl = brand.getImageUrl();
     this.threadType = threadType;
   }
 
 
   public static BrandDto buildFromEntity(Brand brand){
-    return new BrandDto(brand.getId(), DateTimeFormatter.get_MMDDYYY_Format(brand.getDateCreated()), brand.getName());
+    return new BrandDto(brand.getId(), DateTimeFormatter.get_MMDDYYY_Format(brand.getDateCreated()), brand.getName(), brand.getImageUrl());
   }
 
   public static List<BrandDto> buildFromEntities(List<Brand> brandList){
@@ -73,5 +76,13 @@ public class BrandDto {
 
   public void setThreadType(List<ThreadTypeDtoV2> threadType) {
     this.threadType = threadType;
+  }
+
+  public String getImageUrl() {
+    return imageUrl;
+  }
+
+  public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
   }
 }

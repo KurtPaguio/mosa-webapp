@@ -282,7 +282,7 @@ public class AccountServiceImpl implements AccountService{
       throw new ValidationException("Account with email " + email + " does not exist");
     }
 
-    long otp = 100000 + rnd.nextInt(900000);
+    long otp = 100000 + rnd.nextInt(800000);
     account.setChangePasswordOtp(otp);
     accountRepository.save(account);
 
@@ -311,7 +311,7 @@ public class AccountServiceImpl implements AccountService{
   @Override
   @Transactional
   public String resetOtp(String id, boolean isRegister){
-    long otp = rnd.nextInt(900000);
+    long otp = 100000 + rnd.nextInt(800000);
     String email;
 
     if(isRegister){

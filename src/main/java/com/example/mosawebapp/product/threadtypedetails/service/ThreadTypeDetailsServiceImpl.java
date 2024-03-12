@@ -103,7 +103,7 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
       threadType = threadTypeRepository.findById(form.getThreadType()).orElseThrow(() -> new NotFoundException("Thread Type does not exists"));
     }
 
-    ThreadTypeDetails details = new ThreadTypeDetails(form.getWidth(), form.getAspectRatio(), form.getDiameter(), form.getPrice(), form.getStocks(), threadType);
+    ThreadTypeDetails details = new ThreadTypeDetails(form.getWidth(), form.getAspectRatio(), form.getDiameter(), form.getSidewall(), form.getPrice(), form.getStocks(), threadType);
 
     mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, ADDED);
     threadTypeDetailsRepository.save(details);

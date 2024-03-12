@@ -7,13 +7,14 @@ public class ThreadTypeDetailsForm {
   private String width;
   private String aspectRatio;
   private String diameter;
+  private String sidewall;
   private Long price;
   @Nullable
   private Long stocks;
 
   public ThreadTypeDetailsForm(){}
 
-  public ThreadTypeDetailsForm(String threadType, String width, String aspectRatio, String diameter,
+  public ThreadTypeDetailsForm(String threadType, String width, String aspectRatio, String diameter, String sidewall,
       Long price, @Nullable Long stocks) {
     this.threadType = threadType;
     this.width = width;
@@ -53,6 +54,14 @@ public class ThreadTypeDetailsForm {
 
   public void setDiameter(String diameter) {
     this.diameter = diameter;
+  }
+
+  public String getSidewall() {
+    return sidewall;
+  }
+
+  public void setSidewall(String sidewall) {
+    this.sidewall = sidewall;
   }
 
   public Long getPrice() {

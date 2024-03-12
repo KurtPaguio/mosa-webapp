@@ -27,6 +27,8 @@ public class ThreadTypeDetails {
   @Column
   private String diameter;
   @Column
+  private String sidewall;
+  @Column
   private Long price;
   @Column
   private Long stocks;
@@ -36,12 +38,13 @@ public class ThreadTypeDetails {
 
   public ThreadTypeDetails(){}
 
-  public ThreadTypeDetails(String width, String aspectRatio, String diameter, Long price,
+  public ThreadTypeDetails(String width, String aspectRatio, String diameter, String sidewall, Long price,
       Long stocks,
       ThreadType threadType) {
     this.width = width;
     this.aspectRatio = aspectRatio;
     this.diameter = diameter;
+    this.sidewall = sidewall;
     this.price = price;
     this.stocks = stocks;
     this.threadType = threadType;
@@ -85,6 +88,14 @@ public class ThreadTypeDetails {
 
   public void setDiameter(String diameter) {
     this.diameter = diameter;
+  }
+
+  public String getSidewall() {
+    return sidewall;
+  }
+
+  public void setSidewall(String sidewall) {
+    this.sidewall = sidewall;
   }
 
   public Long getPrice() {

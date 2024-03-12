@@ -22,18 +22,20 @@ public class ThreadTypeDetailsDto {
   private String width;
   private String aspectRatio;
   private String diameter;
+  private String sidewall;
   private Long price;
   private Long stocks;
 
   public ThreadTypeDetailsDto(){}
 
   public ThreadTypeDetailsDto(String id, String dateCreated, String width, String aspectRatio,
-      String diameter, Long price, Long stocks) {
+      String diameter, String sidewall, Long price, Long stocks) {
     this.id = id;
     this.dateCreated = dateCreated;
     this.width = width;
     this.aspectRatio = aspectRatio;
     this.diameter = diameter;
+    this.sidewall = sidewall;
     this.price = price;
     this.stocks = stocks;
   }
@@ -45,13 +47,14 @@ public class ThreadTypeDetailsDto {
     this.width = details.getWidth();
     this.aspectRatio = details.getAspectRatio();
     this.diameter = details.getDiameter();
+    this.sidewall = details.getSidewall();
     this.price = details.getPrice();
     this.stocks = details.getStocks();
   }
 
   public static ThreadTypeDetailsDto buildFromEntity(ThreadTypeDetails details){
     return new ThreadTypeDetailsDto(details.getId(), DateTimeFormatter.get_MMDDYYY_Format(details.getDateCreated()), details.getWidth(), details.getAspectRatio(),
-        details.getDiameter(), details.getPrice(), details.getStocks());
+        details.getDiameter(), details.getSidewall(), details.getPrice(), details.getStocks());
   }
 
   public static List<ThreadTypeDetailsDto> buildFromEntities(List<ThreadTypeDetails> details) {
@@ -111,6 +114,14 @@ public class ThreadTypeDetailsDto {
 
   public void setDiameter(String diameter) {
     this.diameter = diameter;
+  }
+
+  public String getSidewall() {
+    return sidewall;
+  }
+
+  public void setSidewall(String sidewall) {
+    this.sidewall = sidewall;
   }
 
   public Long getPrice() {

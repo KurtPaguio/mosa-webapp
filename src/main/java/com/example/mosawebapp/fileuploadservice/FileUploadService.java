@@ -5,13 +5,17 @@ import com.example.mosawebapp.product.brand.domain.Brand;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
+import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import javax.swing.text.DateFormatter;
+import org.apache.poi.ss.format.CellFormatType;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -73,7 +77,7 @@ public class FileUploadService {
 
   public List<ThreadTypeDetails> getThreadTypeDetailsFromFile(InputStream inputStream){
     List<ThreadTypeDetails> detailsList = new ArrayList<>();
-
+    DateFormatter formatter = new DateFormatter();
     XSSFWorkbook workbook = null;
 
     try{
@@ -96,11 +100,12 @@ public class FileUploadService {
 
           switch(cellIndex){
             case 0 -> details.setThreadType(validateThreadType(cell.getStringCellValue()));
-            case 1 -> details.setWidth(cell.getStringCellValue());
-            case 2 -> details.setAspectRatio(cell.getStringCellValue());
-            case 3 -> details.setDiameter(cell.getStringCellValue());
-            case 4 -> details.setPrice((long) cell.getNumericCellValue());
-            case 5 -> details.setStocks((long) cell.getNumericCellValue());
+            case 1 -> details.setWidth(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
+            case 2 -> details.setAspectRatio(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
+            case 3 -> details.setDiameter(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
+            case 4 -> details.setSidewall(cell.getStringCellValue());
+            case 5 -> details.setPrice((long) cell.getNumericCellValue());
+            case 6 -> details.setStocks((long) cell.getNumericCellValue());
             default -> {}
           }
           cellIndex++;
@@ -115,13 +120,18 @@ public class FileUploadService {
     return detailsList;
   }
 
-  public ThreadType validateThreadType(String type){
+  public ThreadType validateThreadType(String type) {
     ThreadType threadType = threadTypeRepository.findByTypeIgnoreCase(type);
 
-    if(threadType == null){
-      threadType = threadTypeRepository.findById(type).orElseThrow(() -> new NotFoundException("Thread Type does not exists"));
+    if (threadType == null) {
+      threadType = threadTypeRepository.findById(type)
+          .orElseThrow(() -> new NotFoundException("Thread Type does not exists"));
     }
 
     return threadType;
+  }
+
+  public boolean isCellNumeric(Cell cell){
+    return cell.getCellTypeEnum() == CellType.NUMERIC;
   }
 }

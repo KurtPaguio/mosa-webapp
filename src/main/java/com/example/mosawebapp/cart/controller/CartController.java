@@ -64,7 +64,7 @@ public class CartController {
   @PostMapping(value = "/addItem")
   public ResponseEntity<?> addItemToCart(@RequestHeader("Authorization") String header, @RequestBody
       CartItemForm form){
-    logger.info("adding item {}", form.getProductId());
+    logger.info("adding item {}", form);
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);

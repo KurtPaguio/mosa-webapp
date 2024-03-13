@@ -1,29 +1,100 @@
 package com.example.mosawebapp.cart.dto;
 
 public class CartItemForm {
-  private String productId;
-  private long quantity;
+  private String brand;
+  private String threadType;
+  private String variant;
+  private String width;
+  private String aspectRatio;
+  private String diameter;
+  private String sidewall;
+  private String plyRating;
+  private Long quantity;
 
   public CartItemForm(){}
 
-  public CartItemForm(String productId, long quantity) {
-    this.productId = productId;
+  public CartItemForm(String brand, String threadType, String variant, String width,
+      String aspectRatio, String diameter, String sidewall, String plyRating, Long quantity) {
+    this.brand = brand;
+    this.threadType = threadType;
+    this.variant = variant;
+    this.width = width;
+    this.aspectRatio = aspectRatio;
+    this.diameter = diameter;
+    this.sidewall = sidewall;
+    this.plyRating = plyRating;
     this.quantity = quantity;
   }
 
-  public String getProductId() {
-    return productId;
+  public String getBrand() {
+    return brand;
   }
 
-  public void setProductId(String productId) {
-    this.productId = productId;
+  public void setBrand(String brand) {
+    this.brand = brand;
   }
 
-  public long getQuantity() {
+  public String getThreadType() {
+    return threadType;
+  }
+
+  public void setThreadType(String threadType) {
+    this.threadType = threadType;
+  }
+
+  public String getVariant() {
+    return variant;
+  }
+
+  public void setVariant(String variant) {
+    this.variant = variant;
+  }
+
+  public String getWidth() {
+    return width;
+  }
+
+  public void setWidth(String width) {
+    this.width = width;
+  }
+
+  public String getAspectRatio() {
+    return aspectRatio;
+  }
+
+  public void setAspectRatio(String aspectRatio) {
+    this.aspectRatio = aspectRatio;
+  }
+
+  public String getDiameter() {
+    return diameter;
+  }
+
+  public void setDiameter(String diameter) {
+    this.diameter = diameter;
+  }
+
+  public String getSidewall() {
+    return sidewall;
+  }
+
+  public void setSidewall(String sidewall) {
+    this.sidewall = sidewall;
+  }
+
+  public String getPlyRating() {
+    return plyRating;
+  }
+
+  public void setPlyRating(String plyRating) {
+    this.plyRating = plyRating;
+  }
+
+  public Long getQuantity() {
     return quantity;
   }
 
-  public void setQuantity(long quantity) {
+  public void setQuantity(Long quantity) {
     this.quantity = quantity;
   }
 }

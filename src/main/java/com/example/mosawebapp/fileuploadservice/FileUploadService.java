@@ -2,34 +2,42 @@ package com.example.mosawebapp.fileuploadservice;
 
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.product.brand.domain.Brand;
+import com.example.mosawebapp.product.brand.domain.BrandRepository;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
-import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.swing.text.DateFormatter;
-import org.apache.poi.ss.format.CellFormatType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FileUploadService {
+  @Value("${default.blank.image.cdn}")
+  private String BLANK_IMAGE;
   @Autowired
   private final ThreadTypeRepository threadTypeRepository;
+  @Autowired
+  private final BrandRepository brandRepository;
 
-  public FileUploadService(ThreadTypeRepository threadTypeRepository) {
+  public FileUploadService(ThreadTypeRepository threadTypeRepository,
+      BrandRepository brandRepository) {
     this.threadTypeRepository = threadTypeRepository;
+    this.brandRepository = brandRepository;
   }
 
   public static boolean isFileValid(MultipartFile file){
@@ -97,15 +105,22 @@ public class FileUploadService {
 
         while(cellIterator.hasNext()){
           Cell cell = cellIterator.next();
+          String brand = null;
 
           switch(cellIndex){
-            case 0 -> details.setThreadType(validateThreadType(cell.getStringCellValue()));
-            case 1 -> details.setWidth(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
-            case 2 -> details.setAspectRatio(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
-            case 3 -> details.setDiameter(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
-            case 4 -> details.setSidewall(cell.getStringCellValue());
-            case 5 -> details.setPrice((long) cell.getNumericCellValue());
-            case 6 -> details.setStocks((long) cell.getNumericCellValue());
+            case 0 -> {
+              brand = validateBrand(cell.getStringCellValue());
+            }
+            case 1 -> {
+              details.setThreadType(validateThreadType(brand, cell.getStringCellValue())); // Brand is still null
+            }
+            case 2 -> details.setWidth(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
+            case 3 -> details.setAspectRatio(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
+            case 4 -> details.setDiameter(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
+            case 5 -> details.setSidewall(cell.getStringCellValue());
+            case 6 -> details.setPlyRating(isCellNumeric(cell) ? "" : cell.getStringCellValue());
+            case 7 -> details.setPrice((long) cell.getNumericCellValue());
+            case 8 -> details.setStocks((long) cell.getNumericCellValue());
             default -> {}
           }
           cellIndex++;
@@ -120,17 +135,35 @@ public class FileUploadService {
     return detailsList;
   }
 
-  public ThreadType validateThreadType(String type) {
+  public ThreadType validateThreadType(String brand, String type) {
     ThreadType threadType = threadTypeRepository.findByTypeIgnoreCase(type);
 
     if (threadType == null) {
-      threadType = threadTypeRepository.findById(type)
-          .orElseThrow(() -> new NotFoundException("Thread Type does not exists"));
+      Brand checkBrand = brandRepository.findByNameIgnoreCase(brand);
+      ThreadType newThreadType = new ThreadType(type, BLANK_IMAGE, "", checkBrand);
+
+      return threadTypeRepository.save(newThreadType);
     }
 
     return threadType;
   }
 
+  public String validateBrand(String brand){
+    Brand checkBrand = brandRepository.findByNameIgnoreCase(brand);
+
+    if(checkBrand == null){
+      brand = Arrays.stream(brand.split("\\s+"))
+          .map(word -> Character.toUpperCase(word.charAt(0)) + word.substring(1))
+          .collect(Collectors.joining(" "));
+
+      Brand newBrand = new Brand(brand, BLANK_IMAGE);
+      brandRepository.save(newBrand);
+
+      return newBrand.getName();
+    }
+
+    return brand;
+  }
   public boolean isCellNumeric(Cell cell){
     return cell.getCellTypeEnum() == CellType.NUMERIC;
   }

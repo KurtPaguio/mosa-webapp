@@ -94,6 +94,7 @@ public class BrandController {
     return ResponseEntity.ok(new ApiResponse("Added " + addCount + " brands successfully", HttpStatus.CREATED));
   }
 
+  @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
   @PutMapping(value = "/updateBrand/{id}")
   public ResponseEntity<?> updateBrand(@RequestHeader("Authorization") String header, @RequestBody
   BrandForm form, @PathVariable("id") String id){

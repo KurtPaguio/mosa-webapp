@@ -9,6 +9,7 @@ import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.product.threadtype.dto.ThreadTypeDto;
 import com.example.mosawebapp.product.threadtype.dto.ThreadTypeForm;
+import com.example.mosawebapp.product.threadtype.dto.ThreadTypeSearch;
 import com.example.mosawebapp.product.threadtype.service.ThreadTypeService;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
@@ -50,26 +51,32 @@ public class ThreadTypeController {
     this.threadTypeService = threadTypeService;
   }
 
-  @GetMapping(value = "/getAllThreadTypes")
-  public ResponseEntity<?> getAllThreadTypes(@RequestHeader("Authorization") String header){
+  @GetMapping(value = "/getAllThreadTypes/{brand}")
+  public ResponseEntity<?> getAllThreadTypes(@RequestHeader("Authorization") String header, @PathVariable("brand") String brand){
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
 
-
-    return ResponseEntity.ok(threadTypeService.findAllThreadTypes());
+    return ResponseEntity.ok(threadTypeService.findAllThreadTypes(brand));
   }
 
   @GetMapping(value = "/getThreadType/{id}")
   public ResponseEntity<?> getBrand(@RequestHeader("Authorization") String header, @PathVariable("id") String id){
     String token = header.replace(BEARER, "");
 
-
     validateTokenValidity(token);
 
     return ResponseEntity.ok(threadTypeService.findThreadType(id));
   }
 
+  @GetMapping(value = "/searchThreadType/{search}")
+  public ResponseEntity<?> searchThreadType(@RequestHeader("Authorization") String header, @PathVariable("search") String search){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return ResponseEntity.ok(threadTypeService.searchThreadType(search));
+  }
   @PostMapping(value = "/addThreadType")
   public ResponseEntity<?> addBrand(@RequestHeader("Authorization") String header, @RequestBody
   List<ThreadTypeForm> forms){

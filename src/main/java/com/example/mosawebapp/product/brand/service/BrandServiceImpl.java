@@ -125,6 +125,7 @@ public class BrandServiceImpl implements BrandService {
 
     Brand brand = brandRepository.findById(id).orElseThrow(() -> new NotFoundException(BRAND_NOT_EXIST));
     brand.setName(form.getBrandName());
+    brand.setImageUrl(form.getImageUrl());
 
     brandRepository.save(brand);
     mailService.sendEmailForBrand(MOSA_TIRE_SUPPLY_EMAIL, brand,UPDATED);

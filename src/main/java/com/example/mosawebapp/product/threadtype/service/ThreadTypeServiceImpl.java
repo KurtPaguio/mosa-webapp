@@ -13,14 +13,17 @@ import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtype.dto.ThreadTypeDto;
 import com.example.mosawebapp.product.threadtype.dto.ThreadTypeForm;
+import com.example.mosawebapp.product.threadtype.dto.ThreadTypeSearch;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetailsRepository;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.validate.Validate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -68,8 +71,15 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
   }
 
   @Override
-  public List<ThreadTypeDto> findAllThreadTypes() {
-    List<ThreadType> types = threadTypeRepository.findAll();
+  public List<ThreadTypeDto> findAllThreadTypes(String brand) {
+    List<ThreadType> types;
+
+    if(brand.isEmpty() || brand.equalsIgnoreCase("\"\"")){
+      types = threadTypeRepository.findAll();
+    } else{
+      Brand filterBrand = brandRepository.findByNameIgnoreCase(brand);
+      types = threadTypeRepository.findByBrand(filterBrand);
+    }
 
     List<ThreadTypeDto> dtos = new ArrayList<>();
     for(ThreadType type: types){
@@ -98,6 +108,10 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
         form.setImageUrl(BLANK_IMAGE);
       }
 
+      if(form.getDescription().isEmpty() || form.getDescription() == null){
+        form.setDescription("No description for this item yet");
+      }
+
       Brand brand = brandRepository.findByNameIgnoreCase(form.getBrand());
 
       if(brand == null){
@@ -122,6 +136,10 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
       form.setImageUrl(BLANK_IMAGE);
     }
 
+    if(form.getDescription().isEmpty() || form.getDescription() == null){
+      form.setDescription("No description for this item yet");
+    }
+
     ThreadType threadType = threadTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("Thread type does not exists"));
     Brand brand = brandRepository.findByNameIgnoreCase(form.getBrand());
 
@@ -139,6 +157,27 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
     activityLogsService.threadTypeActivity(account, List.of(threadType), UPDATED);
 
     return new ThreadTypeDto(threadType);
+  }
+
+  @Override
+  public List<ThreadTypeDto> searchThreadType(String search) {
+    Specification<ThreadType> specs = ThreadTypeSpecs.searchThreadType(search);
+    List<ThreadType> threadTypes = threadTypeRepository.findAll(specs);
+    List<ThreadTypeDto> dtos = new ArrayList<>();
+
+    for(ThreadType type: threadTypes){
+      List<ThreadTypeDetails> details = threadTypeDetailsRepository.findByThreadType(type);
+
+      if(details.isEmpty()){
+        dtos.add(new ThreadTypeDto(type));
+      } else {
+        dtos.add(new ThreadTypeDto(type, details));
+      }
+    }
+
+    dtos.sort(Comparator.comparing(ThreadTypeDto::getDateCreated).reversed());
+
+    return dtos;
   }
 
   @Override

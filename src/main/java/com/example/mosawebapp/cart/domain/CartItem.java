@@ -1,6 +1,7 @@
 package com.example.mosawebapp.cart.domain;
 
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
+import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import java.util.Date;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -28,13 +29,17 @@ public class CartItem {
   @ManyToOne
   @JoinColumn(name = "thread_type_id")
   private ThreadType type;
+  @ManyToOne
+  @JoinColumn(name = "details_id")
+  private ThreadTypeDetails details;
   @Column
   private Long quantity;
   public CartItem(){}
 
-  public CartItem(Cart cart, ThreadType type, Long quantity) {
+  public CartItem(Cart cart, ThreadType type, ThreadTypeDetails details, Long quantity) {
     this.cart = cart;
     this.type = type;
+    this.details = details;
     this.quantity = quantity;
   }
 
@@ -69,6 +74,15 @@ public class CartItem {
   public void setType(ThreadType type) {
     this.type = type;
   }
+
+  public ThreadTypeDetails getDetails() {
+    return details;
+  }
+
+  public void setDetails(ThreadTypeDetails details) {
+    this.details = details;
+  }
+
   public Long getQuantity() {
     return quantity;
   }

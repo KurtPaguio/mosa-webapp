@@ -29,6 +29,8 @@ public class ThreadTypeDetails {
   @Column
   private String sidewall;
   @Column
+  private String plyRating;
+  @Column
   private Long price;
   @Column
   private Long stocks;
@@ -38,13 +40,13 @@ public class ThreadTypeDetails {
 
   public ThreadTypeDetails(){}
 
-  public ThreadTypeDetails(String width, String aspectRatio, String diameter, String sidewall, Long price,
-      Long stocks,
-      ThreadType threadType) {
+  public ThreadTypeDetails(String width, String aspectRatio, String diameter, String sidewall,
+      String plyRating, Long stocks, Long price, ThreadType threadType) {
     this.width = width;
     this.aspectRatio = aspectRatio;
     this.diameter = diameter;
     this.sidewall = sidewall;
+    this.plyRating = plyRating;
     this.price = price;
     this.stocks = stocks;
     this.threadType = threadType;
@@ -96,6 +98,14 @@ public class ThreadTypeDetails {
 
   public void setSidewall(String sidewall) {
     this.sidewall = sidewall;
+  }
+
+  public String getPlyRating() {
+    return plyRating;
+  }
+
+  public void setPlyRating(String plyRating) {
+    this.plyRating = plyRating;
   }
 
   public Long getPrice() {

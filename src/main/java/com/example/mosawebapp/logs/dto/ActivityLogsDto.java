@@ -10,19 +10,17 @@ public class ActivityLogsDto {
   private String dateCreated;
   private String actor;
   private String activity;
-  private boolean isStaff;
   public ActivityLogsDto(){}
 
-  public ActivityLogsDto(String activityId, String dateCreated, String actor, String activity, boolean isStaff) {
+  public ActivityLogsDto(String activityId, String dateCreated, String actor, String activity) {
     this.activityId = activityId;
     this.dateCreated = dateCreated;
     this.actor = actor;
     this.activity = activity;
-    this.isStaff = isStaff;
   }
 
   public static ActivityLogsDto buildFromEntity(ActivityLogs logs){
-    return new ActivityLogsDto(logs.getId(), DateTimeFormatter.get_MMDDYYY_Format(logs.getDateCreated()), logs.getActor(), logs.getActivity(), logs.isStaff());
+    return new ActivityLogsDto(logs.getId(), DateTimeFormatter.get_MMDDYYY_Format(logs.getDateCreated()), logs.getActor(), logs.getActivity());
   }
 
   public static List<ActivityLogsDto> buildFromEntities(List<ActivityLogs> logs){
@@ -64,13 +62,5 @@ public class ActivityLogsDto {
 
   public void setActivity(String activity) {
     this.activity = activity;
-  }
-
-  public boolean isStaff() {
-    return isStaff;
-  }
-
-  public void setStaff(boolean staff) {
-    isStaff = staff;
   }
 }

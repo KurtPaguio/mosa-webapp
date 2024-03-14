@@ -34,6 +34,7 @@ public class AccountConfig {
         Account account = new Account();
         account.setEmail("ktfpaguio2000@gmail.com");
         account.setPassword(passwordEncoder.encode("kurtp2000"));
+        account.setFullName("John Doe");
         account.setUserRole(UserRole.ADMINISTRATOR);
         account.setRoles(Collections.singletonList(roleRepository.findByName(UserRole.ADMINISTRATOR.name())));
         accountRepository.save(account);

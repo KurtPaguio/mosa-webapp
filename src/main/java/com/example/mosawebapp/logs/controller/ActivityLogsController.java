@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/logs")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
 public class ActivityLogsController {
   private static final Logger logger = LoggerFactory.getLogger(ActivityLogsController.class);
 
@@ -43,24 +45,10 @@ public class ActivityLogsController {
     logger.info("getting all activity logs");
     String token = header.replace("Bearer ", "");
 
-    try{
-      validateTokenValidity(token);
+    validateTokenValidity(token);
 
-      return ResponseEntity.ok(ActivityLogsDto.buildFromEntities(activityLogsService.getAllLogs(token)));
-    } catch(SecurityException se){
-      return new ResponseEntity<>(new ApiErrorResponse(
-          DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch(NotFoundException | NullPointerException ne){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.NOT_FOUND, ne.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    } catch(TokenException te){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"401", HttpStatus.UNAUTHORIZED, te.getMessage()),
-          HttpStatus.UNAUTHORIZED);
-    } catch(ValidationException ve){
-      return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"400", HttpStatus.BAD_REQUEST, ve.getMessage()),
-          HttpStatus.BAD_REQUEST);
-    }
+    return ResponseEntity.ok(ActivityLogsDto.buildFromEntities(activityLogsService.getAllLogs(token)));
+
   }
 
   private void validateTokenValidity(String token){

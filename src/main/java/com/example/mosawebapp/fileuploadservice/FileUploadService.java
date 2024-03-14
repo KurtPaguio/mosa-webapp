@@ -103,17 +103,13 @@ public class FileUploadService {
         int cellIndex = 0;
         ThreadTypeDetails details = new ThreadTypeDetails();
 
+        String brand = null;
         while(cellIterator.hasNext()){
           Cell cell = cellIterator.next();
-          String brand = null;
 
           switch(cellIndex){
-            case 0 -> {
-              brand = validateBrand(cell.getStringCellValue());
-            }
-            case 1 -> {
-              details.setThreadType(validateThreadType(brand, cell.getStringCellValue())); // Brand is still null
-            }
+            case 0 -> brand = validateBrand(cell.getStringCellValue());
+            case 1 -> details.setThreadType(validateThreadType(brand, cell.getStringCellValue()));
             case 2 -> details.setWidth(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
             case 3 -> details.setAspectRatio(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
             case 4 -> details.setDiameter(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());

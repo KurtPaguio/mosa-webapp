@@ -156,7 +156,9 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
     threadTypeRepository.save(threadType);
     activityLogsService.threadTypeActivity(account, List.of(threadType), UPDATED);
 
-    return new ThreadTypeDto(threadType);
+    List<ThreadTypeDetails> details = threadTypeDetailsRepository.findByThreadType(threadType);
+
+    return new ThreadTypeDto(threadType, details);
   }
 
   @Override
@@ -187,9 +189,10 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
 
     ThreadType threadType = threadTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("Thread type does not exists"));
 
+    threadTypeDetailsRepository.deleteByThreadType(threadType.getId());
     mailService.sendEmailForThreadType(MOSA_TIRE_SUPPLY_EMAIL, threadType.getBrand(),threadType, DELETED);
-    threadTypeRepository.delete(threadType);
     activityLogsService.threadTypeActivity(account, List.of(threadType), DELETED);
+    threadTypeRepository.delete(threadType);
   }
 
   private Account getAccountFromToken(String token){

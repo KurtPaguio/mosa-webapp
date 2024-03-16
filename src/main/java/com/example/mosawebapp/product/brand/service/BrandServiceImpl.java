@@ -16,11 +16,11 @@ import com.example.mosawebapp.product.brand.dto.BrandForm;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtype.dto.ThreadTypeDtoV2;
+import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetailsRepository;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.validate.Validate;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +39,7 @@ public class BrandServiceImpl implements BrandService {
   private String BLANK_IMAGE;
   private final BrandRepository brandRepository;
   private final ThreadTypeRepository threadTypeRepository;
+  private final ThreadTypeDetailsRepository threadTypeDetailsRepository;
   private final JwtGenerator jwtGenerator;
   private final AccountRepository accountRepository;
   private final MailService mailService;
@@ -46,11 +47,13 @@ public class BrandServiceImpl implements BrandService {
 
   @Autowired
   public BrandServiceImpl(BrandRepository brandRepository,
-      ThreadTypeRepository threadTypeRepository, JwtGenerator jwtGenerator,
+      ThreadTypeRepository threadTypeRepository,
+      ThreadTypeDetailsRepository threadTypeDetailsRepository, JwtGenerator jwtGenerator,
       AccountRepository accountRepository, MailService mailService,
       ActivityLogsService activityLogsService) {
     this.brandRepository = brandRepository;
     this.threadTypeRepository = threadTypeRepository;
+    this.threadTypeDetailsRepository = threadTypeDetailsRepository;
     this.jwtGenerator = jwtGenerator;
     this.accountRepository = accountRepository;
     this.mailService = mailService;
@@ -140,6 +143,12 @@ public class BrandServiceImpl implements BrandService {
     validateIfAccountIsAdmin(account);
 
     Brand brand = brandRepository.findById(id).orElseThrow(() -> new NotFoundException(BRAND_NOT_EXIST));
+    List<ThreadType> threadTypes = threadTypeRepository.findByBrand(brand);
+
+    threadTypeRepository.deleteByBrand(brand.getId());
+    for(ThreadType type: threadTypes){
+      threadTypeDetailsRepository.deleteByThreadType(type.getId());
+    }
 
     mailService.sendEmailForBrand(MOSA_TIRE_SUPPLY_EMAIL, brand, DELETED);
     activityLogsService.brandActivity(account, List.of(brand), DELETED);

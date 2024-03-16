@@ -24,13 +24,13 @@ public class ThreadTypeDetailsDto {
   private String diameter;
   private String sidewall;
   private String plyRating;
-  private Long price;
+  private float price;
   private Long stocks;
 
   public ThreadTypeDetailsDto(){}
 
   public ThreadTypeDetailsDto(String id, String dateCreated, String width, String aspectRatio,
-      String diameter, String sidewall, String plyRating, Long price, Long stocks) {
+      String diameter, String sidewall, String plyRating, float price, Long stocks) {
     this.id = id;
     this.dateCreated = dateCreated;
     this.width = width;
@@ -135,11 +135,11 @@ public class ThreadTypeDetailsDto {
     this.plyRating = plyRating;
   }
 
-  public Long getPrice() {
+  public float getPrice() {
     return price;
   }
 
-  public void setPrice(Long price) {
+  public void setPrice(float price) {
     this.price = price;
   }
 

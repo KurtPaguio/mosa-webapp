@@ -1,6 +1,8 @@
 package com.example.mosawebapp.product.threadtypedetails.domain;
 
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -31,7 +33,7 @@ public class ThreadTypeDetails {
   @Column
   private String plyRating;
   @Column
-  private Long price;
+  private float price;
   @Column
   private Long stocks;
   @ManyToOne
@@ -41,7 +43,7 @@ public class ThreadTypeDetails {
   public ThreadTypeDetails(){}
 
   public ThreadTypeDetails(String width, String aspectRatio, String diameter, String sidewall,
-      String plyRating, Long stocks, Long price, ThreadType threadType) {
+      String plyRating, Long stocks, float price, ThreadType threadType) {
     this.width = width;
     this.aspectRatio = aspectRatio;
     this.diameter = diameter;
@@ -50,6 +52,12 @@ public class ThreadTypeDetails {
     this.price = price;
     this.stocks = stocks;
     this.threadType = threadType;
+  }
+
+  public float roundToNearestHundredths(float price){
+    price = Math.round(price * 100) / 100.0f;
+
+    return price;
   }
 
   public String getId() {
@@ -108,11 +116,11 @@ public class ThreadTypeDetails {
     this.plyRating = plyRating;
   }
 
-  public Long getPrice() {
+  public float getPrice() {
     return price;
   }
 
-  public void setPrice(Long price) {
+  public void setPrice(float price) {
     this.price = price;
   }
 

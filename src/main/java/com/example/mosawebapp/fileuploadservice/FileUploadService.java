@@ -1,5 +1,6 @@
 package com.example.mosawebapp.fileuploadservice;
 
+import com.example.mosawebapp.account.controller.AccountController;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.product.brand.domain.Brand;
 import com.example.mosawebapp.product.brand.domain.BrandRepository;
@@ -8,6 +9,8 @@ import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -18,8 +21,11 @@ import javax.swing.text.DateFormatter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,6 +33,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FileUploadService {
+  private static final Logger logger = LoggerFactory.getLogger(FileUploadService.class);
+
   @Value("${default.blank.image.cdn}")
   private String BLANK_IMAGE;
   @Autowired
@@ -85,50 +93,75 @@ public class FileUploadService {
 
   public List<ThreadTypeDetails> getThreadTypeDetailsFromFile(InputStream inputStream){
     List<ThreadTypeDetails> detailsList = new ArrayList<>();
-    DateFormatter formatter = new DateFormatter();
-    XSSFWorkbook workbook = null;
 
     try{
-      workbook = new XSSFWorkbook(inputStream);
+      XSSFWorkbook workbook = new XSSFWorkbook(inputStream);
       XSSFSheet sheet = workbook.getSheet("Details");
 
       int rowIndex = 0;
+      int totalRows = sheet.getLastRowNum();
       for(Row row: sheet){
         if(rowIndex == 0){
           rowIndex++;
           continue;
         }
 
-        Iterator<Cell> cellIterator = row.iterator();
-        int cellIndex = 0;
         ThreadTypeDetails details = new ThreadTypeDetails();
-
         String brand = null;
-        while(cellIterator.hasNext()){
-          Cell cell = cellIterator.next();
 
-          switch(cellIndex){
-            case 0 -> brand = validateBrand(cell.getStringCellValue());
-            case 1 -> details.setThreadType(validateThreadType(brand, cell.getStringCellValue()));
-            case 2 -> details.setWidth(isCellNumeric(cell) ? String.format("%.0f",cell.getNumericCellValue()) : cell.getStringCellValue());
-            case 3 -> details.setAspectRatio(isCellNumeric(cell) ? String.format("%.0f",cell.getNumericCellValue()) : cell.getStringCellValue());
-            case 4 -> details.setDiameter(isCellNumeric(cell) ? String.format("%.0f",cell.getNumericCellValue()) : cell.getStringCellValue());
-            case 5 -> details.setSidewall(cell.getStringCellValue());
-            case 6 -> details.setPlyRating(isCellNumeric(cell) ? "" : cell.getStringCellValue());
-            case 7 -> details.setPrice((long) cell.getNumericCellValue());
-            case 8 -> details.setStocks((long) cell.getNumericCellValue());
-            default -> {}
-          }
-          cellIndex++;
+        detailsList.add(setThreadTypeDetails(row, brand, details));
+        rowIndex++;
+
+        if(rowIndex >= totalRows){
+          break;
         }
-        detailsList.add(details);
       }
-    } catch (NullPointerException ne){
-      throw new NullPointerException(ne.getMessage());
     } catch (IOException e) {
       throw new RuntimeException(e.getMessage());
     }
     return detailsList;
+  }
+
+  public ThreadTypeDetails setThreadTypeDetails(Row row, String brand, ThreadTypeDetails details){
+    for(int cellIndex = 0; cellIndex < row.getLastCellNum(); cellIndex++){
+      Cell cell = row.getCell(cellIndex, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+      switch(cellIndex){
+        case 0 -> brand = validateBrand(cell.getStringCellValue());
+        case 1 -> details.setThreadType(validateThreadType(brand, cell.getStringCellValue()));
+        case 2 -> details.setWidth(isCellNumeric(cell) ? String.format("%.0f",cell.getNumericCellValue()) : cell.getStringCellValue());
+        case 3 -> details.setAspectRatio(isCellNumeric(cell) ? String.format("%.0f",cell.getNumericCellValue()) : cell.getStringCellValue());
+        case 4 -> details.setDiameter(isCellNumeric(cell) ? String.format("%.0f",cell.getNumericCellValue()) : cell.getStringCellValue());
+        case 5 -> details.setSidewall(cell.getStringCellValue());
+        case 6 -> details.setPlyRating(cell.getStringCellValue());
+        case 7 -> details.setPrice(validatePrice(cell));
+        case 8 -> details.setStocks(validateStock(cell));
+        default -> {}
+      }
+    }
+
+    return details;
+  }
+  public float validatePrice(Cell cell){
+    if(cell.getCellTypeEnum() == CellType.STRING){
+      String value = cell.getStringCellValue().replace(",", "");
+
+      return Float.parseFloat(value);
+    }
+
+    return (float) cell.getNumericCellValue();
+  }
+
+  public Long validateStock(Cell cell){
+    if(cell.getCellTypeEnum() == CellType.STRING){
+      String value = cell.getStringCellValue().replace(",", "");
+
+      logger.info("VALUE {}", value);
+      return Long.parseLong(value);
+    }
+
+    logger.info("CELL {}", cell.getNumericCellValue());
+    return (long) cell.getNumericCellValue();
   }
 
   public ThreadType validateThreadType(String brand, String type) {
@@ -148,10 +181,6 @@ public class FileUploadService {
     Brand checkBrand = brandRepository.findByNameIgnoreCase(brand);
 
     if(checkBrand == null){
-      brand = Arrays.stream(brand.split("\\s+"))
-          .map(word -> Character.toUpperCase(word.charAt(0)) + word.substring(1))
-          .collect(Collectors.joining(" "));
-
       Brand newBrand = new Brand(brand, BLANK_IMAGE);
       brandRepository.save(newBrand);
 

@@ -14,8 +14,8 @@ public class ThreadTypeDto {
   private String dateCreated;
   private String brandName;
   private String type;
-  private Long minPrice;
-  private Long maxPrice;
+  private float minPrice;
+  private float maxPrice;
   private int rating;
   private String imageUrl;
   private String description;
@@ -49,8 +49,8 @@ public class ThreadTypeDto {
     this.id = threadType.getId();
     this.dateCreated = DateTimeFormatter.get_MMDDYYY_Format(threadType.getDateCreated());
     this.type = threadType.getType();
-    this.minPrice = (long) 0;
-    this.maxPrice = (long) 0;
+    this.minPrice = (float) 0;
+    this.maxPrice = (float) 0;
     this.rating = threadType.getRating();
     this.imageUrl = threadType.getImageUrl();
     this.description = threadType.getDescription();
@@ -58,8 +58,8 @@ public class ThreadTypeDto {
     this.brandName = threadType.getBrand().getName();
   }
 
-  private Long getMinimumPrice(List<ThreadTypeDetails> details){
-    long lowestPrice = details.get(0).getPrice();
+  private float getMinimumPrice(List<ThreadTypeDetails> details){
+    float lowestPrice = details.get(0).getPrice();
 
     for(ThreadTypeDetails d: details){
       if(d.getPrice() < lowestPrice){
@@ -70,8 +70,8 @@ public class ThreadTypeDto {
     return lowestPrice;
   }
 
-  private Long getMaximumPrice(List<ThreadTypeDetails> details){
-    long highestPrice = details.get(0).getPrice();
+  private float getMaximumPrice(List<ThreadTypeDetails> details){
+    float highestPrice = details.get(0).getPrice();
 
     for(ThreadTypeDetails d: details){
       if(d.getPrice() > highestPrice){
@@ -131,19 +131,19 @@ public class ThreadTypeDto {
     this.type = type;
   }
 
-  public Long getMinPrice() {
+  public float getMinPrice() {
     return minPrice;
   }
 
-  public void setMinPrice(Long minPrice) {
+  public void setMinPrice(float minPrice) {
     this.minPrice = minPrice;
   }
 
-  public Long getMaxPrice() {
+  public float getMaxPrice() {
     return maxPrice;
   }
 
-  public void setMaxPrice(Long maxPrice) {
+  public void setMaxPrice(float maxPrice) {
     this.maxPrice = maxPrice;
   }
 

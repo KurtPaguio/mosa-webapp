@@ -16,6 +16,7 @@ import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.io.IOException;
 import java.util.Date;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -80,7 +81,7 @@ public class ThreadTypeDetailsController {
     return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Thread Type Details for " + dto.getThreadType() + " created" , dto));
   }
 
-  @PostMapping(value = "/addFileDetails")
+  @PostMapping(value = "/addFileDetails", consumes = {"application/json", "multipart/form-data"})
   public ResponseEntity<?> addThreadTypeDetailsFromFile(@RequestHeader("Authorization") String header, @RequestParam("file") MultipartFile file)
       throws IOException {
     String token = header.replace(BEARER, "");

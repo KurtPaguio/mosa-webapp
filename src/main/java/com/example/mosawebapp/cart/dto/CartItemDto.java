@@ -19,7 +19,7 @@ public class CartItemDto {
   private String threadType;
   private ThreadTypeDetailsDto details;
   private long quantity;
-  private long price;
+  private float price;
 
   public CartItemDto(){}
 
@@ -112,11 +112,11 @@ public class CartItemDto {
     this.quantity = quantity;
   }
 
-  public long getPrice() {
+  public float getPrice() {
     return price;
   }
 
-  public void setPrice(long price) {
+  public void setPrice(float price) {
     this.price = price;
   }
 }

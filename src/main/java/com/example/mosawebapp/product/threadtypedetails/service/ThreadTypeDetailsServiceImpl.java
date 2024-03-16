@@ -20,6 +20,7 @@ import com.example.mosawebapp.validate.Validate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -120,6 +121,13 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
     }
 
     List<ThreadTypeDetails> details = fileUploadService.getThreadTypeDetailsFromFile(file.getInputStream());
+
+    for (ThreadTypeDetails detail : details) {
+      if (threadTypeDetailsRepository.existsByThreadType(detail.getThreadType())) {
+        throw new ValidationException("There are already existing variants with the same Thread Type. Please double check the contents.");
+      }
+    }
+
     this.threadTypeDetailsRepository.saveAll(details);
 
     return details.size();

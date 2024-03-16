@@ -46,6 +46,16 @@ public class CartController {
     this.tokenBlacklistingService = tokenBlacklistingService;
   }
 
+  @GetMapping(value = "/getCheckout")
+  public ResponseEntity<?> getCheckout(@RequestHeader("Authorization") String header){
+    logger.info("getting cart");
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return ResponseEntity.ok(cartService.getCheckouts());
+  }
+
   @GetMapping(value = "/getCart")
   public ResponseEntity<?> getCart(@RequestHeader("Authorization") String header){
     logger.info("getting cart");
@@ -61,6 +71,35 @@ public class CartController {
 
     return ResponseEntity.ok(dto);
   }
+
+  @GetMapping(value = "/subtractItemQuantity/{itemId}")
+  public ResponseEntity<?> subtractItemQuantityInCart(@RequestHeader("Authorization") String header, @PathVariable("itemId") String itemId){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return cartService.subtractCartItemQuantity(token, itemId);
+  }
+
+  @GetMapping(value = "/addItemQuantity/{itemId}")
+  public ResponseEntity<?> addItemQuantityInCart(@RequestHeader("Authorization") String header, @PathVariable("itemId") String itemId){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return cartService.addCartItemQuantity(token, itemId);
+  }
+
+  @GetMapping(value = "/checkout")
+  public ResponseEntity<?> checkoutCart(@RequestHeader("Authorization") String header){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+    cartService.checkout(token);
+
+    return ResponseEntity.ok(new ApiResponse("Cart checkout successfully", HttpStatus.OK));
+  }
+
   @PostMapping(value = "/addItem")
   public ResponseEntity<?> addItemToCart(@RequestHeader("Authorization") String header, @RequestBody
       CartItemForm form){
@@ -69,10 +108,7 @@ public class CartController {
 
     validateTokenValidity(token);
 
-    CartItemDto dto = CartItemDto.buildFromEntity(cartService.addCartItem(token, form));
-
-    //logger.info("item {} - {} added to cart", dto.getProduct().getBrand(), dto.getProduct().getThreadType());
-    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Item added to cart", dto));
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Item added to cart", cartService.addCartItem(token, form)));
   }
 
   @DeleteMapping(value = "/removeItem/{itemId}")
@@ -85,7 +121,7 @@ public class CartController {
     cartService.removeCartItem(token, id);
 
     logger.info("Cart Item removed from the cart");
-    return ResponseEntity.ok(new ApiResponse("Cart Item removed from the cart", HttpStatus.OK));
+    return ResponseEntity.ok(new ApiResponse("Cart item removed from the cart", HttpStatus.OK));
   }
 
   private void validateTokenValidity(String token){

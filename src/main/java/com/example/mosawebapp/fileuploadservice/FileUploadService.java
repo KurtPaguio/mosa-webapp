@@ -110,9 +110,9 @@ public class FileUploadService {
           switch(cellIndex){
             case 0 -> brand = validateBrand(cell.getStringCellValue());
             case 1 -> details.setThreadType(validateThreadType(brand, cell.getStringCellValue()));
-            case 2 -> details.setWidth(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
-            case 3 -> details.setAspectRatio(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
-            case 4 -> details.setDiameter(isCellNumeric(cell) ? String.valueOf(cell.getNumericCellValue()) : cell.getStringCellValue());
+            case 2 -> details.setWidth(isCellNumeric(cell) ? String.format("%.0f",cell.getNumericCellValue()) : cell.getStringCellValue());
+            case 3 -> details.setAspectRatio(isCellNumeric(cell) ? String.format("%.0f",cell.getNumericCellValue()) : cell.getStringCellValue());
+            case 4 -> details.setDiameter(isCellNumeric(cell) ? String.format("%.0f",cell.getNumericCellValue()) : cell.getStringCellValue());
             case 5 -> details.setSidewall(cell.getStringCellValue());
             case 6 -> details.setPlyRating(isCellNumeric(cell) ? "" : cell.getStringCellValue());
             case 7 -> details.setPrice((long) cell.getNumericCellValue());

@@ -5,24 +5,25 @@ import com.example.mosawebapp.account.dto.AccountDto;
 import com.example.mosawebapp.cart.domain.Cart;
 import com.example.mosawebapp.cart.domain.CartItem;
 import com.example.mosawebapp.utils.DateTimeFormatter;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.List;
 
+@JsonInclude(Include.NON_NULL)
 public class CartDto {
   private String cartId;
   private String dateCreated;
   private AccountDto customer;
   private List<CartItemDto> cartItems;
-  private long deliveryFee;
   private long totalPrice;
   private boolean isCartActive;
 
   public CartDto(){}
 
-  public CartDto(String cartId, String dateCreated, Account customer, long deliveryFee, boolean isCartActive) {
+  public CartDto(String cartId, String dateCreated, Account customer, boolean isCartActive) {
     this.cartId = cartId;
     this.dateCreated = dateCreated;
     this.customer = AccountDto.buildFromEntity(customer);
-    this.deliveryFee = deliveryFee;
     this.isCartActive = isCartActive;
   }
 
@@ -30,15 +31,24 @@ public class CartDto {
     this.cartId = cart.getId();
     this.dateCreated = DateTimeFormatter.get_MMDDYYY_Format(cart.getDateCreated());
     this.customer = AccountDto.buildFromEntity(account);
-    this.cartItems = CartItemDto.buildFromEntities(cartItems);
-    this.deliveryFee = cart.getDeliveryFee();
+    this.cartItems = CartItemDto.buildFromEntitiesV2(cartItems);
     this.isCartActive = cart.isActive();
-    this.totalPrice = 0;
+    this.totalPrice = getTotalCartPrice(cartItems);
   }
 
+  public long getTotalCartPrice(List<CartItem> cartItems){
+    List<CartItemDto> dtos = CartItemDto.buildFromEntitiesV2(cartItems);
+    long totalPrice = 0;
+
+    for(CartItemDto item: dtos){
+      totalPrice += item.getPrice();
+    }
+
+    return totalPrice;
+  }
 
   public static CartDto buildFromEntity(Cart cart){
-    return new CartDto(cart.getId(), DateTimeFormatter.get_MMDDYYY_Format(cart.getDateCreated()), cart.getAccount(), cart.getDeliveryFee(), cart.isActive());
+    return new CartDto(cart.getId(), DateTimeFormatter.get_MMDDYYY_Format(cart.getDateCreated()), cart.getAccount(), cart.isActive());
   }
   public String getCartId() {
     return cartId;
@@ -62,14 +72,6 @@ public class CartDto {
 
   public void setCustomer(Account customer) {
     this.customer = AccountDto.buildFromEntity(customer);
-  }
-
-  public long getDeliveryFee() {
-    return deliveryFee;
-  }
-
-  public void setDeliveryFee(long deliveryFee) {
-    this.deliveryFee = deliveryFee;
   }
 
   public boolean isCartActive() {

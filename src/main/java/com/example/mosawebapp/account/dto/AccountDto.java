@@ -3,9 +3,12 @@ package com.example.mosawebapp.account.dto;
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.utils.DateTimeFormatter;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonInclude(Include.NON_NULL)
 public class AccountDto {
   private String id;
   private String dateCreated;

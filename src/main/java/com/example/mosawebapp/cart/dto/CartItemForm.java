@@ -3,7 +3,6 @@ package com.example.mosawebapp.cart.dto;
 public class CartItemForm {
   private String brand;
   private String threadType;
-  private String variant;
   private String width;
   private String aspectRatio;
   private String diameter;
@@ -13,11 +12,10 @@ public class CartItemForm {
 
   public CartItemForm(){}
 
-  public CartItemForm(String brand, String threadType, String variant, String width,
+  public CartItemForm(String brand, String threadType, String width,
       String aspectRatio, String diameter, String sidewall, String plyRating, Long quantity) {
     this.brand = brand;
     this.threadType = threadType;
-    this.variant = variant;
     this.width = width;
     this.aspectRatio = aspectRatio;
     this.diameter = diameter;
@@ -40,14 +38,6 @@ public class CartItemForm {
 
   public void setThreadType(String threadType) {
     this.threadType = threadType;
-  }
-
-  public String getVariant() {
-    return variant;
-  }
-
-  public void setVariant(String variant) {
-    this.variant = variant;
   }
 
   public String getWidth() {

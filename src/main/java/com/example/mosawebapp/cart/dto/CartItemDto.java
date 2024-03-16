@@ -5,15 +5,19 @@ import com.example.mosawebapp.cart.domain.CartItem;
 import com.example.mosawebapp.product.brand.domain.Brand;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtype.dto.ThreadTypeDto;
+import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
+import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class CartItemDto {
   private String itemId;
   private String dateAdded;
   private String brandName;
-  private ThreadTypeDto threadType;
+  private String threadType;
+  private ThreadTypeDetailsDto details;
   private long quantity;
   private long price;
 
@@ -26,6 +30,16 @@ public class CartItemDto {
     this.price = price;
   }
 
+  public CartItemDto(CartItem item, ThreadTypeDetails details){
+    this.itemId = item.getId();
+    this.dateAdded = DateTimeFormatter.get_MMDDYYY_Format(item.getDateCreated());
+    this.brandName = item.getType().getBrand().getName();
+    this.threadType = item.getType().getType();
+    this.details = new ThreadTypeDetailsDto(item.getType(), details);
+    this.quantity = item.getQuantity();
+    this.price = item.getQuantity() * details.getPrice();
+  }
+
   public static CartItemDto buildFromEntity(CartItem item){
     return new CartItemDto(item.getId(), DateTimeFormatter.get_MMDDYYY_Format(item.getDateCreated()), item.getQuantity(), 0);
   }
@@ -35,6 +49,16 @@ public class CartItemDto {
 
     for(CartItem item: items){
       dto.add(buildFromEntity(item));
+    }
+
+    return dto;
+  }
+
+  public static List<CartItemDto> buildFromEntitiesV2(List<CartItem> items){
+    List<CartItemDto> dto = new ArrayList<>();
+
+    for(CartItem item: items){
+      dto.add(new CartItemDto(item, item.getDetails()));
     }
 
     return dto;
@@ -64,12 +88,20 @@ public class CartItemDto {
     this.brandName = brandName;
   }
 
-  public ThreadTypeDto getThreadType() {
+  public String getThreadType() {
     return threadType;
   }
 
-  public void setThreadType(ThreadTypeDto threadType) {
+  public void setThreadType(String threadType) {
     this.threadType = threadType;
+  }
+
+  public ThreadTypeDetailsDto getDetails() {
+    return details;
+  }
+
+  public void setDetails(ThreadTypeDetailsDto details) {
+    this.details = details;
   }
 
   public long getQuantity() {

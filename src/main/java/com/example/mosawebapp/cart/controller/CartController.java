@@ -49,14 +49,14 @@ public class CartController {
     this.tokenBlacklistingService = tokenBlacklistingService;
   }
 
-  @GetMapping(value = "/getCheckout")
-  public ResponseEntity<?> getCheckout(@RequestHeader("Authorization") String header){
-    logger.info("getting cart");
+  @GetMapping(value = "/getCheckouts")
+  public ResponseEntity<?> getCheckouts(@RequestHeader("Authorization") String header){
+    logger.info("getting cart checkouts");
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
 
-    return ResponseEntity.ok(cartService.getCheckouts());
+    return ResponseEntity.ok(cartService.getCheckouts(token));
   }
 
   @GetMapping(value = "/getCart")

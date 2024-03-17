@@ -10,7 +10,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 
 public interface CartService {
-  List<CartCheckoutDto> getCheckouts();
+  List<CartCheckoutDto> getCheckouts(String adminToken);
   CartDto getCart(String token);
   CartItemDto addCartItem(String token, CartItemForm form);
   void removeCartItem(String token, String itemId);

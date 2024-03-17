@@ -7,6 +7,9 @@ import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.SecurityException;
 import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.exceptions.ValidationException;
+import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
+import com.example.mosawebapp.product.threadtypedetails.dto.AddStockForm;
+import com.example.mosawebapp.product.threadtypedetails.dto.DetailsBulkDeleteForm;
 import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsForm;
 import com.example.mosawebapp.product.threadtypedetails.service.ThreadTypeDetailsService;
@@ -92,6 +95,29 @@ public class ThreadTypeDetailsController {
     return ResponseEntity.ok(new ApiResponse("Added " + addCount + " Thread Type Details successfully", HttpStatus.CREATED));
   }
 
+  @PostMapping(value = "/bulkDelete")
+  public ResponseEntity<?> bulkDelete(@RequestHeader("Authorization") String header, @RequestBody
+      DetailsBulkDeleteForm form){
+    String token = header.replace(BEARER, "");
+    validateTokenValidity(token);
+
+    for(String id: form.getIds()){
+      threadTypeDetailsService.deleteThreadTypeDetails(token, id);
+    }
+
+    return ResponseEntity.ok(new ApiResponse("Details deleted successfully", HttpStatus.OK));
+  }
+
+  @PutMapping(value = "/addStock")
+  public ResponseEntity<?> addStock(@RequestHeader("Authorization") String header, @RequestBody
+      AddStockForm form){
+    String token = header.replace(BEARER, "");
+    validateTokenValidity(token);
+
+    threadTypeDetailsService.addStock(token,form);
+
+    return ResponseEntity.ok(new ApiResponse("Stock added to the item", HttpStatus.OK));
+  }
   @PutMapping(value = "/updateDetails/{id}")
   public ResponseEntity<?> updateBrand(@RequestHeader("Authorization") String header, @RequestBody
     ThreadTypeDetailsForm form, @PathVariable("id") String id){

@@ -1,30 +1,35 @@
-package com.example.mosawebapp.product.threadtypedetails.dto;
+package com.example.mosawebapp.kiosk.dto;
 
-import org.springframework.lang.Nullable;
-
-public class ThreadTypeDetailsForm {
+public class KioskOrderForm {
+  private String brand;
   private String threadType;
   private String width;
   private String aspectRatio;
   private String diameter;
   private String sidewall;
   private String plyRating;
-  private float price;
-  @Nullable
-  private Long stocks;
+  private Long quantity;
 
-  public ThreadTypeDetailsForm(){}
+  public KioskOrderForm(){}
 
-  public ThreadTypeDetailsForm(String threadType, String width, String aspectRatio, String diameter,
-      String sidewall, String plyRating, float price, @Nullable Long stocks) {
+  public KioskOrderForm(String brand, String threadType, String width, String aspectRatio,
+      String diameter, String sidewall, String plyRating, Long quantity) {
+    this.brand = brand;
     this.threadType = threadType;
     this.width = width;
     this.aspectRatio = aspectRatio;
     this.diameter = diameter;
     this.sidewall = sidewall;
     this.plyRating = plyRating;
-    this.price = price;
-    this.stocks = stocks;
+    this.quantity = quantity;
+  }
+
+  public String getBrand() {
+    return brand;
+  }
+
+  public void setBrand(String brand) {
+    this.brand = brand;
   }
 
   public String getThreadType() {
@@ -75,20 +80,11 @@ public class ThreadTypeDetailsForm {
     this.plyRating = plyRating;
   }
 
-  public float getPrice() {
-    return price;
+  public Long getQuantity() {
+    return quantity;
   }
 
-  public void setPrice(float price) {
-    this.price = price;
-  }
-
-  @Nullable
-  public Long getStocks() {
-    return stocks;
-  }
-
-  public void setStocks(@Nullable Long stocks) {
-    this.stocks = stocks;
+  public void setQuantity(Long quantity) {
+    this.quantity = quantity;
   }
 }

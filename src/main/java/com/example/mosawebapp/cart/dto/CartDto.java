@@ -15,7 +15,7 @@ public class CartDto {
   private String dateCreated;
   private AccountDto customer;
   private List<CartItemDto> cartItems;
-  private long totalPrice;
+  private float totalPrice;
   private boolean isCartActive;
 
   public CartDto(){}
@@ -36,15 +36,15 @@ public class CartDto {
     this.totalPrice = getTotalCartPrice(cartItems);
   }
 
-  public long getTotalCartPrice(List<CartItem> cartItems){
+  public float getTotalCartPrice(List<CartItem> cartItems){
     List<CartItemDto> dtos = CartItemDto.buildFromEntitiesV2(cartItems);
-    long totalPrice = 0;
+    float price = 0;
 
     for(CartItemDto item: dtos){
-      totalPrice += item.getPrice();
+      price += item.getPrice();
     }
 
-    return totalPrice;
+    return price;
   }
 
   public static CartDto buildFromEntity(Cart cart){
@@ -90,11 +90,11 @@ public class CartDto {
     this.cartItems = cartItems;
   }
 
-  public long getTotalPrice() {
+  public float getTotalPrice() {
     return totalPrice;
   }
 
-  public void setTotalPrice(long totalPrice) {
+  public void setTotalPrice(float totalPrice) {
     this.totalPrice = totalPrice;
   }
 }

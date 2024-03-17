@@ -2,6 +2,7 @@ package com.example.mosawebapp.cart.service;
 
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.AccountRepository;
+import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.apiresponse.ApiObjectResponse;
 import com.example.mosawebapp.apiresponse.ApiResponse;
 import com.example.mosawebapp.cart.domain.Cart;
@@ -61,7 +62,13 @@ public class CartServiceImpl implements CartService{
   }
 
   @Override
-  public List<CartCheckoutDto> getCheckouts(){
+  public List<CartCheckoutDto> getCheckouts(String adminToken){
+    Account account = getAccountFromToken(adminToken);
+
+    if(account.getUserRole() == UserRole.CUSTOMER || account.getUserRole() == UserRole.CONTENT_MANAGER) {
+      throw new ValidationException("Only Administrators, Product, and Order Managers can access this feature");
+    }
+
     List<CartCheckoutDto> dto = new ArrayList<>();
     List<CartCheckout> checkouts = cartCheckoutRepository.findAll();
 
@@ -135,9 +142,6 @@ public class CartServiceImpl implements CartService{
 
     CartItem item = new CartItem(cart, threadType, details, form.getQuantity());
     cartItemRepository.save(item);
-
-    /*details.setStocks(details.getStocks() - form.getQuantity());
-    threadTypeDetailsRepository.save(details);*/
 
     return new CartItemDto(item, details);
   }

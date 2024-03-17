@@ -6,7 +6,7 @@ import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
-import com.example.mosawebapp.fileuploadservice.FileUploadService;
+import com.example.mosawebapp.file_upload_service.FileUploadService;
 import com.example.mosawebapp.logs.service.ActivityLogsService;
 import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.product.brand.domain.Brand;
@@ -17,10 +17,12 @@ import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtype.dto.ThreadTypeDtoV2;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetailsRepository;
+import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.validate.Validate;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,6 +76,7 @@ public class BrandServiceImpl implements BrandService {
       dtos.add(dto);
     }
 
+    dtos.sort(Comparator.comparing(BrandDto::getName).reversed());
     return dtos;
   }
 

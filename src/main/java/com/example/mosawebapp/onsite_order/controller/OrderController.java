@@ -1,16 +1,16 @@
-package com.example.mosawebapp.cart.controller;
+package com.example.mosawebapp.onsite_order.controller;
 
 import com.example.mosawebapp.api_response.ApiObjectResponse;
 import com.example.mosawebapp.api_response.ApiResponse;
-import com.example.mosawebapp.cart.dto.CartDto;
-import com.example.mosawebapp.cart.dto.CartItemForm;
-import com.example.mosawebapp.cart.service.CartService;
 import com.example.mosawebapp.exceptions.TokenException;
+import com.example.mosawebapp.kiosk.controller.KioskController;
+import com.example.mosawebapp.onsite_order.dto.OnsiteOrderDto;
+import com.example.mosawebapp.onsite_order.dto.OrderForm;
+import com.example.mosawebapp.onsite_order.service.OnsiteOrderService;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,99 +23,98 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/cart")
-public class CartController {
-  private static final Logger logger = LoggerFactory.getLogger(CartController.class);
+@RequestMapping("/api/onsiteOrder")
+public class OrderController {
+  private static final Logger logger = LoggerFactory.getLogger(KioskController.class);
   private static final String BEARER = "Bearer ";
   private static final String TOKEN_INVALID = "Token Invalid/Expired";
-  private final CartService cartService;
   private final JwtGenerator jwtGenerator;
   private final TokenBlacklistingService tokenBlacklistingService;
+  private final OnsiteOrderService onsiteOrderService;
 
-  @Autowired
-  public CartController(CartService cartService, JwtGenerator jwtGenerator,
-      TokenBlacklistingService tokenBlacklistingService) {
-    this.cartService = cartService;
+  public OrderController(JwtGenerator jwtGenerator,
+      TokenBlacklistingService tokenBlacklistingService, OnsiteOrderService onsiteOrderService) {
     this.jwtGenerator = jwtGenerator;
     this.tokenBlacklistingService = tokenBlacklistingService;
+    this.onsiteOrderService = onsiteOrderService;
   }
 
-  @GetMapping(value = "/getCheckouts")
-  public ResponseEntity<?> getCheckouts(@RequestHeader("Authorization") String header){
-    logger.info("getting cart checkouts");
+  @GetMapping("/getOrders")
+  public ResponseEntity<?> getAllOrders(@RequestHeader("Authorization") String header){
+    logger.info("getting all onsite orders");
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
 
-    return ResponseEntity.ok(cartService.getCheckouts(token));
+    return ResponseEntity.ok(onsiteOrderService.getAllOrders(token));
   }
 
-  @GetMapping(value = "/getCart")
-  public ResponseEntity<?> getCart(@RequestHeader("Authorization") String header){
+  @GetMapping(value = "/getOrder/{orderId}")
+  public ResponseEntity<?> getCart(@RequestHeader("Authorization") String header, @PathVariable("orderId") String orderId){
     logger.info("getting cart");
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
 
-    CartDto dto = cartService.getCart(token);
+    OnsiteOrderDto dto = onsiteOrderService.getOrder(token, orderId);
 
     if(dto == null){
-      return ResponseEntity.ok(new ApiResponse("No cart yet", HttpStatus.OK));
+      return ResponseEntity.ok(new ApiResponse("No order yet", HttpStatus.OK));
     }
 
     return ResponseEntity.ok(dto);
   }
 
   @GetMapping(value = "/subtractItemQuantity/{itemId}")
-  public ResponseEntity<?> subtractItemQuantityInCart(@RequestHeader("Authorization") String header, @PathVariable("itemId") String itemId){
+  public ResponseEntity<?> subtractItemQuantityInOrder(@RequestHeader("Authorization") String header, @PathVariable("itemId") String itemId){
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
 
-    return cartService.subtractCartItemQuantity(token, itemId);
+    return onsiteOrderService.subtractOrderItemQuantity(token, itemId);
   }
 
   @GetMapping(value = "/addItemQuantity/{itemId}")
-  public ResponseEntity<?> addItemQuantityInCart(@RequestHeader("Authorization") String header, @PathVariable("itemId") String itemId){
+  public ResponseEntity<?> addItemQuantityInOrder(@RequestHeader("Authorization") String header, @PathVariable("itemId") String itemId){
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
 
-    return cartService.addCartItemQuantity(token, itemId);
+    return onsiteOrderService.addOrderItemQuantity(token, itemId);
   }
 
   @GetMapping(value = "/checkout")
-  public ResponseEntity<?> checkoutCart(@RequestHeader("Authorization") String header){
+  public ResponseEntity<?> checkoutOrder(@RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
-    cartService.checkout(token);
+    onsiteOrderService.checkout(token);
 
-    return ResponseEntity.ok(new ApiResponse("Cart checkout successfully", HttpStatus.OK));
+    return ResponseEntity.ok(new ApiResponse("Order checkout successfully", HttpStatus.OK));
   }
 
   @PostMapping(value = "/addItem")
-  public ResponseEntity<?> addItemToCart(@RequestHeader("Authorization") String header, @RequestBody
-      CartItemForm form){
+  public ResponseEntity<?> addItemToOrder(@RequestHeader("Authorization") String header, @RequestBody
+  OrderForm form){
     logger.info("adding item {}", form);
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
 
-    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Item added to cart", cartService.addCartItem(token, form)));
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Item added to cart", onsiteOrderService.addOrderItem(token, form)));
   }
 
   @DeleteMapping(value = "/removeItem/{itemId}")
-  public ResponseEntity<?> removeItemInCart(@PathVariable("itemId") String id, @RequestHeader("Authorization") String header){
+  public ResponseEntity<?> removeItemInOrder(@PathVariable("itemId") String id, @RequestHeader("Authorization") String header){
     logger.info("removing item {}", id);
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
 
-    cartService.removeCartItem(token, id);
+    onsiteOrderService.removeOrderItem(token, id);
 
-    logger.info("Cart Item removed from the cart");
-    return ResponseEntity.ok(new ApiResponse("Cart item removed from the cart", HttpStatus.OK));
+    logger.info("Item removed from the order");
+    return ResponseEntity.ok(new ApiResponse("Item removed from the order", HttpStatus.OK));
   }
 
   private void validateTokenValidity(String token){

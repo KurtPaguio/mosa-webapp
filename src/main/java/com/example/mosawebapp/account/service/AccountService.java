@@ -5,7 +5,7 @@ import com.example.mosawebapp.account.dto.AccountForm;
 import com.example.mosawebapp.account.dto.AccountUpdateForm;
 import com.example.mosawebapp.account.dto.ChangePasswordForm;
 import com.example.mosawebapp.account.dto.LoginForm;
-import com.example.mosawebapp.apiresponse.AuthResponseDto;
+import com.example.mosawebapp.api_response.AuthResponseDto;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 

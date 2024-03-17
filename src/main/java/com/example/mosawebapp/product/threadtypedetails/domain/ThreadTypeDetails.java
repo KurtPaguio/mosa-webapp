@@ -139,4 +139,8 @@ public class ThreadTypeDetails {
   public void setThreadType(ThreadType threadType) {
     this.threadType = threadType;
   }
+
+  public long getNumberInRatio(){
+    return Long.parseLong(aspectRatio.replaceAll("[^\\d]", ""));
+  }
 }

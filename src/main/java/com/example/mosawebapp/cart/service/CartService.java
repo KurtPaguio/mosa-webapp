@@ -11,6 +11,9 @@ import org.springframework.http.ResponseEntity;
 
 public interface CartService {
   List<CartCheckoutDto> getCheckouts(String adminToken);
+
+  List<CartDto> getAllCarts();
+
   CartDto getCart(String token);
   CartItemDto addCartItem(String token, CartItemForm form);
   void removeCartItem(String token, String itemId);

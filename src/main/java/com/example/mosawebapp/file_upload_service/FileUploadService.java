@@ -1,7 +1,5 @@
-package com.example.mosawebapp.fileuploadservice;
+package com.example.mosawebapp.file_upload_service;
 
-import com.example.mosawebapp.account.controller.AccountController;
-import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.product.brand.domain.Brand;
 import com.example.mosawebapp.product.brand.domain.BrandRepository;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
@@ -9,15 +7,10 @@ import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import javax.swing.text.DateFormatter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -170,6 +163,7 @@ public class FileUploadService {
     if (threadType == null) {
       Brand checkBrand = brandRepository.findByNameIgnoreCase(brand);
       ThreadType newThreadType = new ThreadType(type, BLANK_IMAGE, "", checkBrand);
+      newThreadType.setRating(5);
 
       return threadTypeRepository.save(newThreadType);
     }

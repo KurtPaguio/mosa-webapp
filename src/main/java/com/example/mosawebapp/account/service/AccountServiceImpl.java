@@ -15,7 +15,7 @@ import com.example.mosawebapp.account.dto.AccountForm;
 import com.example.mosawebapp.account.dto.LoginForm;
 import com.example.mosawebapp.logs.service.ActivityLogsService;
 import com.example.mosawebapp.mail.MailService;
-import com.example.mosawebapp.apiresponse.AuthResponseDto;
+import com.example.mosawebapp.api_response.AuthResponseDto;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
 import com.example.mosawebapp.validate.Validate;

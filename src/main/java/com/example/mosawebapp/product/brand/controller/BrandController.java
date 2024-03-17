@@ -1,20 +1,14 @@
 package com.example.mosawebapp.product.brand.controller;
 
-import com.example.mosawebapp.apiresponse.ApiErrorResponse;
-import com.example.mosawebapp.apiresponse.ApiObjectResponse;
-import com.example.mosawebapp.apiresponse.ApiResponse;
-import com.example.mosawebapp.exceptions.NotFoundException;
-import com.example.mosawebapp.exceptions.SecurityException;
+import com.example.mosawebapp.api_response.ApiObjectResponse;
+import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.exceptions.TokenException;
-import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.product.brand.dto.BrandDto;
 import com.example.mosawebapp.product.brand.dto.BrandForm;
 import com.example.mosawebapp.product.brand.service.BrandService;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
-import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -54,11 +48,7 @@ public class BrandController {
   }
 
   @GetMapping(value = "/getAllBrands")
-  public ResponseEntity<?> getAllBrands(@RequestHeader("Authorization") String header){
-      String token = header.replace(BEARER, "");
-
-      validateTokenValidity(token);
-
+  public ResponseEntity<?> getAllBrands(){
       return ResponseEntity.ok(brandService.findAllBrands());
   }
 

@@ -5,11 +5,15 @@ import com.example.mosawebapp.kiosk.domain.KioskOrder;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.utils.DateTimeFormatter;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonInclude(Include.NON_NULL)
 public class KioskOrderDto {
   private String kioskOrderId;
+  private String kioskToken;
   private String dateCreated;
   private String brandName;
   private String threadType;
@@ -19,14 +23,16 @@ public class KioskOrderDto {
 
   public KioskOrderDto(){}
 
-  public KioskOrderDto(String kioskOrderId, String dateCreated, long quantity) {
+  public KioskOrderDto(String kioskOrderId, String kioskToken, String dateCreated, long quantity) {
     this.kioskOrderId = kioskOrderId;
+    this.kioskToken = kioskToken;
     this.dateCreated = dateCreated;
     this.quantity = quantity;
   }
 
   public KioskOrderDto(KioskOrder order, ThreadTypeDetails details) {
     this.kioskOrderId = order.getId();
+    this.kioskToken = order.getKiosk().getKioskToken();
     this.dateCreated = DateTimeFormatter.get_MMDDYYY_Format(order.getDateCreated());
     this.brandName = order.getType().getBrand().getName();
     this.threadType = order.getType().getType();
@@ -36,7 +42,7 @@ public class KioskOrderDto {
   }
 
   public static KioskOrderDto buildFromEntity(KioskOrder order){
-    return new KioskOrderDto(order.getId(), DateTimeFormatter.get_MMDDYYY_Format(order.getDateCreated()), order.getQuantity());
+    return new KioskOrderDto(order.getId(), order.getKiosk().getKioskToken(), DateTimeFormatter.get_MMDDYYY_Format(order.getDateCreated()), order.getQuantity());
   }
 
   public static List<KioskOrderDto> buildFromEntitiesV2(List<KioskOrder> orders){
@@ -103,5 +109,13 @@ public class KioskOrderDto {
 
   public void setQuantity(long quantity) {
     this.quantity = quantity;
+  }
+
+  public String getKioskToken() {
+    return kioskToken;
+  }
+
+  public void setKioskToken(String kioskToken) {
+    this.kioskToken = kioskToken;
   }
 }

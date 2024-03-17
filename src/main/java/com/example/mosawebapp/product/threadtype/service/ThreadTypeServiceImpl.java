@@ -16,11 +16,13 @@ import com.example.mosawebapp.product.threadtype.dto.ThreadTypeForm;
 import com.example.mosawebapp.product.threadtype.dto.ThreadTypeSearch;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetailsRepository;
+import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.validate.Validate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
@@ -88,6 +90,8 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
       if(details.isEmpty()){
         dtos.add(new ThreadTypeDto(type));
       } else {
+        details.sort(Comparator.comparing(ThreadTypeDetails::getPrice));
+
         dtos.add(new ThreadTypeDto(type, details));
       }
     }

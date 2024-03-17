@@ -5,12 +5,13 @@ import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
-import com.example.mosawebapp.fileuploadservice.FileUploadService;
+import com.example.mosawebapp.file_upload_service.FileUploadService;
 import com.example.mosawebapp.logs.service.ActivityLogsService;
 import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.product.brand.domain.BrandRepository;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
+import com.example.mosawebapp.product.threadtype.dto.ThreadTypeDto;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetailsRepository;
 import com.example.mosawebapp.product.threadtypedetails.dto.AddStockForm;
@@ -20,6 +21,7 @@ import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.validate.Validate;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -76,6 +78,29 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
       }
     }
 
+    dto.sort(Comparator.comparing(ThreadTypeDetailsDto::getWidth).reversed());
+    return dto;
+  }
+
+  @Override
+  public List<ThreadTypeDetailsDto> findAllInCriticalStocks(String token) {
+    validateIfAccountIsAdmin(getAccountFromToken(token));
+
+    List<ThreadTypeDetails> details = threadTypeDetailsRepository.findAllDetailsInCriticalStocks();
+
+    List<ThreadTypeDetailsDto> dto = new ArrayList<>();
+
+    for(ThreadTypeDetails detail: details){
+      ThreadType threadType = threadTypeRepository.findTypeId(detail.getThreadType().getId());
+
+      if(threadType == null){
+        dto.add(ThreadTypeDetailsDto.buildFromEntity(detail));
+      } else{
+        dto.add(new ThreadTypeDetailsDto(threadType, detail));
+      }
+    }
+
+    dto.sort(Comparator.comparing(ThreadTypeDetailsDto::getWidth).reversed());
     return dto;
   }
 
@@ -207,8 +232,8 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
   }
 
   private void validateIfAccountIsAdmin(Account account){
-    if(account.getUserRole() != UserRole.ADMINISTRATOR){
-      throw new ValidationException("Only Administrators can use this feature");
+    if(account.getUserRole() == UserRole.CUSTOMER){
+      throw new ValidationException("Only Administrators and staff can use this feature");
 
     }
   }

@@ -28,4 +28,7 @@ public interface ThreadTypeDetailsRepository extends JpaRepository<ThreadTypeDet
   @Transactional
   @Query(value = "DELETE FROM thread_type_details WHERE thread_type_id = :id", nativeQuery = true)
   void deleteByThreadType(@Param("id") String id);
+
+  @Query(value = "SELECT FROM thread_type_details WHERE stocks <= 50", nativeQuery = true)
+  List<ThreadTypeDetails> findAllDetailsInCriticalStocks();
 }

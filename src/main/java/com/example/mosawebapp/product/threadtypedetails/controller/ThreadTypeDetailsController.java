@@ -1,13 +1,8 @@
 package com.example.mosawebapp.product.threadtypedetails.controller;
 
-import com.example.mosawebapp.apiresponse.ApiErrorResponse;
-import com.example.mosawebapp.apiresponse.ApiObjectResponse;
-import com.example.mosawebapp.apiresponse.ApiResponse;
-import com.example.mosawebapp.exceptions.NotFoundException;
-import com.example.mosawebapp.exceptions.SecurityException;
+import com.example.mosawebapp.api_response.ApiObjectResponse;
+import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.exceptions.TokenException;
-import com.example.mosawebapp.exceptions.ValidationException;
-import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.product.threadtypedetails.dto.AddStockForm;
 import com.example.mosawebapp.product.threadtypedetails.dto.DetailsBulkDeleteForm;
 import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
@@ -15,11 +10,8 @@ import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsFor
 import com.example.mosawebapp.product.threadtypedetails.service.ThreadTypeDetailsService;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
-import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.io.IOException;
-import java.util.Date;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,9 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class ThreadTypeDetailsController {
   private static final String BEARER = "Bearer ";
   private static final String TOKEN_INVALID = "Token Invalid/Expired";
-  private static final String VALID = "valid";
-  private static final String NOT_VALID = "not valid";
-  private static final String NUMERIC_INPUTS_ONLY = "Numeric Inputs Only";
   private final TokenBlacklistingService tokenBlacklistingService;
   private final JwtGenerator jwtGenerator;
   private final ThreadTypeDetailsService threadTypeDetailsService;
@@ -70,6 +59,15 @@ public class ThreadTypeDetailsController {
     validateTokenValidity(token);
 
     return ResponseEntity.ok(threadTypeDetailsService.findThreadTypeDetails(id));
+  }
+
+  @GetMapping(value = "/getCriticalStocks")
+  public ResponseEntity<?> getDetailsInCriticalStocks(@RequestHeader("Authorization") String header){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return ResponseEntity.ok(threadTypeDetailsService.findAllInCriticalStocks(token));
   }
 
   @PostMapping(value = "/addDetails")

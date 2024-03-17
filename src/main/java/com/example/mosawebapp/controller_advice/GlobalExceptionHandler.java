@@ -1,6 +1,6 @@
-package com.example.mosawebapp.controlleradvice;
+package com.example.mosawebapp.controller_advice;
 
-import com.example.mosawebapp.apiresponse.ApiErrorResponse;
+import com.example.mosawebapp.api_response.ApiErrorResponse;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.SecurityException;
 import com.example.mosawebapp.exceptions.TokenException;

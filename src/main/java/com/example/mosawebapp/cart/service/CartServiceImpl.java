@@ -3,8 +3,11 @@ package com.example.mosawebapp.cart.service;
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.domain.UserRole;
-import com.example.mosawebapp.apiresponse.ApiObjectResponse;
-import com.example.mosawebapp.apiresponse.ApiResponse;
+import com.example.mosawebapp.all_orders.domain.OrderType;
+import com.example.mosawebapp.all_orders.domain.Orders;
+import com.example.mosawebapp.all_orders.domain.OrdersRepository;
+import com.example.mosawebapp.api_response.ApiObjectResponse;
+import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.cart.domain.Cart;
 import com.example.mosawebapp.cart.domain.CartCheckout;
 import com.example.mosawebapp.cart.domain.CartCheckoutRepository;
@@ -41,6 +44,7 @@ public class CartServiceImpl implements CartService{
   private final CartItemRepository cartItemRepository;
   private final ThreadTypeRepository threadTypeRepository;
   private final ThreadTypeDetailsRepository threadTypeDetailsRepository;
+  private final OrdersRepository ordersRepository;
   private final CartCheckoutRepository cartCheckoutRepository;
   private final BrandRepository brandRepository;
   private final JwtGenerator jwtGenerator;
@@ -50,12 +54,13 @@ public class CartServiceImpl implements CartService{
       AccountRepository accountRepository, CartItemRepository cartItemRepository,
       ThreadTypeRepository threadTypeRepository,
       ThreadTypeDetailsRepository threadTypeDetailsRepository,
-      CartCheckoutRepository cartCheckoutRepository, BrandRepository brandRepository, JwtGenerator jwtGenerator) {
+      OrdersRepository ordersRepository, CartCheckoutRepository cartCheckoutRepository, BrandRepository brandRepository, JwtGenerator jwtGenerator) {
     this.cartRepository = cartRepository;
     this.accountRepository = accountRepository;
     this.cartItemRepository = cartItemRepository;
     this.threadTypeRepository = threadTypeRepository;
     this.threadTypeDetailsRepository = threadTypeDetailsRepository;
+    this.ordersRepository = ordersRepository;
     this.cartCheckoutRepository = cartCheckoutRepository;
     this.brandRepository = brandRepository;
     this.jwtGenerator = jwtGenerator;
@@ -78,6 +83,24 @@ public class CartServiceImpl implements CartService{
     }
 
     return dto;
+  }
+
+  @Override
+  public List<CartDto> getAllCarts(){
+    List<Cart> carts = cartRepository.findAll();
+
+    List<CartDto> dtos = new ArrayList<>();
+    for(Cart cart: carts){
+      Account account = cart.getAccount();
+
+      Cart userCart = cartRepository.findByAccount(account);
+
+      List<CartItem> cartItems = cartItemRepository.findByCart(userCart);
+
+      dtos.add(new CartDto(cart, account, cartItems));
+    }
+
+    return dtos;
   }
 
   @Override
@@ -117,6 +140,9 @@ public class CartServiceImpl implements CartService{
     details.setStocks(details.getStocks() - item.getQuantity());
 
     threadTypeDetailsRepository.save(details);
+
+    Orders orders = new Orders(cart.getId(), OrderType.ONLINE);
+    ordersRepository.save(orders);
   }
 
   @Override
@@ -206,7 +232,7 @@ public class CartServiceImpl implements CartService{
     cartItem.setQuantity(cartItem.getQuantity() + 1);
     cartItemRepository.save(cartItem);
 
-    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Item quantity subtracted", new CartItemDto(cartItem, details)));
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Item quantity added", new CartItemDto(cartItem, details)));
   }
 
   private Account getAccountFromToken(String token){

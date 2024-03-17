@@ -1,20 +1,13 @@
 package com.example.mosawebapp.product.threadtype.controller;
 
-import com.example.mosawebapp.apiresponse.ApiErrorResponse;
-import com.example.mosawebapp.apiresponse.ApiObjectResponse;
-import com.example.mosawebapp.apiresponse.ApiResponse;
-import com.example.mosawebapp.exceptions.NotFoundException;
-import com.example.mosawebapp.exceptions.SecurityException;
+import com.example.mosawebapp.api_response.ApiObjectResponse;
+import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.exceptions.TokenException;
-import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.product.threadtype.dto.ThreadTypeDto;
 import com.example.mosawebapp.product.threadtype.dto.ThreadTypeForm;
-import com.example.mosawebapp.product.threadtype.dto.ThreadTypeSearch;
 import com.example.mosawebapp.product.threadtype.service.ThreadTypeService;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
-import com.example.mosawebapp.utils.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

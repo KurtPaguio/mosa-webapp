@@ -82,6 +82,30 @@ public class ThreadTypeDto {
     return highestPrice;
   }
 
+  private float getMinimumPriceAsDto(List<ThreadTypeDetailsDto> details){
+    float lowestPrice = details.get(0).getPrice();
+
+    for(ThreadTypeDetailsDto d: details){
+      if(d.getPrice() < lowestPrice){
+        lowestPrice = d.getPrice();
+      }
+    }
+
+    return lowestPrice;
+  }
+
+  private float getMaximumPriceAsDto(List<ThreadTypeDetailsDto> details){
+    float highestPrice = details.get(0).getPrice();
+
+    for(ThreadTypeDetailsDto d: details){
+      if(d.getPrice() > highestPrice){
+        highestPrice = d.getPrice();
+      }
+    }
+
+    return highestPrice;
+  }
+
   public static ThreadTypeDto buildFromEntity(ThreadType type){
     return new ThreadTypeDto(type.getId(), DateTimeFormatter.get_MMDDYYY_Format(type.getDateCreated()), type.getType(),
         type.getRating(), type.getImageUrl(), type.getDescription());

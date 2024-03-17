@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface ThreadTypeDetailsService {
   List<ThreadTypeDetailsDto> findAllThreadTypesDetails();
-
+  List<ThreadTypeDetailsDto> findAllInCriticalStocks(String token);
   void addStock(String token, AddStockForm form);
 
   ThreadTypeDetailsDto findThreadTypeDetails(String id);

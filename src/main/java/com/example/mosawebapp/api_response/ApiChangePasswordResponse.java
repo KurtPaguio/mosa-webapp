@@ -1,6 +1,5 @@
-package com.example.mosawebapp.apiresponse;
+package com.example.mosawebapp.api_response;
 
-import com.example.mosawebapp.account.dto.AccountDto;
 import org.springframework.http.HttpStatus;
 
 public class ApiChangePasswordResponse {

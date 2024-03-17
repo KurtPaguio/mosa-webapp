@@ -1,18 +1,12 @@
 package com.example.mosawebapp.scheduling.controller;
 
-import com.example.mosawebapp.apiresponse.ApiErrorResponse;
-import com.example.mosawebapp.apiresponse.ApiObjectResponse;
-import com.example.mosawebapp.exceptions.NotFoundException;
-import com.example.mosawebapp.exceptions.SecurityException;
+import com.example.mosawebapp.api_response.ApiObjectResponse;
 import com.example.mosawebapp.exceptions.TokenException;
-import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.scheduling.dto.ScheduleDto;
 import com.example.mosawebapp.scheduling.dto.ScheduleForm;
 import com.example.mosawebapp.scheduling.service.ScheduleService;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
-import com.example.mosawebapp.utils.DateTimeFormatter;
-import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

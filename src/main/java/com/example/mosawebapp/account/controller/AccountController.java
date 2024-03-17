@@ -4,20 +4,18 @@ import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.account.dto.*;
 import com.example.mosawebapp.account.registration.dto.AccountRegistrationDto;
 import com.example.mosawebapp.account.registration.service.AccountRegistrationService;
-import com.example.mosawebapp.apiresponse.ApiChangePasswordResponse;
-import com.example.mosawebapp.apiresponse.ApiErrorResponse;
-import com.example.mosawebapp.apiresponse.ApiObjectResponse;
-import com.example.mosawebapp.exceptions.NotFoundException;
+import com.example.mosawebapp.api_response.ApiObjectResponse;
 import com.example.mosawebapp.exceptions.SecurityException;
 import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.service.AccountService;
-import com.example.mosawebapp.apiresponse.ApiResponse;
+import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.exceptions.ValidationException;
+import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
-import com.example.mosawebapp.utils.DateTimeFormatter;
-import java.util.Date;
+import java.util.Comparator;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +31,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.view.RedirectView;
 
 @RestController
 @RequestMapping("/api/account")
@@ -68,6 +65,10 @@ public class AccountController {
 
     validateTokenValidity(token);
 
+    List<AccountDto> accountDto = AccountDto.buildFromEntities(accountService.findAllAccounts(token));
+
+    accountDto.sort(Comparator.comparing(AccountDto::getFullName).reversed());
+
     return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllAccounts(token)));
   }
 
@@ -78,6 +79,10 @@ public class AccountController {
 
     validateTokenValidity(token);
 
+    List<AccountDto> accountDto = AccountDto.buildFromEntities(accountService.findAllStaffAccounts(token));
+
+    accountDto.sort(Comparator.comparing(AccountDto::getFullName).reversed());
+
     return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllStaffAccounts(token)));
   }
 
@@ -87,6 +92,10 @@ public class AccountController {
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
+
+    List<AccountDto> accountDto = AccountDto.buildFromEntities(accountService.findAllCustomerAccounts(token));
+
+    accountDto.sort(Comparator.comparing(AccountDto::getFullName).reversed());
 
     return ResponseEntity.ok(AccountDto.buildFromEntities(accountService.findAllCustomerAccounts(token)));
   }

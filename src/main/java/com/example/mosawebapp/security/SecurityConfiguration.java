@@ -37,7 +37,7 @@ public class SecurityConfiguration {
             .and()
             .authorizeRequests()
             .antMatchers("/api/account/**", "/api/brand/**", "/api/threadType/**", "/api/threadTypeDetails/**", "/api/schedule/**",
-                "/api/logs/**", "/api/cart/**", "/api/kiosk/**", "/mail/**").permitAll()
+                "/api/logs/**", "/api/cart/**", "/api/kiosk/**", "/api/orders/**", "/mail/**").permitAll()
             .anyRequest().authenticated()
             .and()
             .httpBasic();

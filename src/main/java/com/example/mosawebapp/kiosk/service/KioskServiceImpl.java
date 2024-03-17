@@ -3,13 +3,11 @@ package com.example.mosawebapp.kiosk.service;
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.domain.UserRole;
-import com.example.mosawebapp.apiresponse.ApiObjectResponse;
-import com.example.mosawebapp.apiresponse.ApiResponse;
-import com.example.mosawebapp.cart.domain.Cart;
-import com.example.mosawebapp.cart.domain.CartCheckout;
-import com.example.mosawebapp.cart.domain.CartItem;
-import com.example.mosawebapp.cart.dto.CartItemDto;
-import com.example.mosawebapp.cart.dto.CartItemForm;
+import com.example.mosawebapp.all_orders.domain.OrderType;
+import com.example.mosawebapp.all_orders.domain.Orders;
+import com.example.mosawebapp.all_orders.domain.OrdersRepository;
+import com.example.mosawebapp.api_response.ApiObjectResponse;
+import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.kiosk.domain.Kiosk;
@@ -47,6 +45,7 @@ public class KioskServiceImpl implements KioskService{
   private final KioskOrderRepository kioskOrderRepository;
   private final KioskRepository kioskRepository;
   private final KioskCheckoutRepository kioskCheckoutRepository;
+  private final OrdersRepository ordersRepository;
   private final JwtGenerator jwtGenerator;
   private final AccountRepository accountRepository;
   private final ThreadTypeRepository threadTypeRepository;
@@ -55,12 +54,14 @@ public class KioskServiceImpl implements KioskService{
 
   @Autowired
   public KioskServiceImpl(KioskOrderRepository kioskOrderRepository,
-      KioskRepository kioskRepository, KioskCheckoutRepository kioskCheckoutRepository, JwtGenerator jwtGenerator,
+      KioskRepository kioskRepository, KioskCheckoutRepository kioskCheckoutRepository,
+      OrdersRepository ordersRepository, JwtGenerator jwtGenerator,
       AccountRepository accountRepository, ThreadTypeRepository threadTypeRepository,
       ThreadTypeDetailsRepository threadTypeDetailsRepository, BrandRepository brandRepository) {
     this.kioskOrderRepository = kioskOrderRepository;
     this.kioskRepository = kioskRepository;
     this.kioskCheckoutRepository = kioskCheckoutRepository;
+    this.ordersRepository = ordersRepository;
     this.jwtGenerator = jwtGenerator;
     this.accountRepository = accountRepository;
     this.threadTypeRepository = threadTypeRepository;
@@ -198,7 +199,7 @@ public class KioskServiceImpl implements KioskService{
     order.setQuantity(order.getQuantity() + 1);
     kioskOrderRepository.save(order);
 
-    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Item quantity subtracted", new KioskOrderDto(order, details)));
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Item quantity added", new KioskOrderDto(order, details)));
   }
 
   @Override
@@ -221,6 +222,9 @@ public class KioskServiceImpl implements KioskService{
     details.setStocks(details.getStocks() - order.getQuantity());
 
     threadTypeDetailsRepository.save(details);
+
+    Orders orders = new Orders(kiosk.getId(), OrderType.KIOSK);
+    ordersRepository.save(orders);
   }
 
   private void validateForm(KioskOrderForm form){

@@ -74,7 +74,7 @@ public class KioskServiceImpl implements KioskService{
     Kiosk kiosk = new Kiosk(true);
     kioskRepository.save(kiosk);
 
-    logger.info("created kiosk for ordering with token {}", kiosk.getKioskToken());
+    logger.info("created kiosk for ordering with number {}", kiosk.getKioskNumber());
     return KioskDto.buildFromEntity(kiosk);
   }
 
@@ -99,11 +99,11 @@ public class KioskServiceImpl implements KioskService{
   }
 
   @Override
-  public KioskDto getKiosk(String token) {
-    Kiosk kiosk = kioskRepository.findByKioskToken(token);
+  public KioskDto getKiosk(String kioskNumber) {
+    Kiosk kiosk = kioskRepository.findByKioskNumber(kioskNumber);
 
     if(kiosk == null){
-      throw new ValidationException("Kiosk with token " + token + " does not exists");
+      throw new ValidationException("Kiosk with number " + kioskNumber + " does not exists");
     }
 
     List<KioskOrder> orders = kioskOrderRepository.findByKiosk(kiosk);
@@ -116,10 +116,12 @@ public class KioskServiceImpl implements KioskService{
   }
 
   @Override
-  public KioskOrderDto addKioskOrder(String token, KioskOrderForm form) {
+  public KioskOrderDto addKioskOrder(String kioskNumber, KioskOrderForm form) {
     Validate.notNull(form);
     validateForm(form);
-    Kiosk kiosk = kioskRepository.findByKioskTokenAndIsActiveLatest(token, true);
+
+    logger.info("KIOSK NUMBER: {}", kioskNumber);
+    Kiosk kiosk = kioskRepository.findByKioskNumberAndIsActiveLatest(kioskNumber, true);
     ThreadType threadType = validateThreadType(form);
     ThreadTypeDetails details = validateThreadTypeDetails(form);
 
@@ -145,7 +147,7 @@ public class KioskServiceImpl implements KioskService{
   @Override
   public void removeKioskOrder(KioskOrderQuantityForm form) {
     KioskOrder order = kioskOrderRepository.findById(form.getItemId()).orElseThrow(() -> new NotFoundException("Kiosk Order does not exists"));
-    Kiosk kiosk = kioskRepository.findByKioskTokenAndIsActiveLatest(form.getKioskToken(), true);
+    Kiosk kiosk = kioskRepository.findByKioskNumberAndIsActiveLatest(form.getKioskNumber(), true);
 
     boolean isKioskOrderItemInCurrentCart = kioskOrderRepository.isKioskOrderInCurrentCart(kiosk, form.getItemId());
 
@@ -160,7 +162,7 @@ public class KioskServiceImpl implements KioskService{
   public ResponseEntity<?> subtractKioskOrderQuantity(KioskOrderQuantityForm form) {
     KioskOrder order = kioskOrderRepository.findById(form.getItemId()).orElseThrow(() -> new NotFoundException("Kiosk Order does not exists"));
 
-    Kiosk kiosk = kioskRepository.findByKioskTokenAndIsActiveLatest(form.getKioskToken(), true);
+    Kiosk kiosk = kioskRepository.findByKioskNumberAndIsActiveLatest(form.getKioskNumber(), true);
     ThreadTypeDetails details = threadTypeDetailsRepository.findById(order.getDetails().getId())
         .orElseThrow(() -> new NotFoundException("Thread Type Variant not found"));
 
@@ -186,7 +188,7 @@ public class KioskServiceImpl implements KioskService{
   public ResponseEntity<?> addKioskOrderQuantity(KioskOrderQuantityForm form) {
     KioskOrder order = kioskOrderRepository.findById(form.getItemId()).orElseThrow(() -> new NotFoundException("Kiosk Order does not exists"));
 
-    Kiosk kiosk = kioskRepository.findByKioskTokenAndIsActiveLatest(form.getKioskToken(), true);
+    Kiosk kiosk = kioskRepository.findByKioskNumberAndIsActiveLatest(form.getKioskNumber(), true);
     ThreadTypeDetails details = threadTypeDetailsRepository.findById(order.getDetails().getId())
         .orElseThrow(() -> new NotFoundException("Thread Type Variant not found"));
 
@@ -203,8 +205,8 @@ public class KioskServiceImpl implements KioskService{
   }
 
   @Override
-  public void checkout(String token) {
-    Kiosk kiosk = kioskRepository.findByKioskTokenAndIsActiveLatest(token, true);
+  public void checkout(String kioskNumber) {
+    Kiosk kiosk = kioskRepository.findByKioskNumberAndIsActiveLatest(kioskNumber, true);
 
     if(kiosk == null){
       throw new ValidationException("No latest kiosk order existing");
@@ -259,7 +261,7 @@ public class KioskServiceImpl implements KioskService{
 
   private ThreadTypeDetails validateThreadTypeDetails(KioskOrderForm form){
     ThreadTypeDetails details = threadTypeDetailsRepository.findByDetails(form.getWidth().toLowerCase(), form.getAspectRatio().toLowerCase(), form.getDiameter().toLowerCase(),
-        form.getSidewall().toLowerCase(), form.getPlyRating().toLowerCase());
+        form.getSidewall().toLowerCase());
 
     if(details == null){
       throw new NotFoundException("No Thread Type Variant exists with these details");

@@ -14,10 +14,10 @@ import org.springframework.http.ResponseEntity;
 public interface KioskService {
   KioskDto startOrdering();
   List<KioskCheckoutDto> getCheckouts(String adminToken);
-  KioskDto getKiosk(String token);
-  KioskOrderDto addKioskOrder(String token, KioskOrderForm form);
+  KioskDto getKiosk(String kioskNumber);
+  KioskOrderDto addKioskOrder(String kioskNumber, KioskOrderForm form);
   void removeKioskOrder(KioskOrderQuantityForm form);
   ResponseEntity<?> subtractKioskOrderQuantity(KioskOrderQuantityForm form);
   ResponseEntity<?> addKioskOrderQuantity(KioskOrderQuantityForm form);
-  void checkout(String token);
+  void checkout(String kioskNumber);
 }

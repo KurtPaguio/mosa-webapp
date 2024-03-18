@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/kiosk")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
 public class KioskController {
   private static final Logger logger = LoggerFactory.getLogger(KioskController.class);
   private static final String BEARER = "Bearer ";
@@ -58,11 +60,11 @@ public class KioskController {
     return ResponseEntity.ok(kioskService.getCheckouts(token));
   }
 
-  @GetMapping(value = "/getKioskOrder/{kioskToken}")
-  public ResponseEntity<?> getKioskOrder(@PathVariable("kioskToken") String token){
+  @GetMapping(value = "/getKioskOrder/{kioskNumber}")
+  public ResponseEntity<?> getKioskOrder(@PathVariable("kioskNumber") String kioskNumber){
     logger.info("getting kiosk order");
 
-    KioskDto dto = kioskService.getKiosk(token);
+    KioskDto dto = kioskService.getKiosk(kioskNumber);
 
     if(dto == null){
       return ResponseEntity.ok(new ApiResponse("No kiosk orders yet", HttpStatus.OK));
@@ -81,19 +83,19 @@ public class KioskController {
     return kioskService.addKioskOrderQuantity(form);
   }
 
-  @GetMapping(value = "/checkout/{token}")
-  public ResponseEntity<?> checkoutKioskOrder(@PathVariable("token") String token){
-    kioskService.checkout(token);
+  @GetMapping(value = "/checkout/{kioskNumber}")
+  public ResponseEntity<?> checkoutKioskOrder(@PathVariable("kioskNumber") String kioskNumber){
+    kioskService.checkout(kioskNumber);
 
     return ResponseEntity.ok(new ApiResponse("Kiosk Order checkout successfully", HttpStatus.OK));
   }
 
-  @PostMapping(value = "/addItem/{kioskToken}")
-  public ResponseEntity<?> addItemToKiosk(@PathVariable("kioskToken") String token, @RequestBody
+  @PostMapping(value = "/addItem/{kioskNumber}")
+  public ResponseEntity<?> addItemToKiosk(@PathVariable("kioskNumber") String kioskNumber, @RequestBody
       KioskOrderForm form){
     logger.info("adding item {}", form);
 
-    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Item added to Kiosk Order", kioskService.addKioskOrder(token, form)));
+    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.CREATED, "Item added to Kiosk Order", kioskService.addKioskOrder(kioskNumber, form)));
   }
 
   @DeleteMapping(value = "/removeItem/")

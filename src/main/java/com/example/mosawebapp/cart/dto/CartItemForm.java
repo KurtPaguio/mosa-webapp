@@ -1,5 +1,7 @@
 package com.example.mosawebapp.cart.dto;
 
+import org.springframework.lang.Nullable;
+
 public class CartItemForm {
   private String brand;
   private String threadType;
@@ -7,13 +9,14 @@ public class CartItemForm {
   private String aspectRatio;
   private String diameter;
   private String sidewall;
+  @Nullable
   private String plyRating;
   private Long quantity;
 
   public CartItemForm(){}
 
   public CartItemForm(String brand, String threadType, String width,
-      String aspectRatio, String diameter, String sidewall, String plyRating, Long quantity) {
+      String aspectRatio, String diameter, String sidewall, @Nullable String plyRating, Long quantity) {
     this.brand = brand;
     this.threadType = threadType;
     this.width = width;
@@ -72,11 +75,12 @@ public class CartItemForm {
     this.sidewall = sidewall;
   }
 
+  @Nullable
   public String getPlyRating() {
     return plyRating;
   }
 
-  public void setPlyRating(String plyRating) {
+  public void setPlyRating(@Nullable String plyRating) {
     this.plyRating = plyRating;
   }
 

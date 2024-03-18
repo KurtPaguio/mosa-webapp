@@ -44,11 +44,7 @@ public class ThreadTypeDetailsController {
   }
 
   @GetMapping(value = "/getAllDetails")
-  public ResponseEntity<?> getAllThreadTypesDetails(@RequestHeader("Authorization") String header){
-    String token = header.replace(BEARER, "");
-
-    validateTokenValidity(token);
-
+  public ResponseEntity<?> getAllThreadTypesDetails(){
     return ResponseEntity.ok(threadTypeDetailsService.findAllThreadTypesDetails());
   }
 

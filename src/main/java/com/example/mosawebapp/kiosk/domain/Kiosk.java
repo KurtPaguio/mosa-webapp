@@ -1,5 +1,6 @@
 package com.example.mosawebapp.kiosk.domain;
 
+import com.example.mosawebapp.kiosk.QueueingNumberService;
 import java.util.Date;
 import java.util.UUID;
 import javax.persistence.Column;
@@ -7,9 +8,13 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
+import javax.persistence.Transient;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
 
+@Configurable
 @Entity
 public class Kiosk {
   @Id
@@ -19,13 +24,13 @@ public class Kiosk {
   @CreationTimestamp
   private Date dateCreated;
   @Column
-  private String kioskToken;
+  private String kioskNumber;
   @Column
   private boolean isActive;
 
   @PrePersist
-  public void generateKioskToken(){
-    this.kioskToken = UUID.randomUUID().toString();
+  public void generateKioskNumber(){
+    this.kioskNumber = QueueingNumberService.getNextQueueingNumber();
   }
 
   public Kiosk(){}
@@ -50,12 +55,12 @@ public class Kiosk {
     this.dateCreated = dateCreated;
   }
 
-  public String getKioskToken() {
-    return kioskToken;
+  public String getKioskNumber() {
+    return kioskNumber;
   }
 
-  public void setKioskToken(String kioskToken) {
-    this.kioskToken = kioskToken;
+  public void setKioskNumber(String kioskNumber) {
+    this.kioskNumber = kioskNumber;
   }
 
   public boolean isActive() {

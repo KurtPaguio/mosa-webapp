@@ -1,13 +1,13 @@
 package com.example.mosawebapp.kiosk.dto;
 
 public class KioskOrderQuantityForm {
-  private String kioskToken;
+  private String kioskNumber;
   private String itemId;
 
   public KioskOrderQuantityForm(){}
 
-  public KioskOrderQuantityForm(String kioskToken, String itemId) {
-    this.kioskToken = kioskToken;
+  public KioskOrderQuantityForm(String kioskNumber, String itemId) {
+    this.kioskNumber = kioskNumber;
     this.itemId = itemId;
   }
 
@@ -19,11 +19,11 @@ public class KioskOrderQuantityForm {
     this.itemId = itemId;
   }
 
-  public String getKioskToken() {
-    return kioskToken;
+  public String getKioskNumber() {
+    return kioskNumber;
   }
 
-  public void setKioskToken(String kioskToken) {
-    this.kioskToken = kioskToken;
+  public void setKioskNumber(String kioskNumber) {
+    this.kioskNumber = kioskNumber;
   }
 }

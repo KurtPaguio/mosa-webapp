@@ -11,25 +11,25 @@ import java.util.List;
 public class KioskDto {
   private String kioskId;
   private String dateCreated;
-  private String kioskToken;
+  private String kioskNumber;
   private List<KioskOrderDto> kioskOrders;
   private boolean isActive;
   private float totalPrice;
 
   public KioskDto(){}
 
-  public KioskDto(String kioskId, String dateCreated, String kioskToken, boolean isActive) {
+  public KioskDto(String kioskId, String dateCreated, String kioskNumber, boolean isActive) {
     this.kioskId = kioskId;
     this.dateCreated = dateCreated;
-    this.kioskToken = kioskToken;
+    this.kioskNumber = kioskNumber;
     this.isActive = isActive;
   }
 
-  public KioskDto(String kioskId, String dateCreated, String kioskToken, List<KioskOrderDto> kioskOrders,
+  public KioskDto(String kioskId, String dateCreated, String kioskNumber, List<KioskOrderDto> kioskOrders,
       boolean isActive) {
     this.kioskId = kioskId;
     this.dateCreated = dateCreated;
-    this.kioskToken = kioskToken;
+    this.kioskNumber = kioskNumber;
     this.kioskOrders = kioskOrders;
     this.isActive = isActive;
   }
@@ -37,7 +37,7 @@ public class KioskDto {
   public KioskDto(Kiosk kiosk, List<KioskOrder> orders){
     this.kioskId = kiosk.getId();
     this.dateCreated = DateTimeFormatter.get_MMDDYYY_Format(kiosk.getDateCreated());
-    this.kioskToken = kiosk.getKioskToken();
+    this.kioskNumber = kiosk.getKioskNumber();
     this.kioskOrders = KioskOrderDto.buildFromEntitiesV2(orders);
     this.isActive = kiosk.isActive();
     this.totalPrice = getTotalOrderPrice(orders);
@@ -55,7 +55,7 @@ public class KioskDto {
   }
 
   public static KioskDto buildFromEntity(Kiosk kiosk){
-    return new KioskDto(kiosk.getId(), DateTimeFormatter.get_MMDDYYY_Format(kiosk.getDateCreated()), kiosk.getKioskToken(), kiosk.isActive());
+    return new KioskDto(kiosk.getId(), DateTimeFormatter.get_MMDDYYY_Format(kiosk.getDateCreated()), kiosk.getKioskNumber(), kiosk.isActive());
   }
 
   public String getKioskId() {
@@ -74,12 +74,12 @@ public class KioskDto {
     this.dateCreated = dateCreated;
   }
 
-  public String getKioskToken() {
-    return kioskToken;
+  public String getKioskNumber() {
+    return kioskNumber;
   }
 
-  public void setKioskToken(String kioskToken) {
-    this.kioskToken = kioskToken;
+  public void setKioskNumber(String kioskNumber) {
+    this.kioskNumber = kioskNumber;
   }
 
   public List<KioskOrderDto> getKioskOrders() {

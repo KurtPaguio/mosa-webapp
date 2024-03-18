@@ -119,12 +119,12 @@ public class CartServiceImpl implements CartService{
   }
 
   @Override
-  public void checkout(String token){
+  public void checkout(String token) {
     Account account = getAccountFromToken(token);
 
     Cart cart = cartRepository.findByAccountAndIsActiveLatest(account, true);
 
-    if(cart == null){
+    if (cart == null) {
       throw new ValidationException("No latest cart existing for this user");
     }
 
@@ -273,7 +273,7 @@ public class CartServiceImpl implements CartService{
 
   private ThreadTypeDetails validateThreadTypeDetails(CartItemForm form){
     ThreadTypeDetails details = threadTypeDetailsRepository.findByDetails(form.getWidth().toLowerCase(), form.getAspectRatio().toLowerCase(), form.getDiameter().toLowerCase(),
-        form.getSidewall().toLowerCase(), form.getPlyRating().toLowerCase());
+        form.getSidewall().toLowerCase());
 
     if(details == null){
       throw new NotFoundException("No Thread Type Variant exists with these details");

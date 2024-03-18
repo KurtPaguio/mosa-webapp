@@ -19,10 +19,9 @@ public interface ThreadTypeDetailsRepository extends JpaRepository<ThreadTypeDet
       + "lower(width) = :width "
       + "AND lower(aspect_ratio) = :ratio "
       + "AND lower(diameter) = :diameter "
-      + "AND lower(sidewall) = :sidewall "
-      + "AND lower(ply_rating) = :plyRating", nativeQuery = true)
+      + "AND lower(sidewall) = :sidewall ", nativeQuery = true)
   ThreadTypeDetails findByDetails(@Param("width") String width, @Param("ratio") String ratio, @Param("diameter") String diameter,
-      @Param("sidewall") String sidewall, @Param("plyRating") String plyRating);
+      @Param("sidewall") String sidewall);
 
   @Modifying
   @Transactional

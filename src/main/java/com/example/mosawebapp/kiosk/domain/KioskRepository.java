@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface KioskRepository extends JpaRepository<Kiosk, String>, JpaSpecificationExecutor {
-  Kiosk findByKioskToken(String token);
+  Kiosk findByKioskNumber(String kioskNumber);
 
-  @Query("SELECT k FROM Kiosk k WHERE k.kioskToken = :kioskToken AND k.isActive = :isActive ORDER BY k.dateCreated DESC")
-  Kiosk findByKioskTokenAndIsActiveLatest(@Param("kioskToken") String kioskToken, @Param("isActive") boolean isActive);
+  @Query("SELECT k FROM Kiosk k WHERE k.kioskNumber = :kioskNumber AND k.isActive = :isActive ORDER BY k.dateCreated DESC")
+  Kiosk findByKioskNumberAndIsActiveLatest(@Param("kioskNumber") String kioskNumber, @Param("isActive") boolean isActive);
 }

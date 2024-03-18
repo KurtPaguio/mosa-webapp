@@ -45,11 +45,7 @@ public class ThreadTypeController {
   }
 
   @GetMapping(value = "/getAllThreadTypes/{brand}")
-  public ResponseEntity<?> getAllThreadTypes(@RequestHeader("Authorization") String header, @PathVariable("brand") String brand){
-    String token = header.replace(BEARER, "");
-
-    validateTokenValidity(token);
-
+  public ResponseEntity<?> getAllThreadTypes(@PathVariable("brand") String brand){
     return ResponseEntity.ok(threadTypeService.findAllThreadTypes(brand));
   }
 

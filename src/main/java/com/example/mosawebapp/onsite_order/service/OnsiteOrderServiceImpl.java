@@ -252,7 +252,7 @@ public class OnsiteOrderServiceImpl implements OnsiteOrderService{
 
   private ThreadTypeDetails validateThreadTypeDetails(OrderForm form){
     ThreadTypeDetails details = threadTypeDetailsRepository.findByDetails(form.getWidth().toLowerCase(), form.getAspectRatio().toLowerCase(), form.getDiameter().toLowerCase(),
-        form.getSidewall().toLowerCase(), form.getPlyRating().toLowerCase());
+        form.getSidewall().toLowerCase());
 
     if(details == null){
       throw new NotFoundException("No Thread Type Variant exists with these details");

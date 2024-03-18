@@ -13,7 +13,7 @@ import java.util.List;
 @JsonInclude(Include.NON_NULL)
 public class KioskOrderDto {
   private String kioskOrderId;
-  private String kioskToken;
+  private String kioskNumber;
   private String dateCreated;
   private String brandName;
   private String threadType;
@@ -23,16 +23,16 @@ public class KioskOrderDto {
 
   public KioskOrderDto(){}
 
-  public KioskOrderDto(String kioskOrderId, String kioskToken, String dateCreated, long quantity) {
+  public KioskOrderDto(String kioskOrderId, String kioskNumber, String dateCreated, long quantity) {
     this.kioskOrderId = kioskOrderId;
-    this.kioskToken = kioskToken;
+    this.kioskNumber = kioskNumber;
     this.dateCreated = dateCreated;
     this.quantity = quantity;
   }
 
   public KioskOrderDto(KioskOrder order, ThreadTypeDetails details) {
     this.kioskOrderId = order.getId();
-    this.kioskToken = order.getKiosk().getKioskToken();
+    this.kioskNumber = order.getKiosk().getKioskNumber();
     this.dateCreated = DateTimeFormatter.get_MMDDYYY_Format(order.getDateCreated());
     this.brandName = order.getType().getBrand().getName();
     this.threadType = order.getType().getType();
@@ -42,7 +42,7 @@ public class KioskOrderDto {
   }
 
   public static KioskOrderDto buildFromEntity(KioskOrder order){
-    return new KioskOrderDto(order.getId(), order.getKiosk().getKioskToken(), DateTimeFormatter.get_MMDDYYY_Format(order.getDateCreated()), order.getQuantity());
+    return new KioskOrderDto(order.getId(), order.getKiosk().getKioskNumber(), DateTimeFormatter.get_MMDDYYY_Format(order.getDateCreated()), order.getQuantity());
   }
 
   public static List<KioskOrderDto> buildFromEntitiesV2(List<KioskOrder> orders){
@@ -111,11 +111,11 @@ public class KioskOrderDto {
     this.quantity = quantity;
   }
 
-  public String getKioskToken() {
-    return kioskToken;
+  public String getKioskNumber() {
+    return kioskNumber;
   }
 
-  public void setKioskToken(String kioskToken) {
-    this.kioskToken = kioskToken;
+  public void setKioskNumber(String kioskNumber) {
+    this.kioskNumber = kioskNumber;
   }
 }

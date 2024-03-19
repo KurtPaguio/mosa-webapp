@@ -1,23 +1,20 @@
 package com.example.mosawebapp.cart.service;
 
-import com.example.mosawebapp.cart.domain.Cart;
-import com.example.mosawebapp.cart.domain.CartItem;
-import com.example.mosawebapp.cart.dto.CartCheckoutDto;
 import com.example.mosawebapp.cart.dto.CartDto;
-import com.example.mosawebapp.cart.dto.CartItemDto;
-import com.example.mosawebapp.cart.dto.CartItemForm;
+import com.example.mosawebapp.cart.dto.CartForm;
+import com.example.mosawebapp.cart.dto.CheckoutForm;
 import java.util.List;
-import org.springframework.http.ResponseEntity;
 
 public interface CartService {
-  List<CartCheckoutDto> getCheckouts(String adminToken);
+  List<CartDto> getAllCartOrders(String token);
+  List<CartDto> getAllCurrentUserOrders(String token);
 
-  List<CartDto> getAllCarts();
+  List<CartDto> getAllUserCurrentOrders(String token);
 
-  CartDto getCart(String token);
-  CartItemDto addCartItem(String token, CartItemForm form);
-  void removeCartItem(String token, String itemId);
-  ResponseEntity<?> subtractCartItemQuantity(String token, String itemId);
-  ResponseEntity<?> addCartItemQuantity(String token, String itemId);
-  void checkout(String token);
+  CartDto getCartOrder(String token, String cartId);
+  CartDto addCartOrder(String token, CartForm form);
+  CartDto addCartOrderQuantity(String token, String cartId);
+  void removeCartOrder(String token, String cartId);
+  CartDto subtractCartOrderQuantity(String token, String cartId);
+  void checkout(String token, CheckoutForm form);
 }

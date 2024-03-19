@@ -16,10 +16,10 @@ public interface ThreadTypeDetailsRepository extends JpaRepository<ThreadTypeDet
   List<ThreadTypeDetails> findByThreadType(ThreadType type);
 
   @Query(value = "SELECT * FROM thread_type_details WHERE "
-      + "lower(width) = :width "
-      + "AND lower(aspect_ratio) = :ratio "
-      + "AND lower(diameter) = :diameter "
-      + "AND lower(sidewall) = :sidewall ", nativeQuery = true)
+      + "width = :width "
+      + "AND aspect_ratio = :ratio "
+      + "AND diameter = :diameter "
+      + "AND sidewall = :sidewall ", nativeQuery = true)
   ThreadTypeDetails findByDetails(@Param("width") String width, @Param("ratio") String ratio, @Param("diameter") String diameter,
       @Param("sidewall") String sidewall);
 

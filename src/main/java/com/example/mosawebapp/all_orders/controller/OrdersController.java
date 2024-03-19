@@ -15,15 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrdersController {
   private static final String BEARER = "Bearer ";
   private static final String TOKEN_INVALID = "Token Invalid/Expired";
+  private final OrdersService ordersService;
   private final TokenBlacklistingService tokenBlacklistingService;
   private final JwtGenerator jwtGenerator;
-  private final OrdersService ordersService;
-
-  public OrdersController(TokenBlacklistingService tokenBlacklistingService,
-      JwtGenerator jwtGenerator, OrdersService ordersService) {
+  public OrdersController(OrdersService ordersService,
+      TokenBlacklistingService tokenBlacklistingService, JwtGenerator jwtGenerator) {
+    this.ordersService = ordersService;
     this.tokenBlacklistingService = tokenBlacklistingService;
     this.jwtGenerator = jwtGenerator;
-    this.ordersService = ordersService;
   }
 
   @GetMapping(value = "/getAllOrders")
@@ -31,6 +30,7 @@ public class OrdersController {
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
+
     return ResponseEntity.ok(ordersService.getAllOrders(token));
   }
 

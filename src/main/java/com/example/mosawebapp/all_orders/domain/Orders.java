@@ -1,6 +1,5 @@
 package com.example.mosawebapp.all_orders.domain;
 
-import com.example.mosawebapp.account.domain.UserRole;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -26,7 +25,6 @@ public class Orders {
   private OrderType orderType;
 
   public Orders(){}
-
   public Orders(String orderId, OrderType orderType) {
     this.orderId = orderId;
     this.orderType = orderType;

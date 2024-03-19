@@ -29,10 +29,11 @@ public class ThreadTypeDetailsDto {
 
   public ThreadTypeDetailsDto(){}
 
-  public ThreadTypeDetailsDto(String id, String dateCreated, String width, String aspectRatio,
+  public ThreadTypeDetailsDto(String id, String dateCreated, String threadType, String width, String aspectRatio,
       String diameter, String sidewall, String plyRating, float price, Long stocks) {
     this.id = id;
     this.dateCreated = dateCreated;
+    this.threadType = threadType;
     this.width = width;
     this.aspectRatio = aspectRatio;
     this.diameter = diameter;
@@ -56,7 +57,8 @@ public class ThreadTypeDetailsDto {
   }
 
   public static ThreadTypeDetailsDto buildFromEntity(ThreadTypeDetails details){
-    return new ThreadTypeDetailsDto(details.getId(), DateTimeFormatter.get_MMDDYYY_Format(details.getDateCreated()), details.getWidth(), details.getAspectRatio(),
+    return new ThreadTypeDetailsDto(details.getId(), DateTimeFormatter.get_MMDDYYY_Format(details.getDateCreated()),
+        details.getThreadType().getType(), details.getWidth(), details.getAspectRatio(),
         details.getDiameter(), details.getSidewall(), details.getPlyRating(), details.getPrice(), details.getStocks());
   }
 

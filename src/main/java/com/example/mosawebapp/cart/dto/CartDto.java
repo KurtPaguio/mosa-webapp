@@ -1,61 +1,58 @@
 package com.example.mosawebapp.cart.dto;
 
-import com.example.mosawebapp.account.domain.Account;
-import com.example.mosawebapp.account.dto.AccountDto;
 import com.example.mosawebapp.cart.domain.Cart;
-import com.example.mosawebapp.cart.domain.CartItem;
+import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
+import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.utils.DateTimeFormatter;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import java.util.List;
 
-@JsonInclude(Include.NON_NULL)
 public class CartDto {
-  private String cartId;
+  private String id;
   private String dateCreated;
-  private AccountDto customer;
-  private List<CartItemDto> cartItems;
+  private String customerName;
+  private String brandName;
+  private String threadType;
+  private ThreadTypeDetailsDto details;
+  private long quantity;
   private float totalPrice;
-  private boolean isCartActive;
 
   public CartDto(){}
 
-  public CartDto(String cartId, String dateCreated, Account customer, boolean isCartActive) {
-    this.cartId = cartId;
+  public CartDto(String id, String dateCreated, String brandName, String threadType,
+      ThreadTypeDetails details, long quantity, float totalPrice) {
+    this.id = id;
     this.dateCreated = dateCreated;
-    this.customer = AccountDto.buildFromEntity(customer);
-    this.isCartActive = isCartActive;
+    this.brandName = brandName;
+    this.threadType = threadType;
+    this.details = ThreadTypeDetailsDto.buildFromEntity(details);
+    this.quantity = quantity;
+    this.totalPrice = totalPrice;
   }
 
-  public CartDto(Cart cart, Account account, List<CartItem> cartItems){
-    this.cartId = cart.getId();
+  public CartDto(Cart cart){
+    this.id = cart.getId();
     this.dateCreated = DateTimeFormatter.get_MMDDYYY_Format(cart.getDateCreated());
-    this.customer = AccountDto.buildFromEntity(account);
-    this.cartItems = CartItemDto.buildFromEntitiesV2(cartItems);
-    this.isCartActive = cart.isActive();
-    this.totalPrice = getTotalCartPrice(cartItems);
+    this.customerName = validateCustomerName(cart);
+    this.brandName = cart.getType().getBrand().getName();
+    this.threadType = cart.getType().getType();
+    this.details = ThreadTypeDetailsDto.buildFromEntity(cart.getDetails());
+    this.quantity = cart.getQuantity();
+    this.totalPrice = cart.getQuantity() * details.getPrice();
   }
 
-  public float getTotalCartPrice(List<CartItem> cartItems){
-    List<CartItemDto> dtos = CartItemDto.buildFromEntitiesV2(cartItems);
-    float price = 0;
-
-    for(CartItemDto item: dtos){
-      price += item.getPrice();
+  public String validateCustomerName(Cart cart){
+    if(cart.getAccount().getFullName() == null || cart.getAccount().getFullName().isEmpty()){
+      return cart.getAccount().getEmail() + " (No Name)";
     }
 
-    return price;
+    return cart.getAccount().getFullName();
   }
 
-  public static CartDto buildFromEntity(Cart cart){
-    return new CartDto(cart.getId(), DateTimeFormatter.get_MMDDYYY_Format(cart.getDateCreated()), cart.getAccount(), cart.isActive());
-  }
-  public String getCartId() {
-    return cartId;
+  public String getId() {
+    return id;
   }
 
-  public void setCartId(String cartId) {
-    this.cartId = cartId;
+  public void setId(String id) {
+    this.id = id;
   }
 
   public String getDateCreated() {
@@ -66,28 +63,36 @@ public class CartDto {
     this.dateCreated = dateCreated;
   }
 
-  public AccountDto getCustomer() {
-    return customer;
+  public String getBrandName() {
+    return brandName;
   }
 
-  public void setCustomer(Account customer) {
-    this.customer = AccountDto.buildFromEntity(customer);
+  public void setBrandName(String brandName) {
+    this.brandName = brandName;
   }
 
-  public boolean isCartActive() {
-    return isCartActive;
+  public String getThreadType() {
+    return threadType;
   }
 
-  public void setCartActive(boolean active) {
-    isCartActive = active;
+  public void setThreadType(String threadType) {
+    this.threadType = threadType;
   }
 
-  public List<CartItemDto> getCartItems() {
-    return cartItems;
+  public ThreadTypeDetailsDto getDetails() {
+    return details;
   }
 
-  public void setCartItems(List<CartItemDto> cartItems) {
-    this.cartItems = cartItems;
+  public void setDetails(ThreadTypeDetailsDto details) {
+    this.details = details;
+  }
+
+  public long getQuantity() {
+    return quantity;
+  }
+
+  public void setQuantity(long quantity) {
+    this.quantity = quantity;
   }
 
   public float getTotalPrice() {
@@ -96,5 +101,13 @@ public class CartDto {
 
   public void setTotalPrice(float totalPrice) {
     this.totalPrice = totalPrice;
+  }
+
+  public String getCustomerName() {
+    return customerName;
+  }
+
+  public void setCustomerName(String customerName) {
+    this.customerName = customerName;
   }
 }

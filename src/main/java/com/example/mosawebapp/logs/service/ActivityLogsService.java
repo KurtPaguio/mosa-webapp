@@ -7,7 +7,6 @@ import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.logs.domain.ActivityLogs;
 import com.example.mosawebapp.logs.domain.ActivityLogsRepository;
-import com.example.mosawebapp.onsite_order.domain.OnsiteOrderCheckout;
 import com.example.mosawebapp.product.brand.domain.Brand;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
@@ -167,18 +166,11 @@ public class ActivityLogsService {
     }
   }
 
-  public void threadTypeDetailsActivity(Account account, ThreadTypeDetails details, String action){
+  public void threadTypeDetailsActivity(Account account, ThreadTypeDetails details, String action) {
     String actor = account.getFullName();
-    String message = actor + " just " + action + " a Thread Type details for " + details.getThreadType().getType() + " in Mosa Tire Supply";
-
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
-    activityLogsRepository.save(log);
-  }
-
-  public void onsiteOrderCheckoutActivity(OnsiteOrderCheckout onsiteOrderCheckout, Account account, ThreadTypeDetails details){
-    String actor = account.getFullName();
-    String message = actor + " just completed an onsite order of " + details.getThreadType().getType() + " on " +
-        DateTimeFormatter.get_MMDDYYY_Format(onsiteOrderCheckout.getDateCreated());
+    String message =
+        actor + " just " + action + " a Thread Type details for " + details.getThreadType()
+            .getType() + " in Mosa Tire Supply";
 
     ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
     activityLogsRepository.save(log);

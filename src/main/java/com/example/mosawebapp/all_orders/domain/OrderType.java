@@ -10,13 +10,9 @@ public enum OrderType {
 
   String label;
 
-  OrderType(String label){this.label = label;}
+  OrderType(String label){ this.label = label; };
 
-  public static List<OrderType> getTypesAsList(){
+  public static List<OrderType> getOrderTypes(){
     return Arrays.asList(ONLINE, ONSITE, KIOSK);
-  }
-
-  public static List<String> getTypesLabelAsList(){
-    return Arrays.asList("Online Order", "Onsite Order", "Kiosk Order");
   }
 }

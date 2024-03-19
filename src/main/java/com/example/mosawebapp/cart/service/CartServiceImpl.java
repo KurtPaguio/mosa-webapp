@@ -6,22 +6,13 @@ import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.all_orders.domain.OrderType;
 import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.all_orders.domain.OrdersRepository;
-import com.example.mosawebapp.api_response.ApiObjectResponse;
-import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.cart.domain.Cart;
-import com.example.mosawebapp.cart.domain.CartCheckout;
-import com.example.mosawebapp.cart.domain.CartCheckoutRepository;
-import com.example.mosawebapp.cart.domain.CartItem;
-import com.example.mosawebapp.cart.domain.CartItemRepository;
 import com.example.mosawebapp.cart.domain.CartRepository;
-import com.example.mosawebapp.cart.dto.CartCheckoutDto;
 import com.example.mosawebapp.cart.dto.CartDto;
-import com.example.mosawebapp.cart.dto.CartItemDto;
-import com.example.mosawebapp.cart.dto.CartItemForm;
+import com.example.mosawebapp.cart.dto.CartForm;
+import com.example.mosawebapp.cart.dto.CheckoutForm;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
-import com.example.mosawebapp.product.brand.domain.Brand;
-import com.example.mosawebapp.product.brand.domain.BrandRepository;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
@@ -29,210 +20,242 @@ import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.validate.Validate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Collections;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CartServiceImpl implements CartService{
-  private static final String CART_ITEM_NOT_EXIST = "Cart Item does not exists";
-  private static final String CART_ITEM_NOT_FOR_USER = "Cart item does not belong in user's cart";
-  private final CartRepository cartRepository;
+  private static final Logger logger = LoggerFactory.getLogger(CartServiceImpl.class);
   private final AccountRepository accountRepository;
-  private final CartItemRepository cartItemRepository;
+  private final JwtGenerator jwtGenerator;
   private final ThreadTypeRepository threadTypeRepository;
   private final ThreadTypeDetailsRepository threadTypeDetailsRepository;
+  private final CartRepository cartRepository;
   private final OrdersRepository ordersRepository;
-  private final CartCheckoutRepository cartCheckoutRepository;
-  private final BrandRepository brandRepository;
-  private final JwtGenerator jwtGenerator;
 
-  @Autowired
-  public CartServiceImpl(CartRepository cartRepository,
-      AccountRepository accountRepository, CartItemRepository cartItemRepository,
+  public CartServiceImpl(AccountRepository accountRepository, JwtGenerator jwtGenerator,
       ThreadTypeRepository threadTypeRepository,
-      ThreadTypeDetailsRepository threadTypeDetailsRepository,
-      OrdersRepository ordersRepository, CartCheckoutRepository cartCheckoutRepository, BrandRepository brandRepository, JwtGenerator jwtGenerator) {
-    this.cartRepository = cartRepository;
+      ThreadTypeDetailsRepository threadTypeDetailsRepository, CartRepository cartRepository,
+      OrdersRepository ordersRepository) {
     this.accountRepository = accountRepository;
-    this.cartItemRepository = cartItemRepository;
+    this.jwtGenerator = jwtGenerator;
     this.threadTypeRepository = threadTypeRepository;
     this.threadTypeDetailsRepository = threadTypeDetailsRepository;
+    this.cartRepository = cartRepository;
     this.ordersRepository = ordersRepository;
-    this.cartCheckoutRepository = cartCheckoutRepository;
-    this.brandRepository = brandRepository;
-    this.jwtGenerator = jwtGenerator;
   }
 
   @Override
-  public List<CartCheckoutDto> getCheckouts(String adminToken){
-    Account account = getAccountFromToken(adminToken);
+  public List<CartDto> getAllCartOrders(String token) {
+    logger.info("getting all cart orders");
+    validateIfAccountIsNotCustomerOrContentManager(token);
 
-    if(account.getUserRole() == UserRole.CUSTOMER || account.getUserRole() == UserRole.CONTENT_MANAGER) {
-      throw new ValidationException("Only Administrators, Product, and Order Managers can access this feature");
-    }
+    List<Cart> carts = cartRepository.findAll();
+    List<CartDto> dto = new ArrayList<>();
 
-    List<CartCheckoutDto> dto = new ArrayList<>();
-    List<CartCheckout> checkouts = cartCheckoutRepository.findAll();
-
-    for(CartCheckout checkout: checkouts){
-      List<CartItem> items = cartItemRepository.findByCart(checkout.getCart());
-      dto.add(CartCheckoutDto.buildFromEntityV2(checkout, items));
+    for(Cart cart: carts){
+      dto.add(new CartDto(cart));
     }
 
     return dto;
   }
 
   @Override
-  public List<CartDto> getAllCarts(){
-    List<Cart> carts = cartRepository.findAll();
+  public List<CartDto> getAllCurrentUserOrders(String token){
+    logger.info("getting current user's orders");
 
-    List<CartDto> dtos = new ArrayList<>();
+    Account account = getAccountFromToken(token);
+
+    List<Cart> carts = cartRepository.findByAccount(account);
+
+    if(carts.isEmpty()){
+      return Collections.emptyList();
+    }
+
+    List<CartDto> dto = new ArrayList<>();
+
     for(Cart cart: carts){
-      Account account = cart.getAccount();
-
-      Cart userCart = cartRepository.findByAccount(account);
-
-      List<CartItem> cartItems = cartItemRepository.findByCart(userCart);
-
-      dtos.add(new CartDto(cart, account, cartItems));
+      dto.add(new CartDto(cart));
     }
 
-    return dtos;
+    return dto;
   }
 
   @Override
-  public CartDto getCart(String token) {
+  public List<CartDto> getAllUserCurrentOrders(String token){
+    logger.info("getting user's current orders");
+
     Account account = getAccountFromToken(token);
 
-    Cart cart = cartRepository.findByAccountAndIsActiveLatest(account, true);
+    List<Cart> carts = cartRepository.findByAccountAndIsNotCheckedOut(account.getId());
 
-    if(cart == null){
-      return null;
+    if(carts.isEmpty()){
+      return Collections.emptyList();
     }
 
-    List<CartItem> cartItems = cartItemRepository.findByCart(cart);
+    List<CartDto> dto = new ArrayList<>();
+    for(Cart cart: carts){
+      dto.add(new CartDto(cart));
+    }
 
-    return new CartDto(cart, account, cartItems);
+    return dto;
   }
 
   @Override
-  public void checkout(String token) {
-    Account account = getAccountFromToken(token);
+  public CartDto getCartOrder(String token, String cartId) {
+    logger.info("getting order {}", cartId);
+    validateIfAccountIsNotCustomerOrContentManager(token);
 
-    Cart cart = cartRepository.findByAccountAndIsActiveLatest(account, true);
+    Cart cart = cartRepository.findById(cartId).orElseThrow(() -> new NotFoundException("Cart Order does not exists"));
 
-    if (cart == null) {
-      throw new ValidationException("No latest cart existing for this user");
-    }
-
-    cart.setActive(false);
-    cartRepository.save(cart);
-
-    CartCheckout checkout = new CartCheckout(cart, account);
-
-    cartCheckoutRepository.save(checkout);
-
-    CartItem item = cartItemRepository.findItemByCart(cart);
-    ThreadTypeDetails details = item.getDetails();
-    details.setStocks(details.getStocks() - item.getQuantity());
-
-    threadTypeDetailsRepository.save(details);
-
-    Orders orders = new Orders(cart.getId(), OrderType.ONLINE);
-    ordersRepository.save(orders);
+    return new CartDto(cart);
   }
 
   @Override
-  public CartItemDto addCartItem(String token, CartItemForm form) {
+  public CartDto addCartOrder(String token, CartForm form) {
     Validate.notNull(form);
-    validateForm(form);
+
     Account account = getAccountFromToken(token);
-    Cart cart = cartRepository.findByAccountAndIsActiveLatest(account, true);
-    ThreadType threadType = validateThreadType(form);
+    ThreadType type = validateThreadType(form.getThreadType());
     ThreadTypeDetails details = validateThreadTypeDetails(form);
 
+    validateQuantityAndStocks(form, details);
+
+    logger.info("saving order by {}", account.getFullName());
+
+    Cart existingCart = cartRepository.findLatestByAccountAndTypeAndDetails(account, type, details);
+    if(existingCart != null){
+      existingCart.setQuantity(existingCart.getQuantity() + form.getQuantity());
+      cartRepository.save(existingCart);
+
+      return new CartDto(existingCart);
+    }
+
+    Cart cart = new Cart(account, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), false);
+    cartRepository.save(cart);
+
+    return new CartDto(cart);
+  }
+
+  private ThreadType validateThreadType(String threadType){
+    ThreadType type = threadTypeRepository.findByTypeIgnoreCase(threadType);
+
+    if(type == null){
+      threadTypeRepository.findById(threadType).orElseThrow(() -> new NotFoundException("Thread Type does not exists"));
+    }
+
+    return type;
+  }
+
+  private ThreadTypeDetails validateThreadTypeDetails(CartForm form){
+    ThreadTypeDetails details = threadTypeDetailsRepository.findByDetails(form.getWidth(), form.getAspectRatio(), form.getDiameter(), form.getSidewall());
+
+    if(details == null){
+      throw new NotFoundException("Thread Type with these details does not exists");
+    }
+
+    if(!(form.getThreadType().equals(details.getThreadType().getId())
+        || form.getThreadType().equalsIgnoreCase(details.getThreadType().getType()))){
+      throw new NotFoundException("Details under this Thread Type does not exists");
+    }
+
+    return details;
+  }
+
+  private void validateQuantityAndStocks(CartForm form, ThreadTypeDetails details){
+    if(details.getStocks() == 0){
+      throw new ValidationException("Entered thread type and its variant is out of stock");
+    }
+
+    if(form.getQuantity() < 1){
+      throw new ValidationException("Quantity must be greater than or equal to one");
+    }
+
+    if(form.getQuantity() > details.getStocks()){
+      throw new ValidationException("Current stock is lower than the entered quantity by " + (form.getQuantity() - details.getStocks()));
+    }
+  }
+
+  @Override
+  public CartDto addCartOrderQuantity(String token, String cartId) {
+    Account account = getAccountFromToken(token);
+    Cart cart = cartRepository.findByIdAndAccount(cartId, account);
+
     if(cart == null){
-      cart = cartRepository.save(new Cart(account, true));
+      throw new NotFoundException("Cart Order does not exists for this user");
     }
 
-    CartItem existingItem = cartItemRepository.isCartFormAlreadyInUserCart(cart, details.getThreadType(), details);
-    if(existingItem != null){
-      existingItem.setQuantity(existingItem.getQuantity() + form.getQuantity());
-      cartItemRepository.save(existingItem);
-
-      return new CartItemDto(existingItem, details);
+    if(cart.getDetails().getStocks() == 0){
+      throw new ValidationException("Cannot add anymore as the variant is already out of stock");
     }
 
-    CartItem item = new CartItem(cart, threadType, details, form.getQuantity());
-    cartItemRepository.save(item);
+    logger.info("adding order quantity from cart {} of {}", cartId, account.getFullName());
 
-    return new CartItemDto(item, details);
+    cart.setQuantity(cart.getQuantity() + 1);
+    cartRepository.save(cart);
+
+    return new CartDto(cart);
   }
 
   @Override
-  public void removeCartItem(String token, String itemId) {
+  public void removeCartOrder(String token, String cartId) {
     Account account = getAccountFromToken(token);
-    CartItem cartItem = cartItemRepository.findById(itemId).orElseThrow(() -> new NotFoundException(CART_ITEM_NOT_EXIST));
-    Cart cart = cartRepository.findByAccountAndIsActiveLatest(account, true);
+    Cart cart = cartRepository.findByIdAndAccount(cartId, account);
 
-    boolean isCartItemInUserCart = cartItemRepository.isCartItemInUserCart(cart, itemId);
-
-    if(!isCartItemInUserCart){
-      throw new ValidationException(CART_ITEM_NOT_FOR_USER);
+    if(cart == null){
+      throw new NotFoundException("Cart Order was already removed or does not exists");
     }
 
-    cartItemRepository.delete(cartItem);
+    logger.info("deleting cart order {} of {}", cartId, account.getFullName());
+
+    cartRepository.delete(cart);
   }
 
   @Override
-  public ResponseEntity<?> subtractCartItemQuantity(String token, String itemId) {
+  public CartDto subtractCartOrderQuantity(String token, String cartId) {
     Account account = getAccountFromToken(token);
-    CartItem cartItem = cartItemRepository.findById(itemId).orElseThrow(() -> new NotFoundException(CART_ITEM_NOT_EXIST));
+    Cart cart = cartRepository.findByIdAndAccount(cartId, account);
 
-    Cart cart = cartRepository.findByAccountAndIsActiveLatest(account, true);
-    ThreadTypeDetails details = threadTypeDetailsRepository.findById(cartItem.getDetails().getId())
-        .orElseThrow(() -> new NotFoundException("Thread Type Variant not found"));
-
-    boolean isCartItemInUserCart = cartItemRepository.isCartItemInUserCart(cart, itemId);
-
-    if(!isCartItemInUserCart){
-      throw new ValidationException(CART_ITEM_NOT_FOR_USER);
+    if(cart == null){
+      throw new NotFoundException("Cart Order does not exists for this user");
     }
 
-    cartItem.setQuantity(cartItem.getQuantity() - 1);
-    cartItemRepository.save(cartItem);
+    logger.info("subtracting order quantity from cart {} of {}", cartId, account.getFullName());
 
-    if(cartItem.getQuantity() == 0){
-      cartItemRepository.delete(cartItem);
+    cart.setQuantity(cart.getQuantity() - 1);
+    cartRepository.save(cart);
 
-      return ResponseEntity.ok(new ApiResponse("Item removed from cart", HttpStatus.OK));
-    }
-
-    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Item quantity subtracted", new CartItemDto(cartItem, details)));
+    return new CartDto(cart);
   }
 
   @Override
-  public ResponseEntity<?> addCartItemQuantity(String token, String itemId) {
+  public void checkout(String token, CheckoutForm form) {
+    Validate.notNull(form);
+
     Account account = getAccountFromToken(token);
-    CartItem cartItem = cartItemRepository.findById(itemId).orElseThrow(() -> new NotFoundException(CART_ITEM_NOT_EXIST));
 
-    Cart cart = cartRepository.findByAccountAndIsActiveLatest(account, true);
-    ThreadTypeDetails details = threadTypeDetailsRepository.findById(cartItem.getDetails().getId())
-        .orElseThrow(() -> new NotFoundException("Thread Type Variant not found"));
+    logger.info("checking out selected cart orders of {}", account.getFullName());
+    for(String id: form.getIds()){
+      Cart cart = cartRepository.findByIdAndAccount(id, account);
 
-    boolean isCartItemInUserCart = cartItemRepository.isCartItemInUserCart(cart, itemId);
+      if(cart == null){
+        throw new NotFoundException("Cart Order id does not exists or belong to the user");
+      }
 
-    if(!isCartItemInUserCart){
-      throw new ValidationException(CART_ITEM_NOT_FOR_USER);
+      cart.setCheckedOut(true);
+      cartRepository.save(cart);
+
+      Orders orders = new Orders(cart.getId(), OrderType.ONLINE);
+      ordersRepository.save(orders);
+
+      ThreadTypeDetails details = cart.getDetails();
+      details.setStocks(details.getStocks() - cart.getQuantity());
+      threadTypeDetailsRepository.save(details);
     }
-
-    cartItem.setQuantity(cartItem.getQuantity() + 1);
-    cartItemRepository.save(cartItem);
-
-    return ResponseEntity.ok(new ApiObjectResponse(HttpStatus.OK, "Item quantity added", new CartItemDto(cartItem, details)));
   }
 
   private Account getAccountFromToken(String token){
@@ -241,58 +264,12 @@ public class CartServiceImpl implements CartService{
     return accountRepository.findById(id).orElseThrow(() -> new NotFoundException("Account does not exists"));
   }
 
-  private void validateForm(CartItemForm form){
-    Brand formBrand = brandRepository.findByNameIgnoreCase(form.getBrand());
+  private void validateIfAccountIsNotCustomerOrContentManager(String token){
+    String accId = jwtGenerator.getUserFromJWT(token);
+    Account adminAccount = accountRepository.findById(accId).orElseThrow(() -> new NotFoundException("Account does not exists"));
 
-    if(formBrand == null){
-      brandRepository.findById(form.getBrand()).orElseThrow(() -> new NotFoundException("Brand does not exists"));
-    }
-
-    if(form.getQuantity() < 0){
-      throw new ValidationException("Quantity must be greater than zero");
-    }
-  }
-
-  private ThreadType validateThreadType(CartItemForm form){
-    ThreadType threadType = threadTypeRepository.findTypeId(form.getThreadType());
-
-    if(threadType == null){
-      threadType = threadTypeRepository.findByTypeIgnoreCase(form.getThreadType());
-
-      if(threadType == null){
-        throw new NotFoundException("Thread type does not exists");
-      }
-
-      validateBrandAndThreadTypeRelation(threadType, form);
-    }
-
-    validateBrandAndThreadTypeRelation(threadType, form);
-
-    return threadType;
-  }
-
-  private ThreadTypeDetails validateThreadTypeDetails(CartItemForm form){
-    ThreadTypeDetails details = threadTypeDetailsRepository.findByDetails(form.getWidth().toLowerCase(), form.getAspectRatio().toLowerCase(), form.getDiameter().toLowerCase(),
-        form.getSidewall().toLowerCase());
-
-    if(details == null){
-      throw new NotFoundException("No Thread Type Variant exists with these details");
-    }
-
-    if(!details.getThreadType().getType().equalsIgnoreCase(form.getThreadType()) && !details.getThreadType().getId().equals(form.getThreadType())){
-      throw new ValidationException("Details not under the Thread Type " + form.getThreadType());
-    }
-
-    if(details.getStocks() == null || details.getStocks() == 0){
-      throw new ValidationException("Already out of stock");
-    }
-
-    return details;
-  }
-
-  private void validateBrandAndThreadTypeRelation(ThreadType threadType, CartItemForm form){
-    if(!threadType.getBrand().getName().equalsIgnoreCase(form.getBrand()) && (!threadType.getBrand().getId().equals(form.getBrand()))){
-        throw new ValidationException("Thread Type is not under the selected brand");
+    if(!adminAccount.getUserRole().equals(UserRole.ADMINISTRATOR)){
+      throw new ValidationException("Only Administrators, Product, and Order managers have access to this feature");
     }
   }
 }

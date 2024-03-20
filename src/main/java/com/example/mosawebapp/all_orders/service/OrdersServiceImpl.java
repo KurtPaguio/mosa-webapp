@@ -14,10 +14,10 @@ import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.security.JwtGenerator;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -49,21 +49,36 @@ public class OrdersServiceImpl implements OrdersService{
     logger.info("getting all orders");
 
     List<Orders> orders = ordersRepository.findAll();
-    List<OrdersDto> dto = new ArrayList<>();
+    List<OrdersDto> dto = processOrders(orders);
 
-    for(Orders order: orders) {
-      List<String> orderIds = Arrays.asList(order.getOrderIds().split(","));
+    return sortOrdersByDate(dto);
+  }
 
-      if(order.getOrderType().equals(OrderType.ONLINE)) {
-        for (String id : orderIds) {
-          Cart cart = cartRepository.findById(id).orElse(null);
+  private List<OrdersDto> processOrders(List<Orders> orders) {
+    return orders.stream()
+            .flatMap(order -> processOrder(order).stream())
+            .collect(Collectors.toList());
+  }
 
-          dto.add(new OrdersDto(order, cart));
-        }
-      }
+  private List<OrdersDto> processOrder(Orders order) {
+    if (!order.getOrderType().equals(OrderType.ONLINE)) {
+      return Collections.emptyList();
     }
-    dto.sort(Comparator.comparing(OrdersDto::getDateOrdered).reversed());
-    return dto;
+
+    List<String> orderIds = Arrays.asList(order.getOrderIds().split(","));
+    return orderIds.stream()
+            .map(id -> createOrderDto(order, cartRepository.findById(id).orElse(null)))
+            .collect(Collectors.toList());
+  }
+
+  private OrdersDto createOrderDto(Orders order, Cart cart) {
+    return new OrdersDto(order, cart);
+  }
+
+  private List<OrdersDto> sortOrdersByDate(List<OrdersDto> dto) {
+    return dto.stream()
+            .sorted(Comparator.comparing(OrdersDto::getDateOrdered).reversed())
+            .collect(Collectors.toList());
   }
 
   @Override

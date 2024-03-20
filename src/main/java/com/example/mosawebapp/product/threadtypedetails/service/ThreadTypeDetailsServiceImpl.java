@@ -8,10 +8,8 @@ import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.file_upload_service.FileUploadService;
 import com.example.mosawebapp.logs.service.ActivityLogsService;
 import com.example.mosawebapp.mail.MailService;
-import com.example.mosawebapp.product.brand.domain.BrandRepository;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
-import com.example.mosawebapp.product.threadtype.dto.ThreadTypeDto;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetailsRepository;
 import com.example.mosawebapp.product.threadtypedetails.dto.AddStockForm;
@@ -38,7 +36,6 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
   private String MOSA_TIRE_SUPPLY_EMAIL;
   @Value("${default.blank.image.cdn}")
   private String BLANK_IMAGE;
-  private final BrandRepository brandRepository;
   private final ThreadTypeRepository threadTypeRepository;
   private final ThreadTypeDetailsRepository threadTypeDetailsRepository;
   private final AccountRepository accountRepository;
@@ -47,12 +44,10 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
   private final ActivityLogsService activityLogsService;
   private final FileUploadService fileUploadService;
   @Autowired
-  public ThreadTypeDetailsServiceImpl(BrandRepository brandRepository,
-      ThreadTypeRepository threadTypeRepository,
+  public ThreadTypeDetailsServiceImpl(ThreadTypeRepository threadTypeRepository,
       ThreadTypeDetailsRepository threadTypeDetailsRepository, AccountRepository accountRepository,
       JwtGenerator jwtGenerator, MailService mailService, ActivityLogsService activityLogsService,
       FileUploadService fileUploadService) {
-    this.brandRepository = brandRepository;
     this.threadTypeRepository = threadTypeRepository;
     this.threadTypeDetailsRepository = threadTypeDetailsRepository;
     this.accountRepository = accountRepository;
@@ -143,7 +138,7 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
     ThreadTypeDetails details = new ThreadTypeDetails(form.getWidth(), form.getAspectRatio(), form.getDiameter(), form.getSidewall(), form.getPlyRating(),
         form.getStocks(), form.getPrice(), threadType);
 
-    mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, ADDED);
+    //mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, ADDED);
     threadTypeDetailsRepository.save(details);
     activityLogsService.threadTypeDetailsActivity(account, details, ADDED);
 
@@ -160,7 +155,8 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
 
     for (ThreadTypeDetails detail : details) {
       if (threadTypeDetailsRepository.existsByThreadType(detail.getThreadType())) {
-        throw new ValidationException("There are already existing variants with the same Thread Type. Please double check the contents.");
+        throw new ValidationException("There are already existing variants with the same Thread Type. " +
+                "Please double check the contents.");
       }
     }
 
@@ -178,11 +174,7 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
     validateForm(form);
 
     ThreadTypeDetails details = threadTypeDetailsRepository.findById(id).orElseThrow(() -> new NotFoundException("Thread Type Details does not exists"));
-    ThreadType threadType = threadTypeRepository.findByTypeIgnoreCase(form.getThreadType());
-
-    if(threadType == null){
-      threadType = threadTypeRepository.findById(form.getThreadType()).orElseThrow(() -> new NotFoundException("Thread Type does not exists"));
-    }
+    ThreadType threadType = details.getThreadType();
 
     details.setWidth(form.getWidth());
     details.setAspectRatio(form.getAspectRatio());
@@ -196,7 +188,7 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
       details.setStocks(form.getStocks());
     }
 
-    mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, UPDATED);
+    //mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, UPDATED);
     threadTypeDetailsRepository.save(details);
     activityLogsService.threadTypeDetailsActivity(account, details, UPDATED);
 
@@ -208,7 +200,8 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
     Account account = getAccountFromToken(token);
     validateIfAccountIsAdmin(account);
 
-    ThreadTypeDetails details = threadTypeDetailsRepository.findById(id).orElseThrow(() -> new NotFoundException("Thread Type Details does not exists"));
+    ThreadTypeDetails details = threadTypeDetailsRepository.findById(id).orElseThrow(() ->
+            new NotFoundException("Thread Type Details does not exists"));
 
     //mailService.sendEmailForThreadTypeDetails(MOSA_TIRE_SUPPLY_EMAIL, details, DELETED);
     threadTypeDetailsRepository.delete(details);

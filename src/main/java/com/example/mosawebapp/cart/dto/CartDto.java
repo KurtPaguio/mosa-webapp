@@ -12,6 +12,7 @@ public class CartDto {
   private String customerName;
   private String brandName;
   private String threadType;
+  private String imageUrl;
   private ThreadTypeDetailsDto details;
   private long quantity;
   private float totalPrice;
@@ -35,6 +36,7 @@ public class CartDto {
     this.dateCreated = DateTimeFormatter.get_MMDDYYY_Format(cart.getDateCreated());
     this.customerName = validateCustomerName(cart);
     this.brandName = cart.getType().getBrand().getName();
+    this.imageUrl = cart.getType().getImageUrl();
     this.threadType = cart.getType().getType();
     this.details = ThreadTypeDetailsDto.buildFromEntity(cart.getDetails());
     this.quantity = cart.getQuantity();
@@ -120,5 +122,13 @@ public class CartDto {
 
   public void setOrderStatus(OrderStatus orderStatus) {
     this.orderStatus = orderStatus;
+  }
+
+  public String getImageUrl() {
+    return imageUrl;
+  }
+
+  public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
   }
 }

@@ -2,6 +2,8 @@ package com.example.mosawebapp.mail;
 
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.dto.AccountForm;
+import com.example.mosawebapp.all_orders.domain.Orders;
+import com.example.mosawebapp.cart.domain.Cart;
 import com.example.mosawebapp.product.brand.domain.Brand;
 import com.example.mosawebapp.product.brand.dto.BrandDto;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
@@ -10,6 +12,7 @@ import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails
 import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.util.Date;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -192,5 +195,40 @@ public class MailService {
 
     simpleMailMessage.setTo(mail);
     javaMailSender.send(simpleMailMessage);
+  }
+
+  public void sendEmailOnPayment(Account account, Orders orders, List<Cart> carts){
+    String itemsOrdered = "";
+    float downPayment = 0;
+    for(Cart cart: carts){
+      downPayment += (cart.getQuantity() + cart.getDetails().getPrice()) / 2;
+      String plyRating;
+
+      if(cart.getDetails().getPlyRating().isEmpty() || cart.getDetails().getPlyRating() == null){
+        plyRating = "No Ply Rating";
+      } else {
+        plyRating = cart.getDetails().getPlyRating();
+      }
+
+      itemsOrdered += "\n" + cart.getType().getType() + " - " + cart.getDetails().getWidth() + "/" + cart.getDetails().getAspectRatio() +
+          "/" + cart.getDetails().getDiameter() + "|" + plyRating + "|" + cart.getDetails().getSidewall();
+    }
+
+    simpleMailMessage.setFrom(fromEmail);
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Payment");
+    simpleMailMessage.setText("Hi, " + account.getFullName() + "!"
+        + "\n\nThank you for choosing Mosa Tire Supply. We're excited to let you know that your order with reference number '" + orders.getReferenceNumber() + "' "
+        + "has been successfully place and already on payment verification."
+        + "\n\nHere's your order details."
+        + "\nOrder Date: " + orders.getDateCreated()
+        + "\nDown Payment: " + downPayment
+        + "\nItems Ordered:" + itemsOrdered);
+
+    simpleMailMessage.setTo(account.getEmail());
+    javaMailSender.send(simpleMailMessage);
+  }
+
+  public void sendEmailForVerified(Account account, Orders orders){
+
   }
 }

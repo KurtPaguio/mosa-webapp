@@ -5,4 +5,8 @@ import java.util.List;
 
 public interface OrdersService {
   List<OrdersDto> getAllOrders(String token);
+
+  OrdersDto verifyPayment(String token, String orderId);
+  OrdersDto toBeDelivered(String token, String orderId);
+  OrdersDto paymentNotVerified(String token, String orderId);
 }

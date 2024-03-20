@@ -1,13 +1,18 @@
 package com.example.mosawebapp.all_orders.domain;
 
 import java.util.Date;
+import java.util.List;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import javax.persistence.JoinColumn;
 import org.apache.poi.xwpf.usermodel.Borders;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
@@ -21,19 +26,22 @@ public class Orders {
   @CreationTimestamp
   private Date dateCreated;
   @Column
-  private String orderId;
+  private String orderIds;
   @Column
   @Enumerated(EnumType.STRING)
   private OrderType orderType;
   @Column
   @Enumerated(EnumType.STRING)
   private OrderStatus orderStatus;
+  @Column
+  private String referenceNumber;
 
   public Orders(){}
-  public Orders(String orderId, OrderType orderType, OrderStatus status) {
-    this.orderId = orderId;
+  public Orders(String orderIds, OrderType orderType, OrderStatus status, String referenceNumber) {
+    this.orderIds = orderIds;
     this.orderType = orderType;
     this.orderStatus = status;
+    this.referenceNumber = referenceNumber;
   }
 
   public String getId() {
@@ -52,12 +60,12 @@ public class Orders {
     this.dateCreated = dateCreated;
   }
 
-  public String getOrderId() {
-    return orderId;
+  public String getOrderIds() {
+    return orderIds;
   }
 
-  public void setOrderId(String orderId) {
-    this.orderId = orderId;
+  public void setOrderIds(String orderIds) {
+    this.orderIds = orderIds;
   }
 
   public OrderType getOrderType() {
@@ -74,5 +82,13 @@ public class Orders {
 
   public void setOrderStatus(OrderStatus orderStatus) {
     this.orderStatus = orderStatus;
+  }
+
+  public String getReferenceNumber() {
+    return referenceNumber;
+  }
+
+  public void setReferenceNumber(String referenceNumber) {
+    this.referenceNumber = referenceNumber;
   }
 }

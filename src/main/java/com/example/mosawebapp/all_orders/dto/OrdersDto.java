@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public class OrdersDto {
   private String orderId;
   private String dateOrdered;
+  private String referenceNumber;
   private OrderType orderType;
   private CartDto onlineOrders;
 
@@ -23,9 +24,17 @@ public class OrdersDto {
     this.onlineOrders = onlineOrders;
   }
 
+  public OrdersDto(Orders orders){
+    this.orderId = orders.getId();
+    this.dateOrdered = DateTimeFormatter.get_MMDDYYY_Format(orders.getDateCreated());
+    this.referenceNumber = orders.getReferenceNumber();
+    this.orderType = orders.getOrderType();
+  }
+
   public OrdersDto(Orders orders, Cart onlineOrders){
     this.orderId = orders.getId();
     this.dateOrdered = DateTimeFormatter.get_MMDDYYY_Format(orders.getDateCreated());
+    this.referenceNumber = orders.getReferenceNumber();
 
     if(onlineOrders != null){
       this.orderType = orders.getOrderType();
@@ -62,5 +71,13 @@ public class OrdersDto {
 
   public void setOrderType(OrderType orderType) {
     this.orderType = orderType;
+  }
+
+  public String getReferenceNumber() {
+    return referenceNumber;
+  }
+
+  public void setReferenceNumber(String referenceNumber) {
+    this.referenceNumber = referenceNumber;
   }
 }

@@ -36,17 +36,19 @@ public class Cart {
   private float totalPrice;
   @Column
   private boolean isCheckedOut;
-
+  @Column
+  private boolean isPaid;
   public Cart(){}
 
   public Cart(Account account, ThreadType type, ThreadTypeDetails details, long quantity,
-      float totalPrice, boolean isCheckedOut) {
+      float totalPrice, boolean isCheckedOut, boolean isPaid) {
     this.account = account;
     this.type = type;
     this.details = details;
     this.quantity = quantity;
     this.totalPrice = totalPrice;
     this.isCheckedOut = isCheckedOut;
+    this.isPaid = isPaid;
   }
 
   public String getId() {
@@ -111,5 +113,13 @@ public class Cart {
 
   public void setCheckedOut(boolean checkedOut) {
     isCheckedOut = checkedOut;
+  }
+
+  public boolean isPaid() {
+    return isPaid;
+  }
+
+  public void setPaid(boolean paid) {
+    isPaid = paid;
   }
 }

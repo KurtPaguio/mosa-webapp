@@ -4,6 +4,7 @@ import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.cart.dto.CartDto;
 import com.example.mosawebapp.cart.dto.CartForm;
 import com.example.mosawebapp.cart.dto.CheckoutForm;
+import com.example.mosawebapp.cart.dto.ReferenceNumberForm;
 import com.example.mosawebapp.cart.service.CartService;
 import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.security.JwtGenerator;
@@ -11,11 +12,11 @@ import com.example.mosawebapp.security.domain.TokenBlacklistingService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/cart")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
 public class CartController {
   private static final String BEARER = "Bearer ";
   private static final String TOKEN_INVALID = "Token Invalid/Expired";
@@ -46,7 +48,7 @@ public class CartController {
     return ResponseEntity.ok(cartService.getAllCartOrders(token));
   }
 
-  @GetMapping(value = "/getCurrentUserOrders")
+  @GetMapping(value = "/getAllUserOrders")
   public ResponseEntity<?> getCurrentUserOrders(@RequestHeader("Authorization") String header){
     String token = header.replace(BEARER, "");
 
@@ -129,9 +131,30 @@ public class CartController {
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
-    int ordersCheckedOut = cartService.checkout(token, form);
 
-    return ResponseEntity.ok(new ApiResponse(ordersCheckedOut + " order/s checked out successfully", HttpStatus.OK));
+    return ResponseEntity.ok(cartService.checkout(token, form));
+  }
+
+  @PostMapping(value = "/cancelCheckout")
+  public ResponseEntity<?> cancelCheckout(@RequestHeader("Authorization") String header, @RequestBody
+  CheckoutForm form){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+    cartService.cancelCheckout(token, form);
+
+    return ResponseEntity.ok(new ApiResponse("Successfully cancelled checkouts", HttpStatus.OK));
+  }
+
+  @PostMapping(value = "/pay")
+  public ResponseEntity<?> pay(@RequestHeader("Authorization") String header, @RequestBody
+  ReferenceNumberForm form){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+    cartService.pay(token, form);
+
+    return ResponseEntity.ok(new ApiResponse("Payment successful", HttpStatus.OK));
   }
 
   private void validateTokenValidity(String token){

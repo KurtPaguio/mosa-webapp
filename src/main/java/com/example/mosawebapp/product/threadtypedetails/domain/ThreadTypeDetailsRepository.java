@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.core.parameters.P;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface ThreadTypeDetailsRepository extends JpaRepository<ThreadTypeDetails, String>,
@@ -16,11 +17,12 @@ public interface ThreadTypeDetailsRepository extends JpaRepository<ThreadTypeDet
   List<ThreadTypeDetails> findByThreadType(ThreadType type);
 
   @Query(value = "SELECT * FROM thread_type_details WHERE "
-      + "width = :width "
+      + "thread_type_id = :typeId "
+      + "AND width = :width "
       + "AND aspect_ratio = :ratio "
       + "AND diameter = :diameter "
       + "AND sidewall = :sidewall ", nativeQuery = true)
-  ThreadTypeDetails findByDetails(@Param("width") String width, @Param("ratio") String ratio, @Param("diameter") String diameter,
+  ThreadTypeDetails findByDetails(@Param("typeId") String typeId, @Param("width") String width, @Param("ratio") String ratio, @Param("diameter") String diameter,
       @Param("sidewall") String sidewall);
 
   @Modifying

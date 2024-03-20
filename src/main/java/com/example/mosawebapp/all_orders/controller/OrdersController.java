@@ -4,6 +4,7 @@ import com.example.mosawebapp.all_orders.service.OrdersService;
 import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -32,6 +33,15 @@ public class OrdersController {
     validateTokenValidity(token);
 
     return ResponseEntity.ok(ordersService.getAllOrders(token));
+  }
+
+  @GetMapping(value = "/verify/{id}")
+  public ResponseEntity<?> getAllOrders(@RequestHeader("Authorization") String header, @Param("id") String id){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return ResponseEntity.ok(ordersService.verifyPayment(token, id));
   }
 
   private void validateTokenValidity(String token){

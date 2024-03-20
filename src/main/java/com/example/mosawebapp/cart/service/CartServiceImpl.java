@@ -7,14 +7,16 @@ import com.example.mosawebapp.all_orders.domain.OrderStatus;
 import com.example.mosawebapp.all_orders.domain.OrderType;
 import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.all_orders.domain.OrdersRepository;
-import com.example.mosawebapp.all_orders.dto.OrdersDto;
 import com.example.mosawebapp.cart.domain.Cart;
 import com.example.mosawebapp.cart.domain.CartRepository;
+import com.example.mosawebapp.cart.dto.CartCheckoutDto;
 import com.example.mosawebapp.cart.dto.CartDto;
 import com.example.mosawebapp.cart.dto.CartForm;
 import com.example.mosawebapp.cart.dto.CheckoutForm;
+import com.example.mosawebapp.cart.dto.ReferenceNumberForm;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
+import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
@@ -27,6 +29,7 @@ import java.util.Collections;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -38,17 +41,21 @@ public class CartServiceImpl implements CartService{
   private final ThreadTypeDetailsRepository threadTypeDetailsRepository;
   private final CartRepository cartRepository;
   private final OrdersRepository ordersRepository;
+  private final MailService mailService;
+
+  @Autowired
 
   public CartServiceImpl(AccountRepository accountRepository, JwtGenerator jwtGenerator,
       ThreadTypeRepository threadTypeRepository,
       ThreadTypeDetailsRepository threadTypeDetailsRepository, CartRepository cartRepository,
-      OrdersRepository ordersRepository) {
+      OrdersRepository ordersRepository, MailService mailService) {
     this.accountRepository = accountRepository;
     this.jwtGenerator = jwtGenerator;
     this.threadTypeRepository = threadTypeRepository;
     this.threadTypeDetailsRepository = threadTypeDetailsRepository;
     this.cartRepository = cartRepository;
     this.ordersRepository = ordersRepository;
+    this.mailService = mailService;
   }
 
   @Override
@@ -125,16 +132,13 @@ public class CartServiceImpl implements CartService{
   }
 
   private OrderStatus determineOrderStatus(String cartId){
-    OrderStatus status;
-    String orderStatus = ordersRepository.findOrderStatusByOrderId(cartId);
+    Orders orderStatus = ordersRepository.findOrderByOrderId(cartId);
 
-    if(orderStatus == null || orderStatus.isEmpty()){
-      status = OrderStatus.NOT_YET_ORDERED;
-    } else {
-      status = OrderStatus.valueOf(orderStatus);
+    if(orderStatus == null){
+      return OrderStatus.NOT_YET_ORDERED;
     }
 
-    return status;
+    return orderStatus.getOrderStatus();
   }
   @Override
   public CartDto addCartOrder(String token, CartForm form) {
@@ -142,7 +146,7 @@ public class CartServiceImpl implements CartService{
 
     Account account = getAccountFromToken(token);
     ThreadType type = validateThreadType(form.getThreadType());
-    ThreadTypeDetails details = validateThreadTypeDetails(form);
+    ThreadTypeDetails details = validateThreadTypeDetails(form, type);
 
     validateQuantityAndStocks(form, details);
 
@@ -156,7 +160,7 @@ public class CartServiceImpl implements CartService{
       return new CartDto(existingCart, OrderStatus.NOT_YET_ORDERED);
     }
 
-    Cart cart = new Cart(account, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), false);
+    Cart cart = new Cart(account, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), false, false);
     cartRepository.save(cart);
 
     return new CartDto(cart, OrderStatus.NOT_YET_ORDERED);
@@ -172,8 +176,10 @@ public class CartServiceImpl implements CartService{
     return type;
   }
 
-  private ThreadTypeDetails validateThreadTypeDetails(CartForm form){
-    ThreadTypeDetails details = threadTypeDetailsRepository.findByDetails(form.getWidth(), form.getAspectRatio(), form.getDiameter(), form.getSidewall());
+  private ThreadTypeDetails validateThreadTypeDetails(CartForm form, ThreadType type){
+    logger.info("validating thread type details");
+    ThreadTypeDetails details = threadTypeDetailsRepository.findByDetails(type.getId(),
+        form.getWidth(), form.getAspectRatio(), form.getDiameter(), form.getSidewall());
 
     if(details == null){
       throw new NotFoundException("Thread Type with these details does not exists");
@@ -254,9 +260,8 @@ public class CartServiceImpl implements CartService{
   }
 
   @Override
-  public int checkout(String token, CheckoutForm form) {
+  public CartCheckoutDto checkout(String token, CheckoutForm form) {
     Validate.notNull(form);
-    int ordersCheckedOut = 0;
 
     Account account = getAccountFromToken(token);
     List<String> cartIds = new ArrayList<>(form.getIds());
@@ -267,6 +272,10 @@ public class CartServiceImpl implements CartService{
     });
 
     logger.info("checking out selected cart orders of {}", account.getFullName());
+
+    List<CartDto> carts = new ArrayList<>();
+    List<String> orderIds = new ArrayList<>();
+
     for(String id: cartIds){
       Cart cart = cartRepository.findByIdAndAccount(id, account);
 
@@ -280,20 +289,106 @@ public class CartServiceImpl implements CartService{
 
       cart.setCheckedOut(true);
       cartRepository.save(cart);
+      carts.add(new CartDto(cart, OrderStatus.FOR_CHECKOUT));
 
-      Orders orders = new Orders(cart.getId(), OrderType.ONLINE, OrderStatus.FOR_VERIFICATION);
-      ordersRepository.save(orders);
+      orderIds.add(id);
+
+      /*;
+
+      ordersCheckedOut++;*/
+    }
+
+    //mailService(account, orders)
+    return new CartCheckoutDto(carts);
+  }
+
+  @Override
+  public void cancelCheckout(String token, CheckoutForm form){
+    Validate.notNull(form);
+
+    Account account = getAccountFromToken(token);
+    List<String> cartIds = new ArrayList<>(form.getIds());
+
+    cartIds.removeIf(id -> {
+      Cart cart = cartRepository.findByIdAndAccount(id, account);
+      return cart != null && cart.isCheckedOut();
+    });
+
+    logger.info("cancelling check out of selected cart orders of {}", account.getFullName());
+
+    for(String id: cartIds){
+      Cart cart = cartRepository.findByIdAndAccount(id, account);
+
+      if(cart == null){
+        throw new NotFoundException("Cart Order id does not exists or belong to the user");
+      }
+
+      if(cart.isCheckedOut()){
+        throw new ValidationException("One of the cart orders is already checked out");
+      }
+
+      cart.setCheckedOut(false);
+      cartRepository.save(cart);
+    }
+
+    logger.info("Successfully cancelled the checkouts");
+  }
+  @Override
+  public void pay(String token, ReferenceNumberForm form){
+    Validate.notNull(form);
+    Account account = getAccountFromToken(token);
+
+    List<String> cartIds = new ArrayList<>(form.getIds());
+
+    cartIds.removeIf(id -> {
+      Cart cart = cartRepository.findByIdAndAccount(id, account);
+      return cart != null && cart.isPaid();
+    });
+
+    logger.info("processing payment of selected cart orders of {}", account.getFullName());
+
+    List<Cart> carts = new ArrayList<>();
+    StringBuilder ids = new StringBuilder();
+    for(String id: cartIds){
+      Cart cart = cartRepository.findByIdAndAccount(id, account);
+
+      validateCartDetails(cart);
+
+      cart.setPaid(true);
+      cartRepository.save(cart);
+
+      if(ids.length() > 0 || !ids.isEmpty()){
+        ids.append(",");
+      }
+
+      carts.add(cart);
+      ids.append(cart.getId());
 
       ThreadTypeDetails details = cart.getDetails();
       details.setStocks(details.getStocks() - cart.getQuantity());
       threadTypeDetailsRepository.save(details);
-
-      ordersCheckedOut++;
     }
 
-    return ordersCheckedOut;
+    Orders orders = new Orders(ids.toString(), OrderType.ONLINE, OrderStatus.FOR_VERIFICATION, form.getRefNo());
+    ordersRepository.save(orders);
+
+    mailService.sendEmailOnPayment(account, orders, carts);
+    logger.info("Successfully paid the checkouts");
   }
 
+  private void validateCartDetails(Cart cart){
+    if(cart == null){
+      throw new NotFoundException("Cart Order id does not exists or belong to the user");
+    }
+
+    if(!cart.isCheckedOut()){
+      throw new ValidationException("Cart Order is not one of the selected orders to be checked out");
+    }
+
+    if(cart.isPaid()){
+      throw new ValidationException("One of the cart orders is already paid");
+    }
+  }
   private Account getAccountFromToken(String token){
     String id = jwtGenerator.getUserFromJWT(token);
 

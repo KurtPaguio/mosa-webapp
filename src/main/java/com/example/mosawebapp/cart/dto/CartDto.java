@@ -1,12 +1,13 @@
 package com.example.mosawebapp.cart.dto;
 
+import com.example.mosawebapp.all_orders.domain.OrderStatus;
 import com.example.mosawebapp.cart.domain.Cart;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.utils.DateTimeFormatter;
 
 public class CartDto {
-  private String id;
+  private String cartOrderId;
   private String dateCreated;
   private String customerName;
   private String brandName;
@@ -14,12 +15,13 @@ public class CartDto {
   private ThreadTypeDetailsDto details;
   private long quantity;
   private float totalPrice;
+  private OrderStatus orderStatus;
 
   public CartDto(){}
 
-  public CartDto(String id, String dateCreated, String brandName, String threadType,
+  public CartDto(String cartOrderId, String dateCreated, String brandName, String threadType,
       ThreadTypeDetails details, long quantity, float totalPrice) {
-    this.id = id;
+    this.cartOrderId = cartOrderId;
     this.dateCreated = dateCreated;
     this.brandName = brandName;
     this.threadType = threadType;
@@ -28,8 +30,8 @@ public class CartDto {
     this.totalPrice = totalPrice;
   }
 
-  public CartDto(Cart cart){
-    this.id = cart.getId();
+  public CartDto(Cart cart, OrderStatus status){
+    this.cartOrderId = cart.getId();
     this.dateCreated = DateTimeFormatter.get_MMDDYYY_Format(cart.getDateCreated());
     this.customerName = validateCustomerName(cart);
     this.brandName = cart.getType().getBrand().getName();
@@ -37,6 +39,7 @@ public class CartDto {
     this.details = ThreadTypeDetailsDto.buildFromEntity(cart.getDetails());
     this.quantity = cart.getQuantity();
     this.totalPrice = cart.getQuantity() * details.getPrice();
+    this.orderStatus = status;
   }
 
   public String validateCustomerName(Cart cart){
@@ -47,12 +50,12 @@ public class CartDto {
     return cart.getAccount().getFullName();
   }
 
-  public String getId() {
-    return id;
+  public String getCartOrderId() {
+    return cartOrderId;
   }
 
-  public void setId(String id) {
-    this.id = id;
+  public void setCartOrderId(String cartOrderId) {
+    this.cartOrderId = cartOrderId;
   }
 
   public String getDateCreated() {
@@ -109,5 +112,13 @@ public class CartDto {
 
   public void setCustomerName(String customerName) {
     this.customerName = customerName;
+  }
+
+  public OrderStatus getOrderStatus() {
+    return orderStatus;
+  }
+
+  public void setOrderStatus(OrderStatus orderStatus) {
+    this.orderStatus = orderStatus;
   }
 }

@@ -29,7 +29,7 @@ public class OrdersDto {
 
     if(onlineOrders != null){
       this.orderType = orders.getOrderType();
-      this.onlineOrders = new CartDto(onlineOrders);
+      this.onlineOrders = new CartDto(onlineOrders, orders.getOrderStatus());
     }
   }
   public String getOrderId() {

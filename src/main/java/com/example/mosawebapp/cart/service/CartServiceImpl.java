@@ -3,6 +3,7 @@ package com.example.mosawebapp.cart.service;
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.domain.UserRole;
+import com.example.mosawebapp.all_orders.domain.OrderStatus;
 import com.example.mosawebapp.all_orders.domain.OrderType;
 import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.all_orders.domain.OrdersRepository;
@@ -58,7 +59,9 @@ public class CartServiceImpl implements CartService{
     List<CartDto> dto = new ArrayList<>();
 
     for(Cart cart: carts){
-      dto.add(new CartDto(cart));
+      String orderStatus = ordersRepository.findOrderStatusByOrderId(cart.getId());
+      OrderStatus status = OrderStatus.valueOf(orderStatus);
+      dto.add(new CartDto(cart, status));
     }
 
     return dto;
@@ -79,7 +82,9 @@ public class CartServiceImpl implements CartService{
     List<CartDto> dto = new ArrayList<>();
 
     for(Cart cart: carts){
-      dto.add(new CartDto(cart));
+      String orderStatus = ordersRepository.findOrderStatusByOrderId(cart.getId());
+      OrderStatus status = OrderStatus.valueOf(orderStatus);
+      dto.add(new CartDto(cart, status));
     }
 
     return dto;
@@ -99,7 +104,9 @@ public class CartServiceImpl implements CartService{
 
     List<CartDto> dto = new ArrayList<>();
     for(Cart cart: carts){
-      dto.add(new CartDto(cart));
+      String orderStatus = ordersRepository.findOrderStatusByOrderId(cart.getId());
+      OrderStatus status = OrderStatus.valueOf(orderStatus);
+      dto.add(new CartDto(cart, status));
     }
 
     return dto;
@@ -111,8 +118,10 @@ public class CartServiceImpl implements CartService{
     validateIfAccountIsNotCustomerOrContentManager(token);
 
     Cart cart = cartRepository.findById(cartId).orElseThrow(() -> new NotFoundException("Cart Order does not exists"));
+    String orderStatus = ordersRepository.findOrderStatusByOrderId(cart.getId());
+    OrderStatus status = OrderStatus.valueOf(orderStatus);
 
-    return new CartDto(cart);
+    return new CartDto(cart, status);
   }
 
   @Override
@@ -132,13 +141,13 @@ public class CartServiceImpl implements CartService{
       existingCart.setQuantity(existingCart.getQuantity() + form.getQuantity());
       cartRepository.save(existingCart);
 
-      return new CartDto(existingCart);
+      return new CartDto(existingCart, OrderStatus.NOT_YET_ORDERED);
     }
 
     Cart cart = new Cart(account, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), false);
     cartRepository.save(cart);
 
-    return new CartDto(cart);
+    return new CartDto(cart, OrderStatus.NOT_YET_ORDERED);
   }
 
   private ThreadType validateThreadType(String threadType){
@@ -198,7 +207,7 @@ public class CartServiceImpl implements CartService{
     cart.setQuantity(cart.getQuantity() + 1);
     cartRepository.save(cart);
 
-    return new CartDto(cart);
+    return new CartDto(cart, OrderStatus.NOT_YET_ORDERED);
   }
 
   @Override
@@ -229,7 +238,7 @@ public class CartServiceImpl implements CartService{
     cart.setQuantity(cart.getQuantity() - 1);
     cartRepository.save(cart);
 
-    return new CartDto(cart);
+    return new CartDto(cart, OrderStatus.NOT_YET_ORDERED);
   }
 
   @Override
@@ -249,7 +258,7 @@ public class CartServiceImpl implements CartService{
       cart.setCheckedOut(true);
       cartRepository.save(cart);
 
-      Orders orders = new Orders(cart.getId(), OrderType.ONLINE);
+      Orders orders = new Orders(cart.getId(), OrderType.ONLINE, OrderStatus.FOR_VERIFICATION);
       ordersRepository.save(orders);
 
       ThreadTypeDetails details = cart.getDetails();

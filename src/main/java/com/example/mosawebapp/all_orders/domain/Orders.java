@@ -7,6 +7,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+
+import org.apache.poi.xwpf.usermodel.Borders;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -23,11 +25,15 @@ public class Orders {
   @Column
   @Enumerated(EnumType.STRING)
   private OrderType orderType;
+  @Column
+  @Enumerated(EnumType.STRING)
+  private OrderStatus orderStatus;
 
   public Orders(){}
-  public Orders(String orderId, OrderType orderType) {
+  public Orders(String orderId, OrderType orderType, OrderStatus status) {
     this.orderId = orderId;
     this.orderType = orderType;
+    this.orderStatus = status;
   }
 
   public String getId() {
@@ -60,5 +66,13 @@ public class Orders {
 
   public void setOrderType(OrderType orderType) {
     this.orderType = orderType;
+  }
+
+  public OrderStatus getOrderStatus() {
+    return orderStatus;
+  }
+
+  public void setOrderStatus(OrderStatus orderStatus) {
+    this.orderStatus = orderStatus;
   }
 }

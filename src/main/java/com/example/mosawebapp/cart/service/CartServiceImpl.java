@@ -7,6 +7,7 @@ import com.example.mosawebapp.all_orders.domain.OrderStatus;
 import com.example.mosawebapp.all_orders.domain.OrderType;
 import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.all_orders.domain.OrdersRepository;
+import com.example.mosawebapp.all_orders.dto.OrdersDto;
 import com.example.mosawebapp.cart.domain.Cart;
 import com.example.mosawebapp.cart.domain.CartRepository;
 import com.example.mosawebapp.cart.dto.CartDto;
@@ -20,10 +21,10 @@ import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetailsRepository;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.validate.Validate;
-import java.util.ArrayList;
+
+import java.util.*;
 import java.util.Collections;
-import java.util.Collections;
-import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -59,11 +60,11 @@ public class CartServiceImpl implements CartService{
     List<CartDto> dto = new ArrayList<>();
 
     for(Cart cart: carts){
-      String orderStatus = ordersRepository.findOrderStatusByOrderId(cart.getId());
-      OrderStatus status = OrderStatus.valueOf(orderStatus);
+      OrderStatus status = determineOrderStatus(cart.getId());
       dto.add(new CartDto(cart, status));
     }
 
+    dto.sort(Comparator.comparing(CartDto::getDateCreated).reversed());
     return dto;
   }
 
@@ -82,11 +83,11 @@ public class CartServiceImpl implements CartService{
     List<CartDto> dto = new ArrayList<>();
 
     for(Cart cart: carts){
-      String orderStatus = ordersRepository.findOrderStatusByOrderId(cart.getId());
-      OrderStatus status = OrderStatus.valueOf(orderStatus);
+      OrderStatus status = determineOrderStatus(cart.getId());
       dto.add(new CartDto(cart, status));
     }
 
+    dto.sort(Comparator.comparing(CartDto::getDateCreated).reversed());
     return dto;
   }
 
@@ -104,11 +105,11 @@ public class CartServiceImpl implements CartService{
 
     List<CartDto> dto = new ArrayList<>();
     for(Cart cart: carts){
-      String orderStatus = ordersRepository.findOrderStatusByOrderId(cart.getId());
-      OrderStatus status = OrderStatus.valueOf(orderStatus);
+      OrderStatus status = determineOrderStatus(cart.getId());
       dto.add(new CartDto(cart, status));
     }
 
+    dto.sort(Comparator.comparing(CartDto::getDateCreated).reversed());
     return dto;
   }
 
@@ -118,12 +119,23 @@ public class CartServiceImpl implements CartService{
     validateIfAccountIsNotCustomerOrContentManager(token);
 
     Cart cart = cartRepository.findById(cartId).orElseThrow(() -> new NotFoundException("Cart Order does not exists"));
-    String orderStatus = ordersRepository.findOrderStatusByOrderId(cart.getId());
-    OrderStatus status = OrderStatus.valueOf(orderStatus);
+    OrderStatus status = determineOrderStatus(cart.getId());
 
     return new CartDto(cart, status);
   }
 
+  private OrderStatus determineOrderStatus(String cartId){
+    OrderStatus status;
+    String orderStatus = ordersRepository.findOrderStatusByOrderId(cartId);
+
+    if(orderStatus == null || orderStatus.isEmpty()){
+      status = OrderStatus.NOT_YET_ORDERED;
+    } else {
+      status = OrderStatus.valueOf(orderStatus);
+    }
+
+    return status;
+  }
   @Override
   public CartDto addCartOrder(String token, CartForm form) {
     Validate.notNull(form);
@@ -136,7 +148,7 @@ public class CartServiceImpl implements CartService{
 
     logger.info("saving order by {}", account.getFullName());
 
-    Cart existingCart = cartRepository.findLatestByAccountAndTypeAndDetails(account, type, details);
+    Cart existingCart = cartRepository.findByAccountAndTypeAndDetailsAndNotCheckedOut(account, type, details);
     if(existingCart != null){
       existingCart.setQuantity(existingCart.getQuantity() + form.getQuantity());
       cartRepository.save(existingCart);
@@ -242,17 +254,28 @@ public class CartServiceImpl implements CartService{
   }
 
   @Override
-  public void checkout(String token, CheckoutForm form) {
+  public int checkout(String token, CheckoutForm form) {
     Validate.notNull(form);
+    int ordersCheckedOut = 0;
 
     Account account = getAccountFromToken(token);
+    List<String> cartIds = new ArrayList<>(form.getIds());
+
+    cartIds.removeIf(id -> {
+      Cart cart = cartRepository.findByIdAndAccount(id, account);
+      return cart != null && cart.isCheckedOut();
+    });
 
     logger.info("checking out selected cart orders of {}", account.getFullName());
-    for(String id: form.getIds()){
+    for(String id: cartIds){
       Cart cart = cartRepository.findByIdAndAccount(id, account);
 
       if(cart == null){
         throw new NotFoundException("Cart Order id does not exists or belong to the user");
+      }
+
+      if(cart.isCheckedOut()){
+        throw new ValidationException("One of the cart orders is already checked out");
       }
 
       cart.setCheckedOut(true);
@@ -264,7 +287,11 @@ public class CartServiceImpl implements CartService{
       ThreadTypeDetails details = cart.getDetails();
       details.setStocks(details.getStocks() - cart.getQuantity());
       threadTypeDetailsRepository.save(details);
+
+      ordersCheckedOut++;
     }
+
+    return ordersCheckedOut;
   }
 
   private Account getAccountFromToken(String token){

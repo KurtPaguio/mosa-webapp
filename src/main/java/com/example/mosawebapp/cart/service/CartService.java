@@ -16,5 +16,5 @@ public interface CartService {
   CartDto addCartOrderQuantity(String token, String cartId);
   void removeCartOrder(String token, String cartId);
   CartDto subtractCartOrderQuantity(String token, String cartId);
-  void checkout(String token, CheckoutForm form);
+  int checkout(String token, CheckoutForm form);
 }

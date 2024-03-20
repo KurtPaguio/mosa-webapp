@@ -129,9 +129,9 @@ public class CartController {
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
-    cartService.checkout(token, form);
+    int ordersCheckedOut = cartService.checkout(token, form);
 
-    return ResponseEntity.ok(new ApiResponse("Checkout successfully", HttpStatus.OK));
+    return ResponseEntity.ok(new ApiResponse(ordersCheckedOut + " order/s checked out successfully", HttpStatus.OK));
   }
 
   private void validateTokenValidity(String token){

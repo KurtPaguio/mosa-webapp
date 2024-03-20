@@ -15,7 +15,7 @@ public interface CartRepository extends JpaRepository<Cart, String> {
   @Query(value = "SELECT * FROM cart WHERE customer_id = :customerId AND is_checked_out = false", nativeQuery = true)
   List<Cart> findByAccountAndIsNotCheckedOut(@Param("customerId") String customerId);
   Cart findByIdAndAccount(String id, Account account);
-  @Query("SELECT c FROM Cart c WHERE c.account = :account AND c.type = :threadType AND c.details = :threadTypeDetails ORDER BY c.dateCreated DESC")
-  Cart findLatestByAccountAndTypeAndDetails(@Param("account") Account account, @Param("threadType") ThreadType threadType, @Param("threadTypeDetails")
+  @Query("SELECT c FROM Cart c WHERE c.account = :account AND c.type = :threadType AND c.details = :threadTypeDetails And c.isCheckedOut = false")
+  Cart findByAccountAndTypeAndDetailsAndNotCheckedOut(@Param("account") Account account, @Param("threadType") ThreadType threadType, @Param("threadTypeDetails")
   ThreadTypeDetails threadTypeDetails);
 }

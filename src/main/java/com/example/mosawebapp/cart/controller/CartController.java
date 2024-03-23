@@ -2,6 +2,7 @@ package com.example.mosawebapp.cart.controller;
 
 import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.cart.dto.CartDto;
+import com.example.mosawebapp.cart.dto.CartDtoV2;
 import com.example.mosawebapp.cart.dto.CartForm;
 import com.example.mosawebapp.cart.dto.CheckoutForm;
 import com.example.mosawebapp.cart.dto.ReferenceNumberForm;
@@ -54,11 +55,7 @@ public class CartController {
 
     validateTokenValidity(token);
 
-    List<CartDto> dto = cartService.getAllCurrentUserOrders(token);
-
-    if(dto == null || dto.isEmpty()){
-      return ResponseEntity.ok(new ApiResponse("User has no orders yet", HttpStatus.OK));
-    }
+    CartDtoV2 dto = cartService.getAllCurrentUserOrders(token);
 
     return ResponseEntity.ok(dto);
   }
@@ -70,10 +67,6 @@ public class CartController {
     validateTokenValidity(token);
 
     List<CartDto> dto = cartService.getAllUserCurrentOrders(token);
-
-    if(dto == null || dto.isEmpty()){
-      return ResponseEntity.ok(new ApiResponse("User has no current orders yet", HttpStatus.OK));
-    }
 
     return ResponseEntity.ok(dto);
   }
@@ -123,6 +116,16 @@ public class CartController {
     validateTokenValidity(token);
 
     return ResponseEntity.ok(cartService.subtractCartOrderQuantity(token, id));
+  }
+
+  @PostMapping(value = "/orderNow")
+  public ResponseEntity<?> orderNow(@RequestHeader("Authorization") String header, @RequestBody
+  CartForm form){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return ResponseEntity.ok(cartService.orderNow(token, form));
   }
 
   @PostMapping(value = "/checkout")

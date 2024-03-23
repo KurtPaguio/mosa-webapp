@@ -13,6 +13,7 @@ import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto
 import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -28,6 +29,8 @@ public class MailService {
   private JavaMailSender javaMailSender;
   @Value("${spring.mail.username}")
   private String fromEmail;
+  @Value("${mosatiresupply.official.email}")
+  private String MOSA_TIRE_SUPPLY_EMAIL;
 
   private final SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
 
@@ -197,11 +200,13 @@ public class MailService {
     javaMailSender.send(simpleMailMessage);
   }
 
-  public void sendEmailOnPayment(Account account, Orders orders, List<Cart> carts){
+  public void sendEmailOnPayment(Account account, String dateOrdered, String refNo, List<Cart> carts){
     String itemsOrdered = "";
-    float downPayment = 0;
+    float totalOrder = 0;
+    int numberOfItems = 1;
+
     for(Cart cart: carts){
-      downPayment += (cart.getQuantity() + cart.getDetails().getPrice()) / 2;
+      totalOrder += cart.getTotalPrice();
       String plyRating;
 
       if(cart.getDetails().getPlyRating().isEmpty() || cart.getDetails().getPlyRating() == null){
@@ -210,25 +215,73 @@ public class MailService {
         plyRating = cart.getDetails().getPlyRating();
       }
 
-      itemsOrdered += "\n" + cart.getType().getType() + " - " + cart.getDetails().getWidth() + "/" + cart.getDetails().getAspectRatio() +
+      itemsOrdered += "\n" + numberOfItems + ". "+ cart.getType().getType() + " - " + cart.getDetails().getWidth() + "/" + cart.getDetails().getAspectRatio() +
           "/" + cart.getDetails().getDiameter() + "|" + plyRating + "|" + cart.getDetails().getSidewall();
+
+      numberOfItems++;
     }
 
     simpleMailMessage.setFrom(fromEmail);
     simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Payment");
     simpleMailMessage.setText("Hi, " + account.getFullName() + "!"
-        + "\n\nThank you for choosing Mosa Tire Supply. We're excited to let you know that your order with reference number '" + orders.getReferenceNumber() + "' "
-        + "has been successfully place and already on payment verification."
+        + "\n\nThank you for choosing Mosa Tire Supply. We're excited to let you know that your order with reference number '" + refNo + "' "
+        + "has been successfully placed and already on payment verification."
         + "\n\nHere's your order details."
-        + "\nOrder Date: " + orders.getDateCreated()
-        + "\nDown Payment: " + downPayment
+        + "\nOrder Date: " + dateOrdered
+        + "\nDown Payment: " + totalOrder / 2
         + "\nItems Ordered:" + itemsOrdered);
 
     simpleMailMessage.setTo(account.getEmail());
     javaMailSender.send(simpleMailMessage);
   }
 
-  public void sendEmailForVerified(Account account, Orders orders){
+  public void sendEmailForVerified(Account account, String refNo){
+    simpleMailMessage.setFrom(fromEmail);
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Payment Verified");
+    simpleMailMessage.setText("Hi, " + account.getFullName() + "!"
+        + "\n\nThank you for ordering from Mosa Tire Supply. Your order with the reference number of '" + refNo + "' was verified and already "
+        + "preparing for delivery. "
+        + "\n\nPlease wait for another email for delivery confirmation."
+    );
 
+    simpleMailMessage.setTo(account.getEmail());
+    javaMailSender.send(simpleMailMessage);
+  }
+
+  public void sendEmailForDelivery(Account account, String refNo){
+    simpleMailMessage.setFrom(fromEmail);
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Delivery");
+    simpleMailMessage.setText("Hi, " + account.getFullName() + "!"
+        + "\n\nYour order with the reference number of '" + refNo + "' was prepared and is already on the way to you."
+        + "\n\nKindly wait for your order and double check once it was delivered to verify that it is the correct order. Thank you!"
+    );
+
+    simpleMailMessage.setTo(account.getEmail());
+    javaMailSender.send(simpleMailMessage);
+  }
+
+  public void sendEmailForOrderCompletion(Account account){
+    simpleMailMessage.setFrom(fromEmail);
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Completion");
+    simpleMailMessage.setText("Hi, " + account.getFullName() + "!"
+        + "\n\nYour order has been delivered. Please double check it. If there was an incorrect order, contact us immediately through this email "
+        + MOSA_TIRE_SUPPLY_EMAIL + " and we will reply as soon as possible."
+        + "\n\nThank you for choosing us. Looking forward to serve you again."
+    );
+
+    simpleMailMessage.setTo(account.getEmail());
+    javaMailSender.send(simpleMailMessage);
+  }
+
+  public void sendEmailForInvalidPayment(Account account, String refNo){
+    simpleMailMessage.setFrom(fromEmail);
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Completion");
+    simpleMailMessage.setText("Hi, " + account.getFullName() + "!"
+        + "\n\nYour order with reference number '" + refNo + "' was invalid cannot be verified."
+        + "\n\nPlease contact us through our messenger or official email " + MOSA_TIRE_SUPPLY_EMAIL + " to fix your order, Thank you!"
+    );
+
+    simpleMailMessage.setTo(account.getEmail());
+    javaMailSender.send(simpleMailMessage);
   }
 }

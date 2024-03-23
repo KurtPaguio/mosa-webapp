@@ -1,5 +1,6 @@
 package com.example.mosawebapp.all_orders.domain;
 
+import com.example.mosawebapp.cart.domain.Cart;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.CollectionTable;
@@ -13,7 +14,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import org.apache.poi.xwpf.usermodel.Borders;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -26,8 +30,6 @@ public class Orders {
   @CreationTimestamp
   private Date dateCreated;
   @Column
-  private String orderIds;
-  @Column
   @Enumerated(EnumType.STRING)
   private OrderType orderType;
   @Column
@@ -35,13 +37,25 @@ public class Orders {
   private OrderStatus orderStatus;
   @Column
   private String referenceNumber;
+  @Column
+  private String paymentMethod;
+  @OneToOne
+  @JoinColumn(name = "cart_id")
+  private Cart cart;
+  @Column
+  private String orderId;
 
   public Orders(){}
-  public Orders(String orderIds, OrderType orderType, OrderStatus status, String referenceNumber) {
-    this.orderIds = orderIds;
+  public Orders(OrderType orderType, OrderStatus status, String referenceNumber, String paymentMethod,
+      Cart cart, String orderId) {
+    this.paymentMethod = paymentMethod;
     this.orderType = orderType;
     this.orderStatus = status;
     this.referenceNumber = referenceNumber;
+    this.orderId = orderId;
+    if(cart != null){
+      this.cart = cart;
+    }
   }
 
   public String getId() {
@@ -58,14 +72,6 @@ public class Orders {
 
   public void setDateCreated(Date dateCreated) {
     this.dateCreated = dateCreated;
-  }
-
-  public String getOrderIds() {
-    return orderIds;
-  }
-
-  public void setOrderIds(String orderIds) {
-    this.orderIds = orderIds;
   }
 
   public OrderType getOrderType() {
@@ -90,5 +96,29 @@ public class Orders {
 
   public void setReferenceNumber(String referenceNumber) {
     this.referenceNumber = referenceNumber;
+  }
+
+  public String getPaymentMethod() {
+    return paymentMethod;
+  }
+
+  public void setPaymentMethod(String paymentMethod) {
+    this.paymentMethod = paymentMethod;
+  }
+
+  public Cart getCart() {
+    return cart;
+  }
+
+  public void setCart(Cart cart) {
+    this.cart = cart;
+  }
+
+  public String getOrderId() {
+    return orderId;
+  }
+
+  public void setOrderId(String orderId) {
+    this.orderId = orderId;
   }
 }

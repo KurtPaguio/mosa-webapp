@@ -48,7 +48,7 @@ public class AccountRegistrationServiceImpl implements AccountRegistrationServic
     AccountRegistration registration = new AccountRegistration(form.getFullName(), form.getEmail(),
         form.getContactNumber(), form.getAddress(), passwordEncoder.encode(form.getConfirmPassword()), form.getUserRole());
 
-    long otp = 100000 + rnd.nextInt(999999);
+    long otp = 100000 + rnd.nextInt(800000);
     registration.setRegisterOtp(otp);
     registration.setStatus(AccountStatus.FOR_REGISTRATION);
     mailService.sendEmailForRegistration(registration.getEmail(), otp);

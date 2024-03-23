@@ -1,12 +1,15 @@
 package com.example.mosawebapp.all_orders.controller;
 
 import com.example.mosawebapp.all_orders.service.OrdersService;
+import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
 import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,14 +39,40 @@ public class OrdersController {
   }
 
   @GetMapping(value = "/verify/{id}")
-  public ResponseEntity<?> getAllOrders(@RequestHeader("Authorization") String header, @Param("id") String id){
+  public ResponseEntity<?> setAsVerified(@RequestHeader("Authorization") String header, @PathVariable("id") String id){
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
-
-    return ResponseEntity.ok(ordersService.verifyPayment(token, id));
+    String refNo = ordersService.verifyOrder(token,id);
+    return ResponseEntity.ok(new ApiResponse("Order with reference number " + refNo + " was verified", HttpStatus.OK));
   }
 
+  @GetMapping(value = "/forDelivery/{id}")
+  public ResponseEntity<?> setAsForDelivery(@RequestHeader("Authorization") String header, @PathVariable("id") String id){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+    String refNo = ordersService.toBeDelivered(token,id);
+    return ResponseEntity.ok(new ApiResponse("Order with reference number " + refNo + " is on delivery", HttpStatus.OK));
+  }
+
+  @GetMapping(value = "/completeOrder/{id}")
+  public ResponseEntity<?> setAsOrderCompleted(@RequestHeader("Authorization") String header, @PathVariable("id") String id){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+    String refNo = ordersService.completeDelivery(token,id);
+    return ResponseEntity.ok(new ApiResponse("Order with reference number " + refNo + " was delivered", HttpStatus.OK));
+  }
+
+  @GetMapping(value = "/invalidOrder/{id}")
+  public ResponseEntity<?> setAsInvalid(@RequestHeader("Authorization") String header, @PathVariable("id") String id){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+    String refNo = ordersService.orderNotVerified(token,id);
+    return ResponseEntity.ok(new ApiResponse("Order with reference number " + refNo + " was not verified", HttpStatus.OK));
+  }
   private void validateTokenValidity(String token){
     if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
       throw new TokenException(TOKEN_INVALID);

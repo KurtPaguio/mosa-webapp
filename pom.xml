@@ -113,8 +113,12 @@
       <artifactId>spring-context-support</artifactId>
       <version>6.0.7</version>
     </dependency>
+		<dependency>
+			<groupId>one.util</groupId>
+			<artifactId>streamex</artifactId>
+			<version>0.7.3</version>
+		</dependency>
   </dependencies>
-
 	<build>
 		<plugins>
 			<plugin>

@@ -224,7 +224,7 @@ public class AccountServiceImpl implements AccountService{
     }
 
     /*Set login otp for the account and save to database
-    long otp = rnd.nextInt(999999);
+    long otp = rnd.nextInt(800000);
     account.setLoginOtp(otp);
     accountRepository.save(account);*/
 

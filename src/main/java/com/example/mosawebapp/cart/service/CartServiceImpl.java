@@ -11,6 +11,7 @@ import com.example.mosawebapp.cart.domain.Cart;
 import com.example.mosawebapp.cart.domain.CartRepository;
 import com.example.mosawebapp.cart.dto.CartCheckoutDto;
 import com.example.mosawebapp.cart.dto.CartDto;
+import com.example.mosawebapp.cart.dto.CartDtoV2;
 import com.example.mosawebapp.cart.dto.CartForm;
 import com.example.mosawebapp.cart.dto.CheckoutForm;
 import com.example.mosawebapp.cart.dto.ReferenceNumberForm;
@@ -22,6 +23,7 @@ import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetailsRepository;
 import com.example.mosawebapp.security.JwtGenerator;
+import com.example.mosawebapp.utils.DateTimeFormatter;
 import com.example.mosawebapp.validate.Validate;
 
 import java.util.*;
@@ -76,15 +78,15 @@ public class CartServiceImpl implements CartService{
   }
 
   @Override
-  public List<CartDto> getAllCurrentUserOrders(String token){
+  public CartDtoV2 getAllCurrentUserOrders(String token){
     logger.info("getting current user's orders");
 
     Account account = getAccountFromToken(token);
 
-    List<Cart> carts = cartRepository.findByAccount(account);
+    List<Cart> carts = cartRepository.findByAccountAndIsPaid(account.getId());
 
     if(carts.isEmpty()){
-      return Collections.emptyList();
+      return null;
     }
 
     List<CartDto> dto = new ArrayList<>();
@@ -95,7 +97,7 @@ public class CartServiceImpl implements CartService{
     }
 
     dto.sort(Comparator.comparing(CartDto::getDateCreated).reversed());
-    return dto;
+    return new CartDtoV2(dto);
   }
 
   @Override
@@ -104,7 +106,7 @@ public class CartServiceImpl implements CartService{
 
     Account account = getAccountFromToken(token);
 
-    List<Cart> carts = cartRepository.findByAccountAndIsNotCheckedOut(account.getId());
+    List<Cart> carts = cartRepository.findByAccountAndIsNotPaid(account.getId());
 
     if(carts.isEmpty()){
       return Collections.emptyList();
@@ -132,14 +134,24 @@ public class CartServiceImpl implements CartService{
   }
 
   private OrderStatus determineOrderStatus(String cartId){
-    Orders orderStatus = ordersRepository.findOrderByOrderId(cartId);
+    String orderStatus = ordersRepository.findOrderByCartId(cartId);
 
     if(orderStatus == null){
       return OrderStatus.NOT_YET_ORDERED;
     }
 
-    return orderStatus.getOrderStatus();
+    return OrderStatus.valueOf(orderStatus);
   }
+
+  @Override
+  public CartCheckoutDto orderNow(String token, CartForm form) {
+    Validate.notNull(form);
+
+    CartDto cart = addCartOrder(token, form);
+
+    return new CartCheckoutDto(Collections.singletonList(cart));
+  }
+
   @Override
   public CartDto addCartOrder(String token, CartForm form) {
     Validate.notNull(form);
@@ -293,9 +305,6 @@ public class CartServiceImpl implements CartService{
 
       orderIds.add(id);
 
-      /*;
-
-      ordersCheckedOut++;*/
     }
 
     //mailService(account, orders)
@@ -309,11 +318,6 @@ public class CartServiceImpl implements CartService{
     Account account = getAccountFromToken(token);
     List<String> cartIds = new ArrayList<>(form.getIds());
 
-    cartIds.removeIf(id -> {
-      Cart cart = cartRepository.findByIdAndAccount(id, account);
-      return cart != null && cart.isCheckedOut();
-    });
-
     logger.info("cancelling check out of selected cart orders of {}", account.getFullName());
 
     for(String id: cartIds){
@@ -321,10 +325,6 @@ public class CartServiceImpl implements CartService{
 
       if(cart == null){
         throw new NotFoundException("Cart Order id does not exists or belong to the user");
-      }
-
-      if(cart.isCheckedOut()){
-        throw new ValidationException("One of the cart orders is already checked out");
       }
 
       cart.setCheckedOut(false);
@@ -338,6 +338,10 @@ public class CartServiceImpl implements CartService{
     Validate.notNull(form);
     Account account = getAccountFromToken(token);
 
+    if(form.getPaymentMethod() == null || form.getPaymentMethod().isEmpty()){
+      throw new ValidationException("Payment Method is required");
+    }
+
     List<String> cartIds = new ArrayList<>(form.getIds());
 
     cartIds.removeIf(id -> {
@@ -347,8 +351,9 @@ public class CartServiceImpl implements CartService{
 
     logger.info("processing payment of selected cart orders of {}", account.getFullName());
 
+    String orderId = UUID.randomUUID().toString();
+
     List<Cart> carts = new ArrayList<>();
-    StringBuilder ids = new StringBuilder();
     for(String id: cartIds){
       Cart cart = cartRepository.findByIdAndAccount(id, account);
 
@@ -357,23 +362,23 @@ public class CartServiceImpl implements CartService{
       cart.setPaid(true);
       cartRepository.save(cart);
 
-      if(ids.length() > 0 || !ids.isEmpty()){
-        ids.append(",");
-      }
-
       carts.add(cart);
-      ids.append(cart.getId());
+
+      Orders orders = new Orders(OrderType.ONLINE, OrderStatus.FOR_VERIFICATION, form.getRefNo(), form.getPaymentMethod(), cart, orderId);
+      ordersRepository.save(orders);
 
       ThreadTypeDetails details = cart.getDetails();
       details.setStocks(details.getStocks() - cart.getQuantity());
       threadTypeDetailsRepository.save(details);
     }
 
-    Orders orders = new Orders(ids.toString(), OrderType.ONLINE, OrderStatus.FOR_VERIFICATION, form.getRefNo());
-    ordersRepository.save(orders);
-
-    mailService.sendEmailOnPayment(account, orders, carts);
-    logger.info("Successfully paid the checkouts");
+    if(!carts.isEmpty()){
+      String latestDateOrdered = DateTimeFormatter.get_MMDDYYY_Format(new Date());
+      mailService.sendEmailOnPayment(account, latestDateOrdered, form.getRefNo(), carts);
+      logger.info("Successfully paid the checkouts");
+    } else{
+      throw new NotFoundException("There are no payable orders");
+    }
   }
 
   private void validateCartDetails(Cart cart){
@@ -389,6 +394,7 @@ public class CartServiceImpl implements CartService{
       throw new ValidationException("One of the cart orders is already paid");
     }
   }
+
   private Account getAccountFromToken(String token){
     String id = jwtGenerator.getUserFromJWT(token);
 

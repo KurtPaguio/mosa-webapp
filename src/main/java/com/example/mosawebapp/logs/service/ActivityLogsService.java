@@ -3,6 +3,8 @@ package com.example.mosawebapp.logs.service;
 import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.domain.UserRole;
+import com.example.mosawebapp.all_orders.domain.OrderStatus;
+import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.logs.domain.ActivityLogs;
@@ -171,6 +173,15 @@ public class ActivityLogsService {
     String message =
         actor + " just " + action + " a Thread Type details for " + details.getThreadType()
             .getType() + " in Mosa Tire Supply";
+
+    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    activityLogsRepository.save(log);
+  }
+
+  public void onlineOrderActivity(Account account, String refNo, OrderStatus orderStatus){
+    String actor = account.getFullName();
+    String message = actor + " just changed the status of order with reference number '" + refNo
+        + "' to " + orderStatus.toString();
 
     ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
     activityLogsRepository.save(log);

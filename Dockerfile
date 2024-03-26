@@ -1,5 +1,4 @@
-FROM openjdk:17
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
-EXPOSE 8080
-COPY target/mosa-webapp.jar mosa-webapp.jar
-ENTRYPOINT ["java", "-jar", "/mosa-webapp.jar"]
+COPY target/*.jar mosa-webapp.jar
+ENTRYPOINT ["java","-jar","/app.jar"]

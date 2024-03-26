@@ -9,12 +9,16 @@ import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.logs.domain.ActivityLogs;
 import com.example.mosawebapp.logs.domain.ActivityLogsRepository;
+import com.example.mosawebapp.onsite_order.domain.OnsiteOrder;
+import com.example.mosawebapp.onsite_order.dto.OnsiteOrderDto;
 import com.example.mosawebapp.product.brand.domain.Brand;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.scheduling.domain.Schedule;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.utils.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import org.slf4j.Logger;
@@ -182,6 +186,29 @@ public class ActivityLogsService {
     String actor = account.getFullName();
     String message = actor + " just changed the status of order with reference number '" + refNo
         + "' to " + orderStatus.toString();
+
+    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    activityLogsRepository.save(log);
+  }
+
+  public void onsiteOrderActivity(Account account, String action, OnsiteOrder order){
+    String actor = account.getFullName();
+    String message = actor + " just " + action + " an order of " + order.getType().getType() + " on " + order.getDateCreated();
+
+    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    activityLogsRepository.save(log);
+  }
+
+  public void onsiteOrderCheckout(Account account, List<OnsiteOrderDto> orders){
+    List<String> orderedItems = new ArrayList<>();
+    Date currentDate = new Date();
+
+    for(OnsiteOrderDto dto: orders){
+      orderedItems.add(dto.getThreadType());
+    }
+
+    String actor = account.getFullName();
+    String message = actor + " just completed an order of " + orderedItems + " on " + DateTimeFormatter.get_MMDDYYY_Format(currentDate);
 
     ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
     activityLogsRepository.save(log);

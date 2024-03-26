@@ -21,7 +21,7 @@ public class KioskCheckoutDto {
       price += kiosk.getTotalPrice();
     }
 
-    return price / 2;
+    return price;
   }
 
   public float getPriceToPay() {

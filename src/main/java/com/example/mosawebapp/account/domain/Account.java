@@ -50,6 +50,8 @@ public class Account {
   private long changePasswordOtp;
   @Column
   private String changePasswordToken;
+  @Column
+  private boolean isOrdering;
 
   @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
   @JoinTable(name = "accounts_roles", joinColumns = @JoinColumn(name = "account_id", referencedColumnName = "id"),
@@ -180,5 +182,12 @@ public class Account {
 
   public void setChangePasswordToken(String changePasswordToken) {
     this.changePasswordToken = changePasswordToken;
+  }
+  public boolean isOrdering() {
+    return isOrdering;
+  }
+
+  public void setOrdering(boolean ordering) {
+    isOrdering = ordering;
   }
 }

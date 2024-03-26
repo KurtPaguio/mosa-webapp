@@ -29,9 +29,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import javax.persistence.Access;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -47,6 +49,7 @@ public class KioskServiceImpl implements KioskService{
   private final OrdersRepository ordersRepository;
   private final MailService mailService;
 
+  @Autowired
   public KioskServiceImpl(AccountRepository accountRepository, JwtGenerator jwtGenerator,
       ThreadTypeRepository threadTypeRepository,
       ThreadTypeDetailsRepository threadTypeDetailsRepository, KioskRepository kioskRepository,
@@ -89,7 +92,7 @@ public class KioskServiceImpl implements KioskService{
   public List<KioskDto> getAllCurrentKioskOrders(String kioskToken) {
     logger.info("getting current kiosk orders");
 
-    List<Kiosk> kiosks = kioskRepository.findByToken(kioskToken);
+    List<Kiosk> kiosks = kioskRepository.findNotCheckedOutKioskByToken(kioskToken);
 
     if(kiosks.isEmpty()){
       return null;
@@ -117,13 +120,14 @@ public class KioskServiceImpl implements KioskService{
     logger.info("saving kiosk order by {}", kioskToken);
 
     Kiosk kiosk = kioskRepository.findByTokenAndTypeAndDetailsAndNotCheckedOut(kioskToken, type, details);
-    if(kiosk != null){
-      kiosk.setQuantity(kiosk.getQuantity() + form.getQuantity());
-      kioskRepository.save(kiosk);
+      if(kiosk != null){
+        kiosk.setQuantity(kiosk.getQuantity() + form.getQuantity());
+        kioskRepository.save(kiosk);
 
-      return kiosk;
-    }
+        return kiosk;
+      }
 
+    logger.info("validating existing kiosk");
     Kiosk existingKiosk = kioskRepository.findKioskByToken(kioskToken);
     if(existingKiosk != null){
       Kiosk newKiosk = new Kiosk(kioskToken, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), false);
@@ -266,7 +270,7 @@ public class KioskServiceImpl implements KioskService{
       kioskRepository.save(kiosk);
       kiosks.add(new KioskDto(kiosk));
 
-      Orders orders = new Orders(OrderType.KIOSK, OrderStatus.ORDER_COMPLETED, null, null, null, kiosk, orderId);
+      Orders orders = new Orders(OrderType.KIOSK, OrderStatus.ORDER_COMPLETED, null, null, null, kiosk, null, orderId);
       ordersRepository.save(orders);
 
       orderIds.add(id);

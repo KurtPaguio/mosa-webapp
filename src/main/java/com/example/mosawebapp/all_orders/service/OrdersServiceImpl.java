@@ -18,6 +18,9 @@ import com.example.mosawebapp.kiosk.domain.KioskRepository;
 import com.example.mosawebapp.kiosk.dto.KioskDto;
 import com.example.mosawebapp.logs.service.ActivityLogsService;
 import com.example.mosawebapp.mail.MailService;
+import com.example.mosawebapp.onsite_order.domain.OnsiteOrder;
+import com.example.mosawebapp.onsite_order.domain.OnsiteOrderRepository;
+import com.example.mosawebapp.onsite_order.dto.OnsiteOrderDto;
 import com.example.mosawebapp.security.JwtGenerator;
 
 import java.util.*;
@@ -33,6 +36,7 @@ public class OrdersServiceImpl implements OrdersService{
   private static final String ORDER_NOT_EXISTS = "Order does not exits";
   private final CartRepository cartRepository;
   private final KioskRepository kioskRepository;
+  private final OnsiteOrderRepository onsiteOrderRepository;
   private final OrdersRepository ordersRepository;
   private final AccountRepository accountRepository;
   private final JwtGenerator jwtGenerator;
@@ -41,11 +45,12 @@ public class OrdersServiceImpl implements OrdersService{
 
   @Autowired
   public OrdersServiceImpl(CartRepository cartRepository, KioskRepository kioskRepository,
-      OrdersRepository ordersRepository,
+      OnsiteOrderRepository onsiteOrderRepository, OrdersRepository ordersRepository,
       AccountRepository accountRepository, JwtGenerator jwtGenerator, MailService mailService,
       ActivityLogsService activityLogsService) {
     this.cartRepository = cartRepository;
     this.kioskRepository = kioskRepository;
+    this.onsiteOrderRepository = onsiteOrderRepository;
     this.ordersRepository = ordersRepository;
     this.accountRepository = accountRepository;
     this.jwtGenerator = jwtGenerator;
@@ -68,11 +73,15 @@ public class OrdersServiceImpl implements OrdersService{
 
     for(Orders order: orders){
       if(order.getOrderType().equals(OrderType.ONLINE)){
-        dto.add(new OrdersDto(order, getCartDtoListPerOrder(order), null));
+        dto.add(new OrdersDto(order, getCartDtoListPerOrder(order), null, null));
       }
 
       if(order.getOrderType().equals(OrderType.KIOSK)){
-        dto.add(new OrdersDto(order, null, getKioskDtoListPerOrder(order)));
+        dto.add(new OrdersDto(order, null, getKioskDtoListPerOrder(order), null));
+      }
+
+      if(order.getOrderType().equals(OrderType.ONSITE)){
+        dto.add(new OrdersDto(order, null, null, getOnsiteOrderDtoListPerOrder(order)));
       }
     }
 
@@ -92,8 +101,6 @@ public class OrdersServiceImpl implements OrdersService{
   }
 
   private List<KioskDto> getKioskDtoListPerOrder(Orders order){
-    logger.info("GETTING KIOSK ORDERS");
-
     List<Kiosk> kiosks = kioskRepository.findAllKiosksByOrderId(order.getOrderId());
     List<KioskDto> dto = new ArrayList<>();
 
@@ -101,11 +108,19 @@ public class OrdersServiceImpl implements OrdersService{
       dto.add(new KioskDto(kiosk));
     }
 
-    logger.info("KIOSK DTO {}", dto.size());
-
     return dto;
   }
 
+  private List<OnsiteOrderDto> getOnsiteOrderDtoListPerOrder(Orders order){
+    List<OnsiteOrder> orders = onsiteOrderRepository.findAllOnsiteOrdersByOrderId(order.getOrderId());
+    List<OnsiteOrderDto> dto = new ArrayList<>();
+
+    for(OnsiteOrder onsiteOrder: orders){
+      dto.add(new OnsiteOrderDto(onsiteOrder));
+    }
+    
+    return dto;
+  }
   @Override
   public String verifyOrder(String token, String orderId) {
     validateIfAccountIsNotCustomerOrContentManager(token);

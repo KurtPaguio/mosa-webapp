@@ -287,7 +287,6 @@ public class CartServiceImpl implements CartService{
     logger.info("checking out selected cart orders of {}", account.getFullName());
 
     List<CartDto> carts = new ArrayList<>();
-    List<String> orderIds = new ArrayList<>();
 
     for(String id: cartIds){
       Cart cart = cartRepository.findByIdAndAccount(id, account);
@@ -303,9 +302,6 @@ public class CartServiceImpl implements CartService{
       cart.setCheckedOut(true);
       cartRepository.save(cart);
       carts.add(new CartDto(cart, OrderStatus.FOR_CHECKOUT));
-
-      orderIds.add(id);
-
     }
 
     //mailService(account, orders)
@@ -365,7 +361,7 @@ public class CartServiceImpl implements CartService{
 
       carts.add(cart);
 
-      Orders orders = new Orders(OrderType.ONLINE, OrderStatus.FOR_VERIFICATION, form.getRefNo(), form.getPaymentMethod(), cart, null, orderId);
+      Orders orders = new Orders(OrderType.ONLINE, OrderStatus.FOR_VERIFICATION, form.getRefNo(), form.getPaymentMethod(), cart, null, null, orderId);
       ordersRepository.save(orders);
 
       ThreadTypeDetails details = cart.getDetails();

@@ -14,8 +14,11 @@ public interface KioskRepository extends JpaRepository<Kiosk, String> {
   List<Kiosk> findByToken(String token);
 
   Kiosk findByIdAndToken(String id, String token);
-  @Query("SELECT k FROM Kiosk k WHERE k.token = :kioskToken")
+  @Query(value = "SELECT * FROM kiosk WHERE token = :kioskToken LIMIT 1", nativeQuery = true)
   Kiosk findKioskByToken(@Param("kioskToken") String kioskToken);
+
+  @Query("SELECT k FROM Kiosk k WHERE k.token = :kioskToken AND k.isCheckedOut = false")
+  List<Kiosk> findNotCheckedOutKioskByToken(@Param("kioskToken") String kioskToken);
 
   @Query("SELECT MAX(k.queueingNumber) FROM Kiosk k")
   Long findLatestQueueingNumber();

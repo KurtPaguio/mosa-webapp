@@ -5,6 +5,8 @@ import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.cart.domain.Cart;
 import com.example.mosawebapp.cart.dto.CartDto;
 import com.example.mosawebapp.kiosk.dto.KioskDto;
+import com.example.mosawebapp.onsite_order.domain.OnsiteOrder;
+import com.example.mosawebapp.onsite_order.dto.OnsiteOrderDto;
 import com.example.mosawebapp.utils.DateTimeFormatter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -20,6 +22,7 @@ public class OrdersDto {
   private float orderTotalPrice;
   private List<CartDto> onlineOrders;
   private List<KioskDto> kioskOrders;
+  private List<OnsiteOrderDto> onsiteOrders;
 
   public OrdersDto(){}
 
@@ -37,7 +40,7 @@ public class OrdersDto {
     this.paymentMethod = orders.getPaymentMethod();
   }
 
-  public OrdersDto(Orders orders, List<CartDto> onlineOrders, List<KioskDto> kioskOrders){
+  public OrdersDto(Orders orders, List<CartDto> onlineOrders, List<KioskDto> kioskOrders, List<OnsiteOrderDto> onsiteOrders){
     this.paymentMethod = orders.getPaymentMethod();
     this.orderId = orders.getOrderId();
     this.dateOrdered = DateTimeFormatter.get_MMDDYYY_Format(orders.getDateCreated());
@@ -53,6 +56,12 @@ public class OrdersDto {
       this.orderType = orders.getOrderType();
       this.kioskOrders = kioskOrders;
       this.orderTotalPrice = computeTotalPriceForKioskOrders(kioskOrders);
+    }
+
+    if(onsiteOrders != null){
+      this.orderType = orders.getOrderType();
+      this.onsiteOrders = onsiteOrders;
+      this.orderTotalPrice = computeTotalPriceForOnsiteOrders(onsiteOrders);
     }
   }
 
@@ -70,6 +79,16 @@ public class OrdersDto {
     float price = 0;
 
     for(KioskDto dto: kioskOrders){
+      price += dto.getTotalPrice();
+    }
+
+    return price;
+  }
+
+  private float computeTotalPriceForOnsiteOrders(List<OnsiteOrderDto> onsiteOrders){
+    float price = 0;
+
+    for(OnsiteOrderDto dto: onsiteOrders){
       price += dto.getTotalPrice();
     }
 
@@ -138,5 +157,14 @@ public class OrdersDto {
 
   public void setKioskOrders(List<KioskDto> kioskOrders) {
     this.kioskOrders = kioskOrders;
+  }
+
+  public List<OnsiteOrderDto> getOnsiteOrders() {
+    return onsiteOrders;
+  }
+
+  public void setOnsiteOrders(
+      List<OnsiteOrderDto> onsiteOrders) {
+    this.onsiteOrders = onsiteOrders;
   }
 }

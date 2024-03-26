@@ -3,7 +3,7 @@ package com.example.mosawebapp.cart.controller;
 import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.cart.dto.CartDto;
 import com.example.mosawebapp.cart.dto.CartDtoV2;
-import com.example.mosawebapp.cart.dto.CartForm;
+import com.example.mosawebapp.cart.dto.OrderForm;
 import com.example.mosawebapp.cart.dto.CheckoutForm;
 import com.example.mosawebapp.cart.dto.ReferenceNumberForm;
 import com.example.mosawebapp.cart.service.CartService;
@@ -82,12 +82,12 @@ public class CartController {
 
   @PostMapping(value = "/addOrder")
   public ResponseEntity<?> addOrder(@RequestHeader("Authorization") String header, @RequestBody
-      CartForm form){
+  OrderForm form){
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
 
-    return ResponseEntity.ok(cartService.addCartOrder(token, form));
+    return ResponseEntity.ok(cartService.addCartOrder(token, form, "add_order"));
   }
 
   @GetMapping(value = "/addOrderQuantity/{id}")
@@ -120,7 +120,7 @@ public class CartController {
 
   @PostMapping(value = "/orderNow")
   public ResponseEntity<?> orderNow(@RequestHeader("Authorization") String header, @RequestBody
-  CartForm form){
+  OrderForm form){
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);

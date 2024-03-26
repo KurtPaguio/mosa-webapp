@@ -2,7 +2,7 @@ package com.example.mosawebapp.cart.dto;
 
 import org.springframework.lang.Nullable;
 
-public class CartForm {
+public class OrderForm {
   private String threadType;
   private String width;
   private String aspectRatio;
@@ -12,9 +12,9 @@ public class CartForm {
   private String plyRating;
   private long quantity;
 
-  public CartForm(){}
+  public OrderForm(){}
 
-  public CartForm(String threadType, String width, String aspectRatio, String diameter,
+  public OrderForm(String threadType, String width, String aspectRatio, String diameter,
       String sidewall, @Nullable String plyRating, long quantity) {
     this.threadType = threadType;
     this.width = width;

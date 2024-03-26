@@ -12,7 +12,7 @@ import com.example.mosawebapp.cart.domain.CartRepository;
 import com.example.mosawebapp.cart.dto.CartCheckoutDto;
 import com.example.mosawebapp.cart.dto.CartDto;
 import com.example.mosawebapp.cart.dto.CartDtoV2;
-import com.example.mosawebapp.cart.dto.CartForm;
+import com.example.mosawebapp.cart.dto.OrderForm;
 import com.example.mosawebapp.cart.dto.CheckoutForm;
 import com.example.mosawebapp.cart.dto.ReferenceNumberForm;
 import com.example.mosawebapp.exceptions.NotFoundException;
@@ -46,7 +46,6 @@ public class CartServiceImpl implements CartService{
   private final MailService mailService;
 
   @Autowired
-
   public CartServiceImpl(AccountRepository accountRepository, JwtGenerator jwtGenerator,
       ThreadTypeRepository threadTypeRepository,
       ThreadTypeDetailsRepository threadTypeDetailsRepository, CartRepository cartRepository,
@@ -144,16 +143,16 @@ public class CartServiceImpl implements CartService{
   }
 
   @Override
-  public CartCheckoutDto orderNow(String token, CartForm form) {
+  public CartCheckoutDto orderNow(String token, OrderForm form) {
     Validate.notNull(form);
 
-    CartDto cart = addCartOrder(token, form);
+    CartDto cart = addCartOrder(token, form, "order_now");
 
     return new CartCheckoutDto(Collections.singletonList(cart));
   }
 
   @Override
-  public CartDto addCartOrder(String token, CartForm form) {
+  public CartDto addCartOrder(String token, OrderForm form, String action) {
     Validate.notNull(form);
 
     Account account = getAccountFromToken(token);
@@ -172,7 +171,9 @@ public class CartServiceImpl implements CartService{
       return new CartDto(existingCart, OrderStatus.NOT_YET_ORDERED);
     }
 
-    Cart cart = new Cart(account, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), false, false);
+    boolean isOrderNow = action.equalsIgnoreCase("order_now");
+
+    Cart cart = new Cart(account, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), isOrderNow, false);
     cartRepository.save(cart);
 
     return new CartDto(cart, OrderStatus.NOT_YET_ORDERED);
@@ -188,7 +189,7 @@ public class CartServiceImpl implements CartService{
     return type;
   }
 
-  private ThreadTypeDetails validateThreadTypeDetails(CartForm form, ThreadType type){
+  private ThreadTypeDetails validateThreadTypeDetails(OrderForm form, ThreadType type){
     logger.info("validating thread type details");
     ThreadTypeDetails details = threadTypeDetailsRepository.findByDetails(type.getId(),
         form.getWidth(), form.getAspectRatio(), form.getDiameter(), form.getSidewall());
@@ -205,7 +206,7 @@ public class CartServiceImpl implements CartService{
     return details;
   }
 
-  private void validateQuantityAndStocks(CartForm form, ThreadTypeDetails details){
+  private void validateQuantityAndStocks(OrderForm form, ThreadTypeDetails details){
     if(details.getStocks() == 0){
       throw new ValidationException("Entered thread type and its variant is out of stock");
     }
@@ -364,7 +365,7 @@ public class CartServiceImpl implements CartService{
 
       carts.add(cart);
 
-      Orders orders = new Orders(OrderType.ONLINE, OrderStatus.FOR_VERIFICATION, form.getRefNo(), form.getPaymentMethod(), cart, orderId);
+      Orders orders = new Orders(OrderType.ONLINE, OrderStatus.FOR_VERIFICATION, form.getRefNo(), form.getPaymentMethod(), cart, null, orderId);
       ordersRepository.save(orders);
 
       ThreadTypeDetails details = cart.getDetails();

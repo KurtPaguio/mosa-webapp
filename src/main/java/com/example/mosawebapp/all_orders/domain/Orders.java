@@ -1,6 +1,8 @@
 package com.example.mosawebapp.all_orders.domain;
 
 import com.example.mosawebapp.cart.domain.Cart;
+import com.example.mosawebapp.kiosk.domain.Kiosk;
+import com.example.mosawebapp.kiosk.dto.KioskDto;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.CollectionTable;
@@ -42,19 +44,27 @@ public class Orders {
   @OneToOne
   @JoinColumn(name = "cart_id")
   private Cart cart;
+  @OneToOne
+  @JoinColumn(name = "kiosk_id")
+  private Kiosk kiosk;
   @Column
   private String orderId;
 
   public Orders(){}
   public Orders(OrderType orderType, OrderStatus status, String referenceNumber, String paymentMethod,
-      Cart cart, String orderId) {
+      Cart cart, Kiosk kiosk, String orderId) {
     this.paymentMethod = paymentMethod;
     this.orderType = orderType;
     this.orderStatus = status;
     this.referenceNumber = referenceNumber;
     this.orderId = orderId;
+
     if(cart != null){
       this.cart = cart;
+    }
+
+    if(kiosk != null){
+      this.kiosk = kiosk;
     }
   }
 
@@ -120,5 +130,13 @@ public class Orders {
 
   public void setOrderId(String orderId) {
     this.orderId = orderId;
+  }
+
+  public Kiosk getKiosk() {
+    return kiosk;
+  }
+
+  public void setKiosk(Kiosk kiosk) {
+    this.kiosk = kiosk;
   }
 }

@@ -13,14 +13,14 @@ import com.example.mosawebapp.cart.domain.CartRepository;
 import com.example.mosawebapp.cart.dto.CartDto;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
+import com.example.mosawebapp.kiosk.domain.Kiosk;
+import com.example.mosawebapp.kiosk.domain.KioskRepository;
+import com.example.mosawebapp.kiosk.dto.KioskDto;
 import com.example.mosawebapp.logs.service.ActivityLogsService;
 import com.example.mosawebapp.mail.MailService;
-import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.security.JwtGenerator;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import javax.persistence.criteria.Order;
 import one.util.streamex.StreamEx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +32,7 @@ public class OrdersServiceImpl implements OrdersService{
   private static final Logger logger = LoggerFactory.getLogger(OrdersServiceImpl.class);
   private static final String ORDER_NOT_EXISTS = "Order does not exits";
   private final CartRepository cartRepository;
+  private final KioskRepository kioskRepository;
   private final OrdersRepository ordersRepository;
   private final AccountRepository accountRepository;
   private final JwtGenerator jwtGenerator;
@@ -39,10 +40,12 @@ public class OrdersServiceImpl implements OrdersService{
   private final ActivityLogsService activityLogsService;
 
   @Autowired
-  public OrdersServiceImpl(CartRepository cartRepository, OrdersRepository ordersRepository,
+  public OrdersServiceImpl(CartRepository cartRepository, KioskRepository kioskRepository,
+      OrdersRepository ordersRepository,
       AccountRepository accountRepository, JwtGenerator jwtGenerator, MailService mailService,
       ActivityLogsService activityLogsService) {
     this.cartRepository = cartRepository;
+    this.kioskRepository = kioskRepository;
     this.ordersRepository = ordersRepository;
     this.accountRepository = accountRepository;
     this.jwtGenerator = jwtGenerator;
@@ -65,7 +68,11 @@ public class OrdersServiceImpl implements OrdersService{
 
     for(Orders order: orders){
       if(order.getOrderType().equals(OrderType.ONLINE)){
-        dto.add(new OrdersDto(order, getCartDtoListPerOrder(order)));
+        dto.add(new OrdersDto(order, getCartDtoListPerOrder(order), null));
+      }
+
+      if(order.getOrderType().equals(OrderType.KIOSK)){
+        dto.add(new OrdersDto(order, null, getKioskDtoListPerOrder(order)));
       }
     }
 
@@ -80,6 +87,21 @@ public class OrdersServiceImpl implements OrdersService{
     for(Cart cart: carts){
       dto.add(new CartDto(cart, order.getOrderStatus()));
     }
+
+    return dto;
+  }
+
+  private List<KioskDto> getKioskDtoListPerOrder(Orders order){
+    logger.info("GETTING KIOSK ORDERS");
+
+    List<Kiosk> kiosks = kioskRepository.findAllKiosksByOrderId(order.getOrderId());
+    List<KioskDto> dto = new ArrayList<>();
+
+    for(Kiosk kiosk: kiosks){
+      dto.add(new KioskDto(kiosk));
+    }
+
+    logger.info("KIOSK DTO {}", dto.size());
 
     return dto;
   }

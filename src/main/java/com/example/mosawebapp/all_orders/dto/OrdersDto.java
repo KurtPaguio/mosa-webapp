@@ -4,6 +4,7 @@ import com.example.mosawebapp.all_orders.domain.OrderType;
 import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.cart.domain.Cart;
 import com.example.mosawebapp.cart.dto.CartDto;
+import com.example.mosawebapp.kiosk.dto.KioskDto;
 import com.example.mosawebapp.utils.DateTimeFormatter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -18,6 +19,7 @@ public class OrdersDto {
   private OrderType orderType;
   private float orderTotalPrice;
   private List<CartDto> onlineOrders;
+  private List<KioskDto> kioskOrders;
 
   public OrdersDto(){}
 
@@ -35,16 +37,22 @@ public class OrdersDto {
     this.paymentMethod = orders.getPaymentMethod();
   }
 
-  public OrdersDto(Orders orders, List<CartDto> onlineOrders){
+  public OrdersDto(Orders orders, List<CartDto> onlineOrders, List<KioskDto> kioskOrders){
     this.paymentMethod = orders.getPaymentMethod();
     this.orderId = orders.getOrderId();
     this.dateOrdered = DateTimeFormatter.get_MMDDYYY_Format(orders.getDateCreated());
     this.referenceNumber = orders.getReferenceNumber();
 
-    if(onlineOrders != null || !onlineOrders.isEmpty()){
+    if(onlineOrders != null){
       this.orderType = orders.getOrderType();
       this.onlineOrders = onlineOrders;
       this.orderTotalPrice = computeTotalPriceForOnlineOrders(onlineOrders);
+    }
+
+    if(kioskOrders != null){
+      this.orderType = orders.getOrderType();
+      this.kioskOrders = kioskOrders;
+      this.orderTotalPrice = computeTotalPriceForKioskOrders(kioskOrders);
     }
   }
 
@@ -57,6 +65,17 @@ public class OrdersDto {
 
     return price;
   }
+
+  private float computeTotalPriceForKioskOrders(List<KioskDto> kioskOrders){
+    float price = 0;
+
+    for(KioskDto dto: kioskOrders){
+      price += dto.getTotalPrice();
+    }
+
+    return price;
+  }
+
   public String getOrderId() {
     return orderId;
   }
@@ -111,5 +130,13 @@ public class OrdersDto {
 
   public void setPaymentMethod(String paymentMethod) {
     this.paymentMethod = paymentMethod;
+  }
+
+  public List<KioskDto> getKioskOrders() {
+    return kioskOrders;
+  }
+
+  public void setKioskOrders(List<KioskDto> kioskOrders) {
+    this.kioskOrders = kioskOrders;
   }
 }

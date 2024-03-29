@@ -1,5 +1,6 @@
 package com.example.mosawebapp.all_orders.dto;
 
+import com.example.mosawebapp.all_orders.domain.OrderStatus;
 import com.example.mosawebapp.all_orders.domain.OrderType;
 import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.cart.domain.Cart;
@@ -16,10 +17,15 @@ import java.util.List;
 public class OrdersDto {
   private String orderId;
   private String dateOrdered;
+  private OrderStatus status;
+  private String customerName;
+  private String customerEmail;
   private String paymentMethod;
   private String referenceNumber;
   private OrderType orderType;
   private float orderTotalPrice;
+  private String kioskToken;
+  private Long queueingNumber;
   private List<CartDto> onlineOrders;
   private List<KioskDto> kioskOrders;
   private List<OnsiteOrderDto> onsiteOrders;
@@ -45,8 +51,11 @@ public class OrdersDto {
     this.orderId = orders.getOrderId();
     this.dateOrdered = DateTimeFormatter.get_MMDDYYY_Format(orders.getDateCreated());
     this.referenceNumber = orders.getReferenceNumber();
+    this.status = orders.getOrderStatus();
 
     if(onlineOrders != null){
+      this.customerName = findOnlineOrderCustomerName(onlineOrders);
+      this.customerEmail = findOnlineOrderCustomerEmail(onlineOrders);
       this.orderType = orders.getOrderType();
       this.onlineOrders = onlineOrders;
       this.orderTotalPrice = computeTotalPriceForOnlineOrders(onlineOrders);
@@ -55,6 +64,8 @@ public class OrdersDto {
     if(kioskOrders != null){
       this.orderType = orders.getOrderType();
       this.kioskOrders = kioskOrders;
+      this.kioskToken = findKioskTokenForKiosk(kioskOrders);
+      this.queueingNumber = findQueueingNumberForKiosk(kioskOrders);
       this.orderTotalPrice = computeTotalPriceForKioskOrders(kioskOrders);
     }
 
@@ -63,6 +74,37 @@ public class OrdersDto {
       this.onsiteOrders = onsiteOrders;
       this.orderTotalPrice = computeTotalPriceForOnsiteOrders(onsiteOrders);
     }
+  }
+  private String findOnlineOrderCustomerName(List<CartDto> carts){
+    return carts.stream()
+        .filter(dto -> !dto.getCustomerName().isEmpty())
+        .findFirst()
+        .map(CartDto::getCustomerName)
+        .orElse("");
+  }
+
+  private String findOnlineOrderCustomerEmail(List<CartDto> carts){
+    return carts.stream()
+        .filter(dto -> !dto.getCustomerEmail().isEmpty())
+        .findFirst()
+        .map(CartDto::getCustomerEmail)
+        .orElse("");
+  }
+
+  private Long findQueueingNumberForKiosk(List<KioskDto> kiosks){
+    return kiosks.stream()
+        .filter(dto -> dto.getQueueingNumber() != null)
+        .findFirst()
+        .map(KioskDto::getQueueingNumber)
+        .orElse(null);
+  }
+
+  private String findKioskTokenForKiosk(List<KioskDto> kiosks){
+    return kiosks.stream()
+        .filter(dto -> !dto.getKioskToken().isEmpty())
+        .findFirst()
+        .map(KioskDto::getKioskToken)
+        .orElse(null);
   }
 
   private float computeTotalPriceForOnlineOrders(List<CartDto> onlineOrders){
@@ -166,5 +208,45 @@ public class OrdersDto {
   public void setOnsiteOrders(
       List<OnsiteOrderDto> onsiteOrders) {
     this.onsiteOrders = onsiteOrders;
+  }
+
+  public OrderStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(OrderStatus status) {
+    this.status = status;
+  }
+
+  public String getCustomerName() {
+    return customerName;
+  }
+
+  public void setCustomerName(String customerName) {
+    this.customerName = customerName;
+  }
+
+  public String getCustomerEmail() {
+    return customerEmail;
+  }
+
+  public void setCustomerEmail(String customerEmail) {
+    this.customerEmail = customerEmail;
+  }
+
+  public Long getQueueingNumber() {
+    return queueingNumber;
+  }
+
+  public void setQueueingNumber(Long queueingNumber) {
+    this.queueingNumber = queueingNumber;
+  }
+
+  public String getKioskToken() {
+    return kioskToken;
+  }
+
+  public void setKioskToken(String kioskToken) {
+    this.kioskToken = kioskToken;
   }
 }

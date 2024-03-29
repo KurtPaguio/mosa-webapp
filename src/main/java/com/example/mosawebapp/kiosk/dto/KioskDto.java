@@ -1,13 +1,17 @@
 package com.example.mosawebapp.kiosk.dto;
 
 import com.example.mosawebapp.kiosk.domain.Kiosk;
+import com.example.mosawebapp.kiosk.domain.KioskOrderStatus;
 import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.utils.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class KioskDto {
   private String kioskId;
   private String dateCreated;
   private String kioskToken;
+  private Long queueingNumber;
   private String brandName;
   private String threadType;
   private String imageUrl;
@@ -41,8 +45,18 @@ public class KioskDto {
     this.details = ThreadTypeDetailsDto.buildFromEntity(kiosk.getDetails());
     this.quantity = kiosk.getQuantity();
     this.totalPrice = kiosk.getQuantity() * kiosk.getDetails().getPrice();
+    this.queueingNumber = kiosk.getQueueingNumber();
   }
 
+  public static List<KioskDto> buildFromEntities(List<Kiosk> kiosks){
+    List<KioskDto> dto = new ArrayList<>();
+
+    for(Kiosk kiosk: kiosks){
+      dto.add(new KioskDto(kiosk));
+    }
+
+    return dto;
+  }
   public String getKioskId() {
     return kioskId;
   }
@@ -113,5 +127,13 @@ public class KioskDto {
 
   public void setTotalPrice(float totalPrice) {
     this.totalPrice = totalPrice;
+  }
+
+  public Long getQueueingNumber() {
+    return queueingNumber;
+  }
+
+  public void setQueueingNumber(Long queueingNumber) {
+    this.queueingNumber = queueingNumber;
   }
 }

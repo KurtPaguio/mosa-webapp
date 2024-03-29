@@ -16,20 +16,19 @@ import com.example.mosawebapp.kiosk.domain.Kiosk;
 import com.example.mosawebapp.kiosk.domain.KioskRepository;
 import com.example.mosawebapp.kiosk.dto.KioskCheckoutDto;
 import com.example.mosawebapp.kiosk.dto.KioskDto;
-import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtype.domain.ThreadTypeRepository;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetailsRepository;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.validate.Validate;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.Access;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,26 +40,25 @@ import org.springframework.stereotype.Service;
 @Service
 public class KioskServiceImpl implements KioskService{
   private static final Logger logger = LoggerFactory.getLogger(KioskServiceImpl.class);
+  private static final String ORDER_NOW = "order_now";
   private final AccountRepository accountRepository;
   private final JwtGenerator jwtGenerator;
   private final ThreadTypeRepository threadTypeRepository;
   private final ThreadTypeDetailsRepository threadTypeDetailsRepository;
   private final KioskRepository kioskRepository;
   private final OrdersRepository ordersRepository;
-  private final MailService mailService;
 
   @Autowired
   public KioskServiceImpl(AccountRepository accountRepository, JwtGenerator jwtGenerator,
       ThreadTypeRepository threadTypeRepository,
       ThreadTypeDetailsRepository threadTypeDetailsRepository, KioskRepository kioskRepository,
-      OrdersRepository ordersRepository, MailService mailService) {
+      OrdersRepository ordersRepository) {
     this.accountRepository = accountRepository;
     this.jwtGenerator = jwtGenerator;
     this.threadTypeRepository = threadTypeRepository;
     this.threadTypeDetailsRepository = threadTypeDetailsRepository;
     this.kioskRepository = kioskRepository;
     this.ordersRepository = ordersRepository;
-    this.mailService = mailService;
   }
 
   @Override
@@ -89,13 +87,45 @@ public class KioskServiceImpl implements KioskService{
   }
 
   @Override
+  public List<KioskDto> getCompletedOrders(String adminToken) {
+    logger.info("getting all completed kiosk orders");
+    validateIfAccountIsNotCustomerOrContentManager(adminToken);
+
+    List<Kiosk> kiosks = kioskRepository.findCompletedOrders();
+    List<KioskDto> dto = new ArrayList<>();
+
+    for(Kiosk kiosk: kiosks){
+      dto.add(new KioskDto(kiosk));
+    }
+
+    dto.sort(Comparator.comparing(KioskDto::getDateCreated).reversed());
+    return dto;
+  }
+
+  @Override
+  public List<KioskDto> getProcessingOrders(String adminToken) {
+    logger.info("getting all processing kiosk orders");
+    validateIfAccountIsNotCustomerOrContentManager(adminToken);
+
+    List<Kiosk> kiosks = kioskRepository.findProcessingOrders();
+    List<KioskDto> dto = new ArrayList<>();
+
+    for(Kiosk kiosk: kiosks){
+      dto.add(new KioskDto(kiosk));
+    }
+
+    dto.sort(Comparator.comparing(KioskDto::getDateCreated).reversed());
+    return dto;
+  }
+
+  @Override
   public List<KioskDto> getAllCurrentKioskOrders(String kioskToken) {
     logger.info("getting current kiosk orders");
 
     List<Kiosk> kiosks = kioskRepository.findNotCheckedOutKioskByToken(kioskToken);
 
     if(kiosks.isEmpty()){
-      return null;
+      return Collections.emptyList();
     }
 
     List<KioskDto> dto = new ArrayList<>();
@@ -129,6 +159,7 @@ public class KioskServiceImpl implements KioskService{
 
     logger.info("validating existing kiosk");
     Kiosk existingKiosk = kioskRepository.findKioskByToken(kioskToken);
+
     if(existingKiosk != null){
       Kiosk newKiosk = new Kiosk(kioskToken, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), false);
       newKiosk.setQueueingNumber(existingKiosk.getQueueingNumber());
@@ -136,11 +167,16 @@ public class KioskServiceImpl implements KioskService{
       return kioskRepository.save(newKiosk);
     }
 
-    boolean isOrderNow = action.equalsIgnoreCase("order_now");
+    boolean isOrderNow = action.equalsIgnoreCase(ORDER_NOW);
 
     Kiosk newKiosk = new Kiosk(kioskToken, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), isOrderNow);
-    Long latestNumber = kioskRepository.findLatestQueueingNumber();
-    newKiosk.setQueueingNumber(latestNumber != null ? latestNumber + 1: 1);
+
+    Kiosk latestKiosk = kioskRepository.findLatestQueueingNumber();
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    String currentDate = dateFormat.format(new Date());
+
+    newKiosk.setQueueingNumber(latestKiosk != null && currentDate.equals(dateFormat.format(latestKiosk.getDateCreated()))
+        ? latestKiosk.getQueueingNumber() + 1 : 1L);
 
     return kioskRepository.save(newKiosk);
   }
@@ -149,7 +185,11 @@ public class KioskServiceImpl implements KioskService{
     ThreadType type = threadTypeRepository.findByTypeIgnoreCase(threadType);
 
     if(type == null){
-      threadTypeRepository.findById(threadType).orElseThrow(() -> new NotFoundException("Thread Type does not exists"));
+      type = threadTypeRepository.findByTypeId(threadType);
+
+      if(type == null){
+        throw new ValidationException("Thread type does not exists");
+      }
     }
 
     return type;
@@ -241,7 +281,7 @@ public class KioskServiceImpl implements KioskService{
 
     List<String> kioskIds = new ArrayList<>(form.getIds());
 
-    if(!action.equalsIgnoreCase("order_now")){
+    if(!action.equalsIgnoreCase(ORDER_NOW)){
       kioskIds.removeIf(id -> {
         Kiosk kiosk = kioskRepository.findByIdAndToken(id, kioskToken);
         return kiosk != null && kiosk.isCheckedOut();
@@ -250,8 +290,9 @@ public class KioskServiceImpl implements KioskService{
 
     logger.info("checking out selected kiosk orders of {}", kioskToken);
 
-    List<KioskDto> kiosks = new ArrayList<>();
-    List<String> orderIds = new ArrayList<>();
+    List<Kiosk> checkedOutKiosks = new ArrayList<>();
+    List<Orders> ordersList = new ArrayList<>();
+    List<ThreadTypeDetails> detailsList = new ArrayList<>();
 
     String orderId = UUID.randomUUID().toString();
     long queueingNumber = 0;
@@ -262,25 +303,27 @@ public class KioskServiceImpl implements KioskService{
         throw new NotFoundException("Kiosk Order id does not exists or belong to the current order");
       }
 
-      if(!action.equalsIgnoreCase("order_now") && kiosk.isCheckedOut()){
+      if(!action.equalsIgnoreCase(ORDER_NOW) && kiosk.isCheckedOut()){
         throw new ValidationException("One of the kiosk orders is already checked out");
       }
 
       kiosk.setCheckedOut(true);
-      kioskRepository.save(kiosk);
-      kiosks.add(new KioskDto(kiosk));
+      checkedOutKiosks.add(kiosk);
 
-      Orders orders = new Orders(OrderType.KIOSK, OrderStatus.ORDER_COMPLETED, null, null, null, kiosk, null, orderId);
-      ordersRepository.save(orders);
-
-      orderIds.add(id);
+      Orders orders = new Orders(OrderType.KIOSK, OrderStatus.PROCESSING, null, null, null, kiosk, null, orderId);
+      ordersList.add(orders);
 
       ThreadTypeDetails details = kiosk.getDetails();
       details.setStocks(details.getStocks() - kiosk.getQuantity());
-      threadTypeDetailsRepository.save(details);
+      detailsList.add(details);
 
       queueingNumber = kiosk.getQueueingNumber();
     }
+
+    List<KioskDto> kiosks = KioskDto.buildFromEntities(kioskRepository.saveAll(checkedOutKiosks));
+
+    ordersRepository.saveAll(ordersList);
+    threadTypeDetailsRepository.saveAll(detailsList);
 
     KioskCheckoutDto dto = new KioskCheckoutDto(kiosks);
     dto.setQueueingNumber(String.valueOf(queueingNumber));
@@ -292,10 +335,10 @@ public class KioskServiceImpl implements KioskService{
   public KioskCheckoutDto orderNow(String kioskToken, OrderForm form) {
     Validate.notNull(form);
 
-    Kiosk kiosk = addKioskOrder(kioskToken, form, "order_now");
+    Kiosk kiosk = addKioskOrder(kioskToken, form, ORDER_NOW);
 
     CheckoutForm checkoutForm = new CheckoutForm(Collections.singletonList(kiosk.getId()));
-    return checkout(kioskToken, checkoutForm, "order_now");
+    return checkout(kioskToken, checkoutForm, ORDER_NOW);
   }
 
   @Override
@@ -303,6 +346,7 @@ public class KioskServiceImpl implements KioskService{
     Validate.notNull(form);
 
     List<String> kioskIds = new ArrayList<>(form.getIds());
+    List<Kiosk> cancelledKiosks = new ArrayList<>();
 
     logger.info("cancelling check out of selected kiosk orders of {}", kioskToken);
 
@@ -314,16 +358,35 @@ public class KioskServiceImpl implements KioskService{
       }
 
       kiosk.setCheckedOut(false);
-      kioskRepository.save(kiosk);
+      cancelledKiosks.add(kiosk);
     }
 
+    kioskRepository.saveAll(cancelledKiosks);
     logger.info("Successfully cancelled the checkouts");
   }
 
-  private Account getAccountFromToken(String token){
-    String id = jwtGenerator.getUserFromJWT(token);
+  @Override
+  public void setAsComplete(String kioskToken) {
+    logger.info("setting kiosk orders as complete");
 
-    return accountRepository.findById(id).orElseThrow(() -> new NotFoundException("Account does not exists"));
+    List<Orders> orders = ordersRepository.findOrdersByKioskToken(kioskToken);
+    List<Orders> completedOrders = new ArrayList<>();
+
+    for (Orders order : orders) {
+      if (!order.getKiosk().isCheckedOut()) {
+        throw new ValidationException("Cannot set as completed if it is not yet checked out");
+      }
+
+      if(order.getOrderStatus().equals(OrderStatus.ORDER_COMPLETED)){
+        throw new ValidationException("One of the orders is already completed");
+      }
+
+      order.setOrderStatus(OrderStatus.ORDER_COMPLETED);
+      completedOrders.add(order);
+    }
+
+    ordersRepository.saveAll(completedOrders);
+    logger.info("done changing status to completed");
   }
 
   private void validateIfAccountIsNotCustomerOrContentManager(String token){

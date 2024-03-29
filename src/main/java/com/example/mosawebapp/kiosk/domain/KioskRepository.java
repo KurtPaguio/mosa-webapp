@@ -20,8 +20,11 @@ public interface KioskRepository extends JpaRepository<Kiosk, String> {
   @Query("SELECT k FROM Kiosk k WHERE k.token = :kioskToken AND k.isCheckedOut = false")
   List<Kiosk> findNotCheckedOutKioskByToken(@Param("kioskToken") String kioskToken);
 
-  @Query("SELECT MAX(k.queueingNumber) FROM Kiosk k")
-  Long findLatestQueueingNumber();
+  /*@Query("SELECT k FROM Kiosk k WHERE k.queueingNumber = (SELECT MAX(k2.queueingNumber) FROM Kiosk k2)")
+  Kiosk findLatestQueueingNumber();*/
+
+  @Query(value = "SELECT * FROM kiosk k WHERE k.queueing_number = (SELECT MAX(k2.queueing_number) FROM kiosk k2) LIMIT 1", nativeQuery = true)
+  Kiosk findLatestQueueingNumber();
 
   @Query("SELECT k FROM Kiosk k WHERE k.token = :token AND k.type = :threadType AND k.details = :threadTypeDetails And k.isCheckedOut = false")
   Kiosk findByTokenAndTypeAndDetailsAndNotCheckedOut(@Param("token") String token, @Param("threadType") ThreadType threadType, @Param("threadTypeDetails")
@@ -31,4 +34,14 @@ public interface KioskRepository extends JpaRepository<Kiosk, String> {
       + "INNER JOIN orders o ON o.kiosk_id = k.id "
       + "WHERE o.order_id = :orderId", nativeQuery = true)
   List<Kiosk> findAllKiosksByOrderId(@Param("orderId") String orderId);
+
+  @Query(value = "SELECT k.* FROM kiosk k "
+      + "INNER JOIN orders o ON o.kiosk_id = k.id "
+      + "WHERE o.order_status = 'ORDER_COMPLETED'", nativeQuery = true)
+  List<Kiosk> findCompletedOrders();
+
+  @Query(value = "SELECT k.* FROM kiosk k "
+      + "INNER JOIN orders o ON o.kiosk_id = k.id "
+      + "WHERE o.order_status = 'PROCESSING'", nativeQuery = true)
+  List<Kiosk> findProcessingOrders();
 }

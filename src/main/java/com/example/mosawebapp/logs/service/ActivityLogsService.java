@@ -9,6 +9,7 @@ import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.logs.domain.ActivityLogs;
 import com.example.mosawebapp.logs.domain.ActivityLogsRepository;
+import com.example.mosawebapp.logs.dto.ActivityLogsDto;
 import com.example.mosawebapp.onsite_order.domain.OnsiteOrder;
 import com.example.mosawebapp.onsite_order.dto.OnsiteOrderDto;
 import com.example.mosawebapp.product.brand.domain.Brand;
@@ -19,10 +20,14 @@ import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -38,11 +43,16 @@ public class ActivityLogsService {
     this.jwtGenerator = jwtGenerator;
   }
 
-  public List<ActivityLogs> getAllLogs(String token){
+  public Page<ActivityLogsDto> getAllLogs(String token, Pageable pageable){
     validateIfAccountIsAdmin(token);
+    Page<ActivityLogs> activityLogs = activityLogsRepository.findAll(pageable);
+    List<ActivityLogs> allActivityLogs = activityLogs.getContent();
+    List<ActivityLogsDto> activityLogsDto = ActivityLogsDto.buildFromEntities(allActivityLogs);
 
-    return activityLogsRepository.findAll();
+    activityLogsDto.sort(Comparator.comparing(ActivityLogsDto::getDateCreated).reversed());
+    return new PageImpl<>(activityLogsDto, pageable, activityLogs.getTotalElements());
   }
+
   public void loginActivity(Account account){
     String actor = account.getFullName();
     String message = actor + " just logged into the system";

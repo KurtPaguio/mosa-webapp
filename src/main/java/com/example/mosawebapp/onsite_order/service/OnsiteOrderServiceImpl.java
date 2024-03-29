@@ -7,12 +7,8 @@ import com.example.mosawebapp.all_orders.domain.OrderStatus;
 import com.example.mosawebapp.all_orders.domain.OrderType;
 import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.all_orders.domain.OrdersRepository;
-import com.example.mosawebapp.cart.domain.Cart;
-import com.example.mosawebapp.cart.dto.CartCheckoutDto;
-import com.example.mosawebapp.cart.dto.CartDto;
 import com.example.mosawebapp.cart.dto.CheckoutForm;
 import com.example.mosawebapp.cart.dto.OrderForm;
-import com.example.mosawebapp.cart.dto.ReferenceNumberForm;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.logs.service.ActivityLogsService;
@@ -27,6 +23,7 @@ import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.validate.Validate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -38,7 +35,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class OnsiteOrderServiceImpl implements OnsiteOrderService {
   private static final Logger logger = LoggerFactory.getLogger(OnsiteOrderServiceImpl.class);
-
+  private static final String ORDER_NOT_EXISTS = "Order does not exists";
+  private static final String ORDER_NOT_IN_ADMIN = "Order is not under the orders handled by this administrator";
   private final AccountRepository accountRepository;
   private final JwtGenerator jwtGenerator;
   private final ThreadTypeRepository threadTypeRepository;
@@ -63,13 +61,13 @@ public class OnsiteOrderServiceImpl implements OnsiteOrderService {
 
   @Override
   public void startOrder(String token) {
-    logger.info("generating token for onsite ordering");
-
     validateIfAccountIsNotCustomerOrContentManager(token);
 
     Account account = getAccountFromToken(token);
     account.setOrdering(true);
     accountRepository.save(account);
+
+    logger.info("starting onsite ordering by {}", account.getFullName());
   }
 
   @Override
@@ -95,7 +93,7 @@ public class OnsiteOrderServiceImpl implements OnsiteOrderService {
     List<OnsiteOrder> orders = onsiteOrderRepository.findByIsBeingOrderedStatusAsTrue();
 
     if(orders.isEmpty()){
-      return null;
+      return Collections.emptyList();
     }
 
     List<OnsiteOrderDto> dto = new ArrayList<>();
@@ -135,7 +133,7 @@ public class OnsiteOrderServiceImpl implements OnsiteOrderService {
       return new OnsiteOrderDto(order);
     }
 
-    OnsiteOrder onsiteOrder = new OnsiteOrder(type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), false, true);
+    OnsiteOrder onsiteOrder = new OnsiteOrder(account, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), false, true);
     onsiteOrderRepository.save(onsiteOrder);
 
     activityLogsService.onsiteOrderActivity(account, "added", onsiteOrder);
@@ -146,7 +144,11 @@ public class OnsiteOrderServiceImpl implements OnsiteOrderService {
     ThreadType type = threadTypeRepository.findByTypeIgnoreCase(threadType);
 
     if(type == null){
-      threadTypeRepository.findById(threadType).orElseThrow(() -> new NotFoundException("Thread Type does not exists"));
+      type = threadTypeRepository.findByTypeId(threadType);
+
+      if(type == null){
+        throw new ValidationException("Thread type does not exists");
+      }
     }
 
     return type;
@@ -187,14 +189,19 @@ public class OnsiteOrderServiceImpl implements OnsiteOrderService {
   public OnsiteOrderDto addOrderQuantity(String token, String orderId) {
     validateIfAccountIsNotCustomerOrContentManager(token);
 
+    Account account = getAccountFromToken(token);
     OnsiteOrder order = onsiteOrderRepository.findOrderById(orderId);
 
     if(order == null){
-      throw new NotFoundException("Order does not exists");
+      throw new NotFoundException(ORDER_NOT_EXISTS);
     }
 
     if(!order.isBeingOrdered() || order.isPaid()){
       throw new ValidationException("Cannot edit quantity of an order not being ordered or already paid");
+    }
+
+    if(order.getAccount() != account){
+      throw new ValidationException(ORDER_NOT_IN_ADMIN);
     }
 
     logger.info("adding order quantity of order {}", orderId);
@@ -213,11 +220,15 @@ public class OnsiteOrderServiceImpl implements OnsiteOrderService {
     OnsiteOrder order = onsiteOrderRepository.findOrderById(orderId);
 
     if(order == null){
-      throw new NotFoundException("Order does not exists");
+      throw new NotFoundException(ORDER_NOT_EXISTS);
     }
 
     if(!order.isBeingOrdered() || order.isPaid()){
       throw new ValidationException("Cannot remove completed order");
+    }
+
+    if(order.getAccount() != account){
+      throw new ValidationException(ORDER_NOT_IN_ADMIN);
     }
 
     logger.info("deleting order {}", orderId);
@@ -230,14 +241,19 @@ public class OnsiteOrderServiceImpl implements OnsiteOrderService {
   public OnsiteOrderDto subtractOrderQuantity(String token, String orderId) {
     validateIfAccountIsNotCustomerOrContentManager(token);
 
+    Account account = getAccountFromToken(token);
     OnsiteOrder order = onsiteOrderRepository.findOrderById(orderId);
 
     if(order == null){
-      throw new NotFoundException("Order does not exists");
+      throw new NotFoundException(ORDER_NOT_EXISTS);
     }
 
     if(!order.isBeingOrdered() || order.isPaid()){
       throw new ValidationException("Cannot edit quantity of an order not being ordered or already paid");
+    }
+
+    if(order.getAccount() != account){
+      throw new ValidationException(ORDER_NOT_IN_ADMIN);
     }
 
     logger.info("subtracting order quantity of order {}", orderId);
@@ -263,59 +279,80 @@ public class OnsiteOrderServiceImpl implements OnsiteOrderService {
 
     logger.info("checking out selected orders");
 
-    List<OnsiteOrderDto> dto = new ArrayList<>();
+    List<OnsiteOrder> checkedOutOrders = new ArrayList<>();
+    List<Orders> ordersList = new ArrayList<>();
+    List<ThreadTypeDetails> detailsList = new ArrayList<>();
 
     String orderId = UUID.randomUUID().toString();
     for(String id: orderIds){
       OnsiteOrder order = onsiteOrderRepository.findOrderById(id);
 
       if(order == null){
-        throw new NotFoundException("Order does not exists");
+        throw new NotFoundException(ORDER_NOT_EXISTS);
       }
 
       if(!order.isBeingOrdered() || order.isPaid()){
         throw new ValidationException("Cannot checkout an order not being ordered or already paid");
       }
 
+      if(order.getAccount() != account){
+        throw new ValidationException("One of the checked out orders is not under the orders handled by this administrator");
+      }
+
       order.setPaid(true);
       order.setBeingOrdered(false);
-      onsiteOrderRepository.save(order);
-      dto.add(new OnsiteOrderDto(order));
+      checkedOutOrders.add(order);
 
       Orders orders = new Orders(OrderType.ONSITE, OrderStatus.ORDER_COMPLETED, null, null, null, null, order, orderId);
-      ordersRepository.save(orders);
+      ordersList.add(orders);
 
       ThreadTypeDetails details = order.getDetails();
       details.setStocks(details.getStocks() - order.getQuantity());
-      threadTypeDetailsRepository.save(details);
+      detailsList.add(details);
     }
 
+    ordersRepository.saveAll(ordersList);
+    threadTypeDetailsRepository.saveAll(detailsList);
+
+    List<OnsiteOrderDto> dto = OnsiteOrderDto.buildFromEntities(onsiteOrderRepository.saveAll(checkedOutOrders));
     activityLogsService.onsiteOrderCheckout(account, dto);
+
+    account.setOrdering(false);
+    accountRepository.save(account);
+
     return new OnsiteOrderCheckoutDto(dto);
   }
 
   @Override
   public void cancelCheckout(String token, CheckoutForm form) {
     Validate.notNull(form);
+    validateIfAccountIsNotCustomerOrContentManager(token);
+
+    Account account = getAccountFromToken(token);
 
     List<String> orderIds = new ArrayList<>(form.getIds());
-
+    List<OnsiteOrder> orders = new ArrayList<>();
     logger.info("cancelling check out of orders");
 
     for(String id: orderIds){
       OnsiteOrder order = onsiteOrderRepository.findOrderById(id);
 
       if(order == null){
-        throw new NotFoundException("Order does not exists");
+        throw new NotFoundException(ORDER_NOT_EXISTS);
       }
 
       if(order.isPaid()){
         throw new ValidationException("Cannot cancel an order that is already paid");
       }
 
-      onsiteOrderRepository.delete(order);
+      if(order.getAccount() != account){
+        throw new ValidationException("One of the checked out orders is not under the orders handled by this administrator");
+      }
+
+      orders.add(order);
     }
 
+    onsiteOrderRepository.deleteAll(orders);
     logger.info("Successfully cancelled the checkouts");
   }
 

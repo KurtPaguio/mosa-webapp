@@ -7,9 +7,9 @@ public interface OrdersService {
   List<OrdersDto> getAllOrders(String token);
 
   String verifyOrder(String token, String orderId);
-  String toBeDelivered(String token, String orderId);
+  String forPickup(String token, String orderId);
 
-  String completeDelivery(String token, String orderId);
+  String completeOrder(String token, String orderId);
 
   String orderNotVerified(String token, String orderId);
 }

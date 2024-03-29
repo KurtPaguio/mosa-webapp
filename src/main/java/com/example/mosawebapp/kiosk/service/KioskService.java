@@ -19,4 +19,7 @@ public interface KioskService {
   KioskCheckoutDto checkout(String kioskToken, CheckoutForm form, String action);
   KioskCheckoutDto orderNow(String kioskToken, OrderForm form);
   void cancelCheckout(String kioskToken, CheckoutForm form);
+  void setAsComplete(String kioskToken);
+  List<KioskDto> getCompletedOrders(String adminToken);
+  List<KioskDto> getProcessingOrders(String adminToken);
 }

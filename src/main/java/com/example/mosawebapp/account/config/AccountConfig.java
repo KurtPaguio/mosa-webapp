@@ -30,10 +30,10 @@ public class AccountConfig {
   @Bean
   public CommandLineRunner createAdminAccount() {
     return args -> {
-      if(accountRepository.findByEmail("ktfpaguio2000@gmail.com") == null){
+      if(accountRepository.findByEmail("noreplymosatiresupply@gmail.com") == null){
         Account account = new Account();
-        account.setEmail("ktfpaguio2000@gmail.com");
-        account.setPassword(passwordEncoder.encode("kurtp2000"));
+        account.setEmail("noreplymosatiresupply@gmail.com");
+        account.setPassword(passwordEncoder.encode("admin123"));
         account.setFullName("John Doe");
         account.setUserRole(UserRole.ADMINISTRATOR);
         account.setRoles(Collections.singletonList(roleRepository.findByName(UserRole.ADMINISTRATOR.name())));

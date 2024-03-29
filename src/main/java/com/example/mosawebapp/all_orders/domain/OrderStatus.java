@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum OrderStatus {
+    PROCESSING("Processing"),
     FOR_CHECKOUT("For Checkout"),
     NOT_YET_ORDERED("Not Yet Ordered"),
     FOR_VERIFICATION("For Verification"),

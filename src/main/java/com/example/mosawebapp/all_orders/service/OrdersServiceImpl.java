@@ -118,7 +118,7 @@ public class OrdersServiceImpl implements OrdersService{
     for(OnsiteOrder onsiteOrder: orders){
       dto.add(new OnsiteOrderDto(onsiteOrder));
     }
-    
+
     return dto;
   }
   @Override
@@ -168,15 +168,15 @@ public class OrdersServiceImpl implements OrdersService{
       throw new ValidationException("Order was already completed");
     }
 
-    if(orders.getOrderStatus().equals(OrderStatus.FOR_DELIVERY)){
-      throw new ValidationException("Cannot verify if status is already on delivery or invalid");
+    if(orders.getOrderStatus().equals(OrderStatus.FOR_PICKUP)){
+      throw new ValidationException("Cannot verify if status is ready for pickup or invalid");
     }
   }
 
   @Override
-  public String toBeDelivered(String token, String orderId) {
+  public String forPickup(String token, String orderId) {
     validateIfAccountIsNotCustomerOrContentManager(token);
-    logger.info("changing order {} status to 'for delivery'", orderId);
+    logger.info("changing order {} status to 'for pickup'", orderId);
 
     Account account = getAccountFromToken(token);
 
@@ -187,7 +187,7 @@ public class OrdersServiceImpl implements OrdersService{
 
     for(Orders order: orders) {
       if (order.getOrderStatus() != OrderStatus.VERIFIED) {
-        throw new ValidationException("Order not yet verified and cannot be delivered yet");
+        throw new ValidationException("Order not yet verified and cannot be ready for pickup yet");
       }
 
       if (order.getOrderStatus().equals(OrderStatus.ORDER_COMPLETED)) {
@@ -199,7 +199,7 @@ public class OrdersServiceImpl implements OrdersService{
       refNo = order.getReferenceNumber();
       status = order.getOrderStatus();
 
-      order.setOrderStatus(OrderStatus.FOR_DELIVERY);
+      order.setOrderStatus(OrderStatus.FOR_PICKUP);
       ordersRepository.save(order);
     }
 
@@ -207,14 +207,14 @@ public class OrdersServiceImpl implements OrdersService{
       throw new ValidationException("Customer of the order does not have an online account");
     }
 
-    mailService.sendEmailForDelivery(customer, refNo);
+    mailService.sendEmailForPickup(customer, refNo);
     activityLogsService.onlineOrderActivity(account, refNo, status);
 
     return refNo;
   }
 
   @Override
-  public String completeDelivery(String token, String orderId) {
+  public String completeOrder(String token, String orderId) {
     validateIfAccountIsNotCustomerOrContentManager(token);
     logger.info("completing order {}", orderId);
 
@@ -229,8 +229,8 @@ public class OrdersServiceImpl implements OrdersService{
         throw new ValidationException("Order already completed");
       }
 
-      if (order.getOrderStatus() != OrderStatus.FOR_DELIVERY) {
-        throw new ValidationException("Order must be delivered first before being completed");
+      if (order.getOrderStatus() != OrderStatus.FOR_PICKUP) {
+        throw new ValidationException("Order must be ready for pickup first before being completed");
       }
 
       customer = order.getCart().getAccount();
@@ -265,10 +265,10 @@ public class OrdersServiceImpl implements OrdersService{
     OrderStatus status = null;
 
     for(Orders order: orders) {
-      if (order.getOrderStatus().equals(OrderStatus.FOR_DELIVERY) || order.getOrderStatus()
+      if (order.getOrderStatus().equals(OrderStatus.FOR_PICKUP) || order.getOrderStatus()
           .equals(OrderStatus.ORDER_COMPLETED)) {
         throw new ValidationException(
-            "Cannot change order status if already on delivery or completed");
+            "Cannot change order status if already ready for pickup or completed");
       }
 
       customer = order.getCart().getAccount();

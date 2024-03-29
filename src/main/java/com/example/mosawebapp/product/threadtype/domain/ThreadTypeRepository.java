@@ -19,7 +19,7 @@ public interface ThreadTypeRepository extends JpaRepository<ThreadType, String>,
   List<ThreadType> findByBrand(String brand);
   List<ThreadType> findAll(Specification specification);
   @Query(value = "SELECT * FROM thread_type WHERE id = :id", nativeQuery = true)
-  ThreadType findTypeId(@Param("id") String id);
+  ThreadType findByTypeId(@Param("id") String id);
   ThreadType findByTypeIgnoreCase(String type);
   @Modifying
   @Transactional

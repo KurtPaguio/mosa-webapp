@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CartServiceImpl implements CartService{
   private static final Logger logger = LoggerFactory.getLogger(CartServiceImpl.class);
+  private static final String CART_ORDER_NOT_EXISTS = "Cart Order id does not exists or belong to the user";
   private final AccountRepository accountRepository;
   private final JwtGenerator jwtGenerator;
   private final ThreadTypeRepository threadTypeRepository;
@@ -171,9 +172,12 @@ public class CartServiceImpl implements CartService{
       return new CartDto(existingCart, OrderStatus.NOT_YET_ORDERED);
     }
 
-    boolean isOrderNow = action.equalsIgnoreCase("order_now");
+    Cart cart = new Cart(account, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), false, false);
 
-    Cart cart = new Cart(account, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), isOrderNow, false);
+    if(action.equalsIgnoreCase("order_now")){
+      cart.setOrderNow(true);
+    }
+
     cartRepository.save(cart);
 
     return new CartDto(cart, OrderStatus.NOT_YET_ORDERED);
@@ -183,7 +187,11 @@ public class CartServiceImpl implements CartService{
     ThreadType type = threadTypeRepository.findByTypeIgnoreCase(threadType);
 
     if(type == null){
-      threadTypeRepository.findById(threadType).orElseThrow(() -> new NotFoundException("Thread Type does not exists"));
+      type = threadTypeRepository.findByTypeId(threadType);
+
+      if(type == null){
+        throw new ValidationException("Thread type does not exists");
+      }
     }
 
     return type;
@@ -286,13 +294,13 @@ public class CartServiceImpl implements CartService{
 
     logger.info("checking out selected cart orders of {}", account.getFullName());
 
-    List<CartDto> carts = new ArrayList<>();
+    List<Cart> checkedOutCarts = new ArrayList<>();
 
     for(String id: cartIds){
       Cart cart = cartRepository.findByIdAndAccount(id, account);
 
       if(cart == null){
-        throw new NotFoundException("Cart Order id does not exists or belong to the user");
+        throw new NotFoundException(CART_ORDER_NOT_EXISTS);
       }
 
       if(cart.isCheckedOut()){
@@ -300,10 +308,10 @@ public class CartServiceImpl implements CartService{
       }
 
       cart.setCheckedOut(true);
-      cartRepository.save(cart);
-      carts.add(new CartDto(cart, OrderStatus.FOR_CHECKOUT));
+      checkedOutCarts.add(cart);
     }
 
+    List<CartDto> carts = CartDto.buildFromEntitiesForCheckout(cartRepository.saveAll(checkedOutCarts));
     //mailService(account, orders)
     return new CartCheckoutDto(carts);
   }
@@ -314,6 +322,8 @@ public class CartServiceImpl implements CartService{
 
     Account account = getAccountFromToken(token);
     List<String> cartIds = new ArrayList<>(form.getIds());
+    List<Cart> carts = new ArrayList<>();
+    List<Cart> orderedNowCarts = new ArrayList<>();
 
     logger.info("cancelling check out of selected cart orders of {}", account.getFullName());
 
@@ -321,13 +331,22 @@ public class CartServiceImpl implements CartService{
       Cart cart = cartRepository.findByIdAndAccount(id, account);
 
       if(cart == null){
-        throw new NotFoundException("Cart Order id does not exists or belong to the user");
+        throw new NotFoundException(CART_ORDER_NOT_EXISTS);
       }
 
-      cart.setCheckedOut(false);
-      cartRepository.save(cart);
+      if(cart.isOrderNow()){
+        orderedNowCarts.add(cart);
+      } else {
+        cart.setCheckedOut(false);
+        carts.add(cart);
+      }
     }
 
+    if(!orderedNowCarts.isEmpty()){
+      cartRepository.deleteAll(orderedNowCarts);
+    }
+
+    cartRepository.saveAll(carts);
     logger.info("Successfully cancelled the checkouts");
   }
   @Override
@@ -351,27 +370,32 @@ public class CartServiceImpl implements CartService{
     String orderId = UUID.randomUUID().toString();
 
     List<Cart> carts = new ArrayList<>();
+    List<Orders> ordersList = new ArrayList<>();
+    List<ThreadTypeDetails> detailsList = new ArrayList<>();
     for(String id: cartIds){
       Cart cart = cartRepository.findByIdAndAccount(id, account);
 
       validateCartDetails(cart);
 
       cart.setPaid(true);
-      cartRepository.save(cart);
-
       carts.add(cart);
 
       Orders orders = new Orders(OrderType.ONLINE, OrderStatus.FOR_VERIFICATION, form.getRefNo(), form.getPaymentMethod(), cart, null, null, orderId);
-      ordersRepository.save(orders);
+      ordersList.add(orders);
 
       ThreadTypeDetails details = cart.getDetails();
       details.setStocks(details.getStocks() - cart.getQuantity());
-      threadTypeDetailsRepository.save(details);
+      detailsList.add(details);
     }
 
     if(!carts.isEmpty()){
+      cartRepository.saveAll(carts);
+      ordersRepository.saveAll(ordersList);
+      threadTypeDetailsRepository.saveAll(detailsList);
+
       String latestDateOrdered = DateTimeFormatter.get_MMDDYYY_Format(new Date());
       mailService.sendEmailOnPayment(account, latestDateOrdered, form.getRefNo(), carts);
+
       logger.info("Successfully paid the checkouts");
     } else{
       throw new NotFoundException("There are no payable orders");
@@ -380,7 +404,7 @@ public class CartServiceImpl implements CartService{
 
   private void validateCartDetails(Cart cart){
     if(cart == null){
-      throw new NotFoundException("Cart Order id does not exists or belong to the user");
+      throw new NotFoundException(CART_ORDER_NOT_EXISTS);
     }
 
     if(!cart.isCheckedOut()){

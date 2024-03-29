@@ -38,6 +38,9 @@ public class Cart {
   private boolean isCheckedOut;
   @Column
   private boolean isPaid;
+  @Column
+  private boolean isOrderNow;
+
   public Cart(){}
 
   public Cart(Account account, ThreadType type, ThreadTypeDetails details, long quantity,
@@ -121,5 +124,13 @@ public class Cart {
 
   public void setPaid(boolean paid) {
     isPaid = paid;
+  }
+
+  public boolean isOrderNow() {
+    return isOrderNow;
+  }
+
+  public void setOrderNow(boolean orderNow) {
+    isOrderNow = orderNow;
   }
 }

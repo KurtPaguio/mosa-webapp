@@ -1,5 +1,6 @@
 package com.example.mosawebapp.onsite_order.domain;
 
+import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import java.util.Date;
@@ -9,6 +10,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -20,6 +22,9 @@ public class OnsiteOrder {
   private String id;
   @CreationTimestamp
   private Date dateCreated;
+  @OneToOne
+  @JoinColumn(name = "admin_id")
+  private Account account;
   @OneToOne
   @JoinColumn(name = "thread_type_id")
   private ThreadType type;
@@ -37,8 +42,9 @@ public class OnsiteOrder {
 
   public OnsiteOrder(){}
 
-  public OnsiteOrder(ThreadType type, ThreadTypeDetails details, long quantity, float totalPrice,
+  public OnsiteOrder(Account account, ThreadType type, ThreadTypeDetails details, long quantity, float totalPrice,
       boolean isPaid, boolean isBeingOrdered) {
+    this.account = account;
     this.type = type;
     this.details = details;
     this.quantity = quantity;
@@ -109,5 +115,13 @@ public class OnsiteOrder {
 
   public void setBeingOrdered(boolean isBeingOrdered) {
     this.isBeingOrdered = isBeingOrdered;
+  }
+
+  public Account getAccount() {
+    return account;
+  }
+
+  public void setAccount(Account account) {
+    this.account = account;
   }
 }

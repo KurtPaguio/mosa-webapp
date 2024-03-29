@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/kiosk")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
+@CrossOrigin(origins = "*")
 public class KioskController {
   private static final String BEARER = "Bearer ";
   private static final String TOKEN_INVALID = "Token Invalid/Expired";
@@ -52,6 +52,31 @@ public class KioskController {
     validateTokenValidity(token);
 
     return ResponseEntity.ok(kioskService.getAllKioskOrders(token));
+  }
+
+  @GetMapping(value = "/getCompletedOrders")
+  public ResponseEntity<?> getCompletedOrders(@RequestHeader("Authorization") String header){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return ResponseEntity.ok(kioskService.getCompletedOrders(token));
+  }
+
+  @GetMapping(value = "/getProcessingOrders")
+  public ResponseEntity<?> getProcessingOrders(@RequestHeader("Authorization") String header){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return ResponseEntity.ok(kioskService.getProcessingOrders(token));
+  }
+
+  @GetMapping(value = "/setAsCompleted/{kioskToken}")
+  public ResponseEntity<?> setOrderAsCompleted(@PathVariable("kioskToken") String kioskToken){
+    kioskService.setAsComplete(kioskToken);
+    
+    return ResponseEntity.ok(new ApiResponse("Order set as completed", HttpStatus.OK));
   }
 
   @GetMapping(value = "/getAllCurrentOrders/{kioskToken}")

@@ -111,7 +111,7 @@ public class MailService {
     simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Change Password OTP");
     simpleMailMessage.setText("We've received a notification of your password reset attempt in Mosa Tire Supply. "
         + "If it's not you who requested it, please ignore this message."
-        + "\n\nHere's the link for reset password: " + url + token
+        + "\n\nHere's the link for reset password: " + url + "?resetToken=" + token
     );
     simpleMailMessage.setTo(mail);
 
@@ -240,20 +240,20 @@ public class MailService {
     simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Payment Verified");
     simpleMailMessage.setText("Hi, " + account.getFullName() + "!"
         + "\n\nThank you for ordering from Mosa Tire Supply. Your order with the reference number of '" + refNo + "' was verified and already "
-        + "preparing for delivery. "
-        + "\n\nPlease wait for another email for delivery confirmation."
+        + "preparing the order."
+        + "\n\nPlease wait for another email for order pickup."
     );
 
     simpleMailMessage.setTo(account.getEmail());
     javaMailSender.send(simpleMailMessage);
   }
 
-  public void sendEmailForDelivery(Account account, String refNo){
+  public void sendEmailForPickup(Account account, String refNo){
     simpleMailMessage.setFrom(fromEmail);
-    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Delivery");
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Pickup");
     simpleMailMessage.setText("Hi, " + account.getFullName() + "!"
-        + "\n\nYour order with the reference number of '" + refNo + "' was prepared and is already on the way to you."
-        + "\n\nKindly wait for your order and double check once it was delivered to verify that it is the correct order. Thank you!"
+        + "\n\nYour order with the reference number of '" + refNo + "' was prepared and is ready for pickup."
+        + "\n\nKindly double check it to verify that it is the correct order. Thank you!"
     );
 
     simpleMailMessage.setTo(account.getEmail());
@@ -264,7 +264,7 @@ public class MailService {
     simpleMailMessage.setFrom(fromEmail);
     simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Completion");
     simpleMailMessage.setText("Hi, " + account.getFullName() + "!"
-        + "\n\nYour order has been delivered. Please double check it. If there was an incorrect order, contact us immediately through this email "
+        + "\n\nYour order has been completed. Please double check and if there was an incorrect item or order, contact us immediately through this email "
         + MOSA_TIRE_SUPPLY_EMAIL + " and we will reply as soon as possible."
         + "\n\nThank you for choosing us. Looking forward to serve you again."
     );
@@ -275,10 +275,10 @@ public class MailService {
 
   public void sendEmailForInvalidPayment(Account account, String refNo){
     simpleMailMessage.setFrom(fromEmail);
-    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Completion");
+    simpleMailMessage.setSubject("NO REPLY: Mosa Tire Supply Order Invalid");
     simpleMailMessage.setText("Hi, " + account.getFullName() + "!"
-        + "\n\nYour order with reference number '" + refNo + "' was invalid cannot be verified."
-        + "\n\nPlease contact us through our messenger or official email " + MOSA_TIRE_SUPPLY_EMAIL + " to fix your order, Thank you!"
+        + "\n\nYour order with reference number '" + refNo + "' was invalid and cannot be verified."
+        + "\n\nPlease contact us through our messenger or official email " + MOSA_TIRE_SUPPLY_EMAIL + " to fix your order. Thank you!"
     );
 
     simpleMailMessage.setTo(account.getEmail());

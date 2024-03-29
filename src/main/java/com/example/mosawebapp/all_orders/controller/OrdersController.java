@@ -49,13 +49,13 @@ public class OrdersController {
     return ResponseEntity.ok(new ApiResponse("Order with reference number " + refNo + " was verified", HttpStatus.OK));
   }
 
-  @GetMapping(value = "/forDelivery/{id}")
-  public ResponseEntity<?> setAsForDelivery(@RequestHeader("Authorization") String header, @PathVariable("id") String id){
+  @GetMapping(value = "/forPickup/{id}")
+  public ResponseEntity<?> setAsForPickup(@RequestHeader("Authorization") String header, @PathVariable("id") String id){
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
-    String refNo = ordersService.toBeDelivered(token,id);
-    return ResponseEntity.ok(new ApiResponse("Order with reference number " + refNo + " is on delivery", HttpStatus.OK));
+    String refNo = ordersService.forPickup(token,id);
+    return ResponseEntity.ok(new ApiResponse("Order with reference number " + refNo + " is ready for pick up", HttpStatus.OK));
   }
 
   @GetMapping(value = "/completeOrder/{id}")
@@ -63,7 +63,7 @@ public class OrdersController {
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
-    String refNo = ordersService.completeDelivery(token,id);
+    String refNo = ordersService.completeOrder(token,id);
     return ResponseEntity.ok(new ApiResponse("Order with reference number " + refNo + " was delivered", HttpStatus.OK));
   }
 

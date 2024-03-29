@@ -4,6 +4,8 @@ import com.example.mosawebapp.all_orders.domain.OrderStatus;
 import com.example.mosawebapp.onsite_order.domain.OnsiteOrder;
 import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.utils.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OnsiteOrderDto {
   private String orderId;
@@ -40,6 +42,15 @@ public class OnsiteOrderDto {
     this.totalPrice = order.getQuantity() * order.getDetails().getPrice();
   }
 
+  public static List<OnsiteOrderDto> buildFromEntities(List<OnsiteOrder> orders){
+    List<OnsiteOrderDto> dto = new ArrayList<>();
+
+    for(OnsiteOrder order: orders){
+      dto.add(new OnsiteOrderDto(order));
+    }
+
+    return dto;
+  }
   public String getOrderId() {
     return orderId;
   }

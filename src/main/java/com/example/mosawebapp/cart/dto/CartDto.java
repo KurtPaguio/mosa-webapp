@@ -5,11 +5,14 @@ import com.example.mosawebapp.cart.domain.Cart;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import com.example.mosawebapp.product.threadtypedetails.dto.ThreadTypeDetailsDto;
 import com.example.mosawebapp.utils.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CartDto {
   private String cartOrderId;
   private String dateCreated;
   private String customerName;
+  private String customerEmail;
   private String brandName;
   private String threadType;
   private String imageUrl;
@@ -35,6 +38,7 @@ public class CartDto {
     this.cartOrderId = cart.getId();
     this.dateCreated = DateTimeFormatter.get_MMDDYYY_Format(cart.getDateCreated());
     this.customerName = validateCustomerName(cart);
+    this.customerEmail = cart.getAccount().getEmail();
     this.brandName = cart.getType().getBrand().getName();
     this.imageUrl = cart.getType().getImageUrl();
     this.threadType = cart.getType().getType();
@@ -44,9 +48,19 @@ public class CartDto {
     this.orderStatus = status;
   }
 
+  public static List<CartDto> buildFromEntitiesForCheckout(List<Cart> carts){
+    List<CartDto> dto = new ArrayList<>();
+
+    for(Cart cart: carts){
+      dto.add(new CartDto(cart, OrderStatus.FOR_CHECKOUT));
+    }
+
+    return dto;
+  }
+
   public String validateCustomerName(Cart cart){
     if(cart.getAccount().getFullName() == null || cart.getAccount().getFullName().isEmpty()){
-      return cart.getAccount().getEmail() + " (No Name)";
+      return "";
     }
 
     return cart.getAccount().getFullName();
@@ -130,5 +144,13 @@ public class CartDto {
 
   public void setImageUrl(String imageUrl) {
     this.imageUrl = imageUrl;
+  }
+
+  public String getCustomerEmail() {
+    return customerEmail;
+  }
+
+  public void setCustomerEmail(String customerEmail) {
+    this.customerEmail = customerEmail;
   }
 }

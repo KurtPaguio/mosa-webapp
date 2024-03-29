@@ -64,7 +64,7 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
     List<ThreadTypeDetailsDto> dto = new ArrayList<>();
 
     for(ThreadTypeDetails detail: details){
-      ThreadType threadType = threadTypeRepository.findTypeId(detail.getThreadType().getId());
+      ThreadType threadType = threadTypeRepository.findByTypeId(detail.getThreadType().getId());
 
       if(threadType == null){
         dto.add(ThreadTypeDetailsDto.buildFromEntity(detail));
@@ -86,7 +86,7 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
     List<ThreadTypeDetailsDto> dto = new ArrayList<>();
 
     for(ThreadTypeDetails detail: details){
-      ThreadType threadType = threadTypeRepository.findTypeId(detail.getThreadType().getId());
+      ThreadType threadType = threadTypeRepository.findByTypeId(detail.getThreadType().getId());
 
       if(threadType == null){
         dto.add(ThreadTypeDetailsDto.buildFromEntity(detail));
@@ -113,7 +113,7 @@ public class ThreadTypeDetailsServiceImpl implements ThreadTypeDetailsService{
   @Override
   public ThreadTypeDetailsDto findThreadTypeDetails(String id) {
     ThreadTypeDetails details = threadTypeDetailsRepository.findById(id).orElseThrow(() -> new NotFoundException(TYPE_DETAILS_NOT_EXIST));
-    ThreadType threadType = threadTypeRepository.findTypeId(details.getThreadType().getId());
+    ThreadType threadType = threadTypeRepository.findByTypeId(details.getThreadType().getId());
 
     if(threadType == null){
       return ThreadTypeDetailsDto.buildFromEntity(details);

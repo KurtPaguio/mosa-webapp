@@ -8,6 +8,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface OrdersRepository extends JpaRepository<Orders, String> {
 
+    @Query(value = "SELECT od.* "
+        + "FROM orders od "
+        + "LEFT JOIN cart ct ON ct.id = od.cart_id "
+        + "LEFT JOIN kiosk k ON k.id = od.kiosk_id "
+        + "LEFT JOIN onsite_order oo ON oo.id = od.onsite_order_id "
+        + "INNER JOIN thread_type_details ttd ON ttd.id = ct.details_id OR ttd.id = k.details_id OR ttd.id = oo.details_id "
+        + "INNER JOIN thread_type tt ON tt.id = ttd.thread_type_id", nativeQuery = true)
+    List<Orders> findAllWithExistingIds();
     @Query(value = "SELECT order_status FROM orders WHERE cart_id = :cartId", nativeQuery = true)
     String findOrderByCartId(@Param("cartId") String cartId);
 

@@ -171,13 +171,16 @@ public class KioskServiceImpl implements KioskService{
 
     Kiosk newKiosk = new Kiosk(kioskToken, type, details, form.getQuantity(), (form.getQuantity() * details.getPrice()), isOrderNow);
 
+    logger.info("finding latest queueing number");
     Kiosk latestKiosk = kioskRepository.findLatestQueueingNumber();
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     String currentDate = dateFormat.format(new Date());
 
+    logger.info("setting queueing number");
     newKiosk.setQueueingNumber(latestKiosk != null && currentDate.equals(dateFormat.format(latestKiosk.getDateCreated()))
         ? latestKiosk.getQueueingNumber() + 1 : 1L);
 
+    logger.info("saving kiosk order");
     return kioskRepository.save(newKiosk);
   }
 

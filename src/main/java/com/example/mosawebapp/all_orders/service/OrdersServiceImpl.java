@@ -64,13 +64,14 @@ public class OrdersServiceImpl implements OrdersService{
     validateIfAccountIsNotCustomerOrContentManager(token);
     logger.info("Getting all orders");
 
-    List<Orders> orders = ordersRepository.findAll();
+    List<Orders> orders = ordersRepository.findAllWithExistingIds();
     orders = StreamEx.of(orders)
         .distinct(Orders::getOrderId)
         .toList();
 
     List<OrdersDto> dto = new ArrayList<>();
 
+    logger.info("setting orders dto");
     for(Orders order: orders){
       if(order.getOrderType().equals(OrderType.ONLINE)){
         dto.add(new OrdersDto(order, getCartDtoListPerOrder(order), null, null));

@@ -12,9 +12,15 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CartRepository extends JpaRepository<Cart, String> {
   List<Cart> findByAccount(Account account);
-  @Query(value = "SELECT * FROM cart WHERE customer_id = :customerId AND is_paid = false", nativeQuery = true)
+  @Query(value = "SELECT ct.* FROM cart ct "
+      + "INNER JOIN thread_type tt ON tt.id = ct.thread_type_id "
+      + "INNER JOIN thread_type_details ttd ON ttd.id = ct.details_id "
+      + "WHERE customer_id = :customerId AND is_paid = false", nativeQuery = true)
   List<Cart> findByAccountAndIsNotPaid(@Param("customerId") String customerId);
-  @Query(value = "SELECT * FROM cart WHERE customer_id = :customerId AND is_paid = true", nativeQuery = true)
+  @Query(value = "SELECT ct.* FROM cart ct "
+      + "INNER JOIN thread_type tt ON tt.id = ct.thread_type_id "
+      + "INNER JOIN thread_type_details ttd ON ttd.id = ct.details_id "
+      + "WHERE customer_id = :customerId AND is_paid = true", nativeQuery = true)
   List<Cart> findByAccountAndIsPaid(@Param("customerId") String customerId);
   Cart findByIdAndAccount(String id, Account account);
   @Query("SELECT c FROM Cart c WHERE c.account = :account AND c.type = :threadType AND c.details = :threadTypeDetails And c.isCheckedOut = false")

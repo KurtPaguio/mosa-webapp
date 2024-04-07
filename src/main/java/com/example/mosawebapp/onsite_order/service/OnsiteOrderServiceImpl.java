@@ -342,7 +342,7 @@ public class OnsiteOrderServiceImpl implements OnsiteOrderService {
       }
 
       if(order.isPaid()){
-        throw new ValidationException("Cannot cancel an order that is already paid");
+        continue;
       }
 
       if(order.getAccount() != account){

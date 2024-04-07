@@ -334,6 +334,10 @@ public class CartServiceImpl implements CartService{
         throw new NotFoundException(CART_ORDER_NOT_EXISTS);
       }
 
+      if(cart.isPaid()){
+        continue;
+      }
+
       if(cart.isOrderNow()){
         orderedNowCarts.add(cart);
       } else {
@@ -375,7 +379,9 @@ public class CartServiceImpl implements CartService{
     for(String id: cartIds){
       Cart cart = cartRepository.findByIdAndAccount(id, account);
 
-      validateCartDetails(cart);
+      if(!cart.isOrderNow()){
+        validateCartDetails(cart);
+      }
 
       cart.setPaid(true);
       carts.add(cart);

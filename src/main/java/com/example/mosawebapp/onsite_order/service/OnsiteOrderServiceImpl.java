@@ -90,7 +90,7 @@ public class OnsiteOrderServiceImpl implements OnsiteOrderService {
   public List<OnsiteOrderDto> getAllCurrentOrders(String token) {
     logger.info("getting current orders");
 
-    List<OnsiteOrder> orders = onsiteOrderRepository.findByIsBeingOrderedStatusAsTrue();
+    List<OnsiteOrder> orders = onsiteOrderRepository.findByIsBeingOrderedStatusAsTrueAndWithExistingIds();
 
     if(orders.isEmpty()){
       return Collections.emptyList();

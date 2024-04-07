@@ -14,6 +14,12 @@ public interface OnsiteOrderRepository extends JpaRepository<OnsiteOrder, String
   @Query("SELECT order FROM OnsiteOrder order WHERE order.isBeingOrdered = true")
   List<OnsiteOrder> findByIsBeingOrderedStatusAsTrue();
 
+  @Query(value = "SELECT oo.* FROM onsite_order oo "
+      + "INNER JOIN thread_type tt ON tt.id = oo.thread_type_id "
+      + "INNER JOIN thread_type_details ttd ON ttd.id = oo.details_id "
+      + "WHERE is_being_ordered = true", nativeQuery = true)
+  List<OnsiteOrder> findByIsBeingOrderedStatusAsTrueAndWithExistingIds();
+
   @Query("SELECT order FROM OnsiteOrder order WHERE order.isBeingOrdered = true "
       + "AND order.type = :threadType AND order.details = :threadTypeDetails And order.isPaid = false")
   OnsiteOrder findByIsBeingOrderedStatusAndTypeAndDetailsAndNotCheckedOut(@Param("threadType") ThreadType threadType, @Param("threadTypeDetails")
@@ -24,6 +30,8 @@ public interface OnsiteOrderRepository extends JpaRepository<OnsiteOrder, String
 
   @Query(value = "SELECT ons.* FROM onsite_order ons "
       + "INNER JOIN orders o ON o.onsite_order_id = ons.id "
+      + "INNER JOIN thread_type_details ttd ON ttd.id = ons.details_id "
+      + "INNER JOIN thread_type tt ON tt.id = ons.thread_type_id "
       + "WHERE o.order_id = :orderId", nativeQuery = true)
   List<OnsiteOrder> findAllOnsiteOrdersByOrderId(@Param("orderId") String orderId);
 }

@@ -23,8 +23,8 @@ public interface KioskRepository extends JpaRepository<Kiosk, String> {
   /*@Query("SELECT k FROM Kiosk k WHERE k.queueingNumber = (SELECT MAX(k2.queueingNumber) FROM Kiosk k2)")
   Kiosk findLatestQueueingNumber();*/
 
-  @Query(value = "SELECT * FROM kiosk k WHERE EXISTS (SELECT 1 FROM thread_type_details t WHERE t.id = k.details_id) \n"
-      + "ORDER BY k.queueing_number DESC LIMIT 1", nativeQuery = true)
+  @Query(value = "SELECT * FROM kiosk k WHERE EXISTS (SELECT 1 FROM thread_type_details t WHERE t.id = k.details_id) "
+      + "ORDER BY k.date_created DESC LIMIT 1", nativeQuery = true)
   Kiosk findLatestQueueingNumber();
 
   @Query("SELECT k FROM Kiosk k WHERE k.token = :token AND k.type = :threadType AND k.details = :threadTypeDetails And k.isCheckedOut = false")
@@ -33,6 +33,8 @@ public interface KioskRepository extends JpaRepository<Kiosk, String> {
 
   @Query(value = "SELECT k.* FROM kiosk k "
       + "INNER JOIN orders o ON o.kiosk_id = k.id "
+      + "INNER JOIN thread_type_details ttd ON ttd.id = k.details_id "
+      + "INNER JOIN thread_type tt ON tt.id = k.thread_type_id "
       + "WHERE o.order_id = :orderId", nativeQuery = true)
   List<Kiosk> findAllKiosksByOrderId(@Param("orderId") String orderId);
 

@@ -35,6 +35,8 @@ public interface CartRepository extends JpaRepository<Cart, String> {
 
   @Query(value = "SELECT c.* FROM cart c "
       + "INNER JOIN orders o ON o.cart_id = c.id "
+      + "INNER JOIN thread_type_details ttd ON ttd.id = c.details_id "
+      + "INNER JOIN thread_type tt ON tt.id = c.thread_type_id "
       + "WHERE o.order_id = :orderId", nativeQuery = true)
   List<Cart> findAllCartsByOrderId(@Param("orderId") String orderId);
 }

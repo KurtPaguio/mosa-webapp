@@ -16,7 +16,7 @@ public interface AccountRepository extends JpaRepository<Account, String>,
   @Query("SELECT CASE WHEN COUNT(acc) > 0 THEN true ELSE false END FROM Account acc WHERE lower(acc.email) = lower(:email)")
   boolean existsByEmail(@Param("email") String email);
 
-  @Query("SELECT acc FROM Account acc WHERE acc.userRole = 'ADMINISTRATOR'")
+  @Query("SELECT acc FROM Account acc WHERE acc.userRole <> 'CUSTOMER'")
   List<Account> findStaffAccounts();
 
   @Query("SELECT acc FROM Account acc WHERE acc.userRole = 'CUSTOMER'")

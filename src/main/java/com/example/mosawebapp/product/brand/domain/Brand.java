@@ -2,7 +2,10 @@ package com.example.mosawebapp.product.brand.domain;
 
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -24,6 +27,8 @@ public class Brand {
   private String name;
   @Column
   private String imageUrl;
+  @OneToMany(mappedBy = "brand", cascade = CascadeType.REMOVE, orphanRemoval = true)
+  private Set<ThreadType> types = new HashSet<>();
 
   public Brand(){}
   public Brand(String name, String imageUrl) {
@@ -61,5 +66,13 @@ public class Brand {
 
   public void setImageUrl(String imageUrl) {
     this.imageUrl = imageUrl;
+  }
+
+  public Set<ThreadType> getTypes() {
+    return types;
+  }
+
+  public void setTypes(Set<ThreadType> types) {
+    this.types = types;
   }
 }

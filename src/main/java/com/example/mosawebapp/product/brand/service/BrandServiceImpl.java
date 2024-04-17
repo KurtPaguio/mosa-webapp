@@ -146,12 +146,6 @@ public class BrandServiceImpl implements BrandService {
     validateIfAccountIsAdmin(account);
 
     Brand brand = brandRepository.findById(id).orElseThrow(() -> new NotFoundException(BRAND_NOT_EXIST));
-    List<ThreadType> threadTypes = threadTypeRepository.findByBrand(brand);
-
-    threadTypeRepository.deleteByBrand(brand.getId());
-    for(ThreadType type: threadTypes){
-      threadTypeDetailsRepository.deleteByThreadType(type.getId());
-    }
 
     mailService.sendEmailForBrand(MOSA_TIRE_SUPPLY_EMAIL, brand, DELETED);
     activityLogsService.brandActivity(account, List.of(brand), DELETED);

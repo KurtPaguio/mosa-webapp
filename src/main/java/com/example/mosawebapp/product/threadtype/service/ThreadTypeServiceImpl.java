@@ -193,7 +193,6 @@ public class ThreadTypeServiceImpl implements ThreadTypeService{
 
     ThreadType threadType = threadTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("Thread type does not exists"));
 
-    threadTypeDetailsRepository.deleteByThreadType(threadType.getId());
     mailService.sendEmailForThreadType(MOSA_TIRE_SUPPLY_EMAIL, threadType.getBrand(),threadType, DELETED);
     activityLogsService.threadTypeActivity(account, List.of(threadType), DELETED);
     threadTypeRepository.delete(threadType);

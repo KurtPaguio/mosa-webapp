@@ -1,13 +1,18 @@
 package com.example.mosawebapp.product.threadtype.domain;
 
 import com.example.mosawebapp.product.brand.domain.Brand;
+import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -30,6 +35,9 @@ public class ThreadType {
   @ManyToOne
   @JoinColumn(name = "brand_id")
   private Brand brand;
+  @OneToMany(mappedBy = "threadType", cascade = CascadeType.REMOVE, orphanRemoval = true)
+  private Set<ThreadTypeDetails> details = new HashSet<>();
+
 
   public ThreadType(){}
 
@@ -96,5 +104,14 @@ public class ThreadType {
 
   public void setBrand(Brand brand) {
     this.brand = brand;
+  }
+
+  public Set<ThreadTypeDetails> getDetails() {
+    return details;
+  }
+
+  public void setDetails(
+      Set<ThreadTypeDetails> details) {
+    this.details = details;
   }
 }

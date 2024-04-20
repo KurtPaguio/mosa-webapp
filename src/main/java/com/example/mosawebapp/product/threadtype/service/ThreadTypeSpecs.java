@@ -10,7 +10,6 @@ import org.springframework.data.jpa.domain.Specification;
 public class ThreadTypeSpecs {
   private static final Logger logger = LoggerFactory.getLogger(ThreadTypeSpecs.class);
   public ThreadTypeSpecs(){
-    // needed by sonarlint
   }
   public static Specification<ThreadType> searchThreadType(String search){
     logger.info("searching thread type by {}", search);

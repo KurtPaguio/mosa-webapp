@@ -295,7 +295,7 @@ public class KioskServiceImpl implements KioskService{
 
     List<Kiosk> checkedOutKiosks = new ArrayList<>();
     List<Orders> ordersList = new ArrayList<>();
-    List<ThreadTypeDetails> detailsList = new ArrayList<>();
+    //List<ThreadTypeDetails> detailsList = new ArrayList<>();
 
     String orderId = UUID.randomUUID().toString();
     long queueingNumber = 0;
@@ -316,9 +316,10 @@ public class KioskServiceImpl implements KioskService{
       Orders orders = new Orders(OrderType.KIOSK, OrderStatus.PROCESSING, null, null, null, kiosk, null, orderId);
       ordersList.add(orders);
 
+      /*
       ThreadTypeDetails details = kiosk.getDetails();
       details.setStocks(details.getStocks() - kiosk.getQuantity());
-      detailsList.add(details);
+      detailsList.add(details);*/
 
       queueingNumber = kiosk.getQueueingNumber();
     }
@@ -326,7 +327,7 @@ public class KioskServiceImpl implements KioskService{
     List<KioskDto> kiosks = KioskDto.buildFromEntities(kioskRepository.saveAll(checkedOutKiosks));
 
     ordersRepository.saveAll(ordersList);
-    threadTypeDetailsRepository.saveAll(detailsList);
+    //threadTypeDetailsRepository.saveAll(detailsList);
 
     KioskCheckoutDto dto = new KioskCheckoutDto(kiosks);
     dto.setQueueingNumber(String.valueOf(queueingNumber));
@@ -372,9 +373,29 @@ public class KioskServiceImpl implements KioskService{
   public void setAsComplete(String kioskToken) {
     logger.info("setting kiosk orders as complete");
 
-    List<Orders> orders = ordersRepository.findOrdersByKioskToken(kioskToken);
-    List<Orders> completedOrders = new ArrayList<>();
+    List<Kiosk> kiosks = kioskRepository.findByToken(kioskToken);
+    List<ThreadTypeDetails> detailsList = updateStocks(kiosks);
+    threadTypeDetailsRepository.saveAll(detailsList);
 
+    List<Orders> orders = ordersRepository.findOrdersByKioskToken(kioskToken);
+    List<Orders> completedOrders = validateAndUpdateOrders(orders);
+    ordersRepository.saveAll(completedOrders);
+    
+    logger.info("done changing status to completed");
+  }
+
+  private List<ThreadTypeDetails> updateStocks(List<Kiosk> kiosks) {
+    List<ThreadTypeDetails> detailsList = new ArrayList<>();
+    for (Kiosk kiosk : kiosks) {
+      ThreadTypeDetails details = kiosk.getDetails();
+      details.setStocks(details.getStocks() - kiosk.getQuantity());
+      detailsList.add(details);
+    }
+    return detailsList;
+  }
+
+  private List<Orders> validateAndUpdateOrders(List<Orders> orders) {
+    List<Orders> completedOrders = new ArrayList<>();
     for (Orders order : orders) {
       if (!order.getKiosk().isCheckedOut()) {
         throw new ValidationException("Cannot set as completed if it is not yet checked out");
@@ -388,8 +409,7 @@ public class KioskServiceImpl implements KioskService{
       completedOrders.add(order);
     }
 
-    ordersRepository.saveAll(completedOrders);
-    logger.info("done changing status to completed");
+    return completedOrders;
   }
 
   private void validateIfAccountIsNotCustomerOrContentManager(String token){

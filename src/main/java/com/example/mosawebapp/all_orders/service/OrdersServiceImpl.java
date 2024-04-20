@@ -8,6 +8,7 @@ import com.example.mosawebapp.all_orders.domain.OrderType;
 import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.all_orders.domain.OrdersRepository;
 import com.example.mosawebapp.all_orders.dto.OrdersDto;
+import com.example.mosawebapp.all_orders.dto.OrdersReportDto;
 import com.example.mosawebapp.cart.domain.Cart;
 import com.example.mosawebapp.cart.domain.CartRepository;
 import com.example.mosawebapp.cart.dto.CartDto;
@@ -22,12 +23,13 @@ import com.example.mosawebapp.onsite_order.domain.OnsiteOrder;
 import com.example.mosawebapp.onsite_order.domain.OnsiteOrderRepository;
 import com.example.mosawebapp.onsite_order.dto.OnsiteOrderDto;
 import com.example.mosawebapp.security.JwtGenerator;
-
 import java.util.*;
 import one.util.streamex.StreamEx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -88,6 +90,39 @@ public class OrdersServiceImpl implements OrdersService{
 
     dto.sort(Comparator.comparing(OrdersDto::getDateOrdered).reversed());
     return dto;
+  }
+
+  @Override
+  public OrdersReportDto getAllFinishedOrdersAndStatistics(String token, Pageable pageable){
+    validateIfAccountIsNotCustomerOrContentManager(token);
+    logger.info("Getting all finished orders and statistics");
+
+    Page<Orders> allOrders = ordersRepository.findCompletedOrdersPageable(pageable);
+    List<Orders> orders = allOrders.getContent();
+    orders = StreamEx.of(orders)
+        .distinct(Orders::getOrderId)
+        .toList();
+
+    List<OrdersDto> dto = new ArrayList<>();
+
+    logger.info("setting finished orders dto");
+    for(Orders order: orders){
+      if(order.getOrderType().equals(OrderType.ONLINE)){
+        dto.add(new OrdersDto(order, getCartDtoListPerOrder(order), null, null));
+      }
+
+      if(order.getOrderType().equals(OrderType.KIOSK)){
+        dto.add(new OrdersDto(order, null, getKioskDtoListPerOrder(order), null));
+      }
+
+      if(order.getOrderType().equals(OrderType.ONSITE)){
+        dto.add(new OrdersDto(order, null, null, getOnsiteOrderDtoListPerOrder(order)));
+      }
+    }
+
+    dto.sort(Comparator.comparing(OrdersDto::getDateOrdered).reversed());
+
+    return new OrdersReportDto(dto);
   }
 
   private List<CartDto> getCartDtoListPerOrder(Orders order){

@@ -8,6 +8,7 @@ import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.io.IOException;
 import java.util.Date;
+import javax.persistence.EntityNotFoundException;
 import org.apache.commons.fileupload.FileUploadException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,11 @@ import org.springframework.web.multipart.MultipartException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+  @ExceptionHandler(EntityNotFoundException.class)
+  public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException se) {
+    return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR,
+        "Error occurred while processing the data"), HttpStatus.INTERNAL_SERVER_ERROR);
+  }
   @ExceptionHandler(SecurityException.class)
   public ResponseEntity<?> handleSecurityException(SecurityException se) {
     return new ResponseEntity<>(new ApiErrorResponse(DateTimeFormatter.get_MMDDYYY_Format(new Date()),"500", HttpStatus.INTERNAL_SERVER_ERROR, se.getMessage()),

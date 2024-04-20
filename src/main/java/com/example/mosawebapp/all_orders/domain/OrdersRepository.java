@@ -1,6 +1,8 @@
 package com.example.mosawebapp.all_orders.domain;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,4 +27,10 @@ public interface OrdersRepository extends JpaRepository<Orders, String> {
     List<Orders> findOrdersByKioskToken(@Param("token") String token);
 
     List<Orders> findByOrderId(String orderId);
+
+    @Query("SELECT ord FROM Orders ord WHERE ord.orderStatus = 'ORDER_COMPLETED'")
+    List<Orders> findCompletedOrders();
+
+    @Query("SELECT ord FROM Orders ord WHERE ord.orderStatus = 'ORDER_COMPLETED'")
+    Page<Orders> findCompletedOrdersPageable(Pageable pageable);
 }

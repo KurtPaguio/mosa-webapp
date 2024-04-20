@@ -5,7 +5,8 @@ import com.example.mosawebapp.api_response.ApiResponse;
 import com.example.mosawebapp.exceptions.TokenException;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.security.domain.TokenBlacklistingService;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -38,6 +39,16 @@ public class OrdersController {
     validateTokenValidity(token);
 
     return ResponseEntity.ok(ordersService.getAllOrders(token));
+  }
+
+  @GetMapping(value = "/getFinishedOrders")
+  public ResponseEntity<?> getFinishedOrders(@PageableDefault(size = 20) Pageable pageable,
+      @RequestHeader("Authorization") String header) {
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return ResponseEntity.ok(ordersService.getAllFinishedOrdersAndStatistics(token, pageable));
   }
 
   @GetMapping(value = "/verify/{id}")

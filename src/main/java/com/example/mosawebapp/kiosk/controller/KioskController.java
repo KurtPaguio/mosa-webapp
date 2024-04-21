@@ -112,9 +112,21 @@ public class KioskController {
     return ResponseEntity.ok(kioskService.checkout(kioskToken, form, "checkout"));
   }
 
+  @GetMapping(value = "/cancelCheckout/{kioskToken}")
+  public ResponseEntity<?> cancelCheckout(@PathVariable("kioskToken") String kioskToken){
+    kioskService.cancelCheckout(kioskToken);
+
+    return ResponseEntity.ok(new ApiResponse("Successfully cancelled checkouts", HttpStatus.OK));
+  }
+
   @PostMapping(value = "/orderNow/{kioskToken}")
   public ResponseEntity<?> orderNow(@PathVariable("kioskToken") String kioskToken, @RequestBody OrderForm form){
     return ResponseEntity.ok(kioskService.orderNow(kioskToken, form));
+  }
+
+  @GetMapping(value = "/getOrderStatus/{kioskToken}")
+  public ResponseEntity<?> getOrderStatus(@PathVariable("kioskToken") String kioskToken){
+    return ResponseEntity.ok(kioskService.isOrderStatusComplete(kioskToken));
   }
 
   private void validateTokenValidity(String token){

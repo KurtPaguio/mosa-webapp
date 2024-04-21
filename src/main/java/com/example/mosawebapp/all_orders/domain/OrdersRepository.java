@@ -26,6 +26,11 @@ public interface OrdersRepository extends JpaRepository<Orders, String> {
         + "WHERE k.token = :token", nativeQuery = true)
     List<Orders> findOrdersByKioskToken(@Param("token") String token);
 
+    @Query(value = "SELECT o.* FROM orders o "
+        + "INNER JOIN kiosk k ON k.id = o.kiosk_id "
+        + "WHERE k.token = :token LIMIT 1", nativeQuery = true)
+    Orders findOrderByKioskToken(@Param("token") String token);
+
     List<Orders> findByOrderId(String orderId);
 
     @Query("SELECT ord FROM Orders ord WHERE ord.orderStatus = 'ORDER_COMPLETED'")

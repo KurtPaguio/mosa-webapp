@@ -1,7 +1,5 @@
 HELP.md
-/target/*
-!/target/*.jar
-!/target/*.jar.original
+/target
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -34,4 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 
-### dockers ###
+### dockers & env###
+Dockerfile
+docker-compose.yml
+.env

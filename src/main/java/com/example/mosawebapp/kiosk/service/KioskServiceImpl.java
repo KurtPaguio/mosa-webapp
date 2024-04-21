@@ -316,18 +316,12 @@ public class KioskServiceImpl implements KioskService{
       Orders orders = new Orders(OrderType.KIOSK, OrderStatus.PROCESSING, null, null, null, kiosk, null, orderId);
       ordersList.add(orders);
 
-      /*
-      ThreadTypeDetails details = kiosk.getDetails();
-      details.setStocks(details.getStocks() - kiosk.getQuantity());
-      detailsList.add(details);*/
-
       queueingNumber = kiosk.getQueueingNumber();
     }
 
     List<KioskDto> kiosks = KioskDto.buildFromEntities(kioskRepository.saveAll(checkedOutKiosks));
 
     ordersRepository.saveAll(ordersList);
-    //threadTypeDetailsRepository.saveAll(detailsList);
 
     KioskCheckoutDto dto = new KioskCheckoutDto(kiosks);
     dto.setQueueingNumber(String.valueOf(queueingNumber));
@@ -346,26 +340,14 @@ public class KioskServiceImpl implements KioskService{
   }
 
   @Override
-  public void cancelCheckout(String kioskToken, CheckoutForm form) {
-    Validate.notNull(form);
-
-    List<String> kioskIds = new ArrayList<>(form.getIds());
-    List<Kiosk> cancelledKiosks = new ArrayList<>();
-
+  public void cancelCheckout(String kioskToken) {
     logger.info("cancelling check out of selected kiosk orders of {}", kioskToken);
 
-    for(String id: kioskIds){
-      Kiosk kiosk = kioskRepository.findByIdAndToken(id, kioskToken);
+    List<Kiosk> cancelledKiosks = kioskRepository.findByToken(kioskToken);
+    List<Orders> orders = ordersRepository.findOrdersByKioskToken(kioskToken);
+    ordersRepository.deleteAll(orders);
+    kioskRepository.deleteAll(cancelledKiosks);
 
-      if(kiosk == null){
-        throw new NotFoundException("Kiosk Order id does not exists or belong to the user");
-      }
-
-      kiosk.setCheckedOut(false);
-      cancelledKiosks.add(kiosk);
-    }
-
-    kioskRepository.saveAll(cancelledKiosks);
     logger.info("Successfully cancelled the checkouts");
   }
 
@@ -382,6 +364,17 @@ public class KioskServiceImpl implements KioskService{
     ordersRepository.saveAll(completedOrders);
     
     logger.info("done changing status to completed");
+  }
+
+  @Override
+  public boolean isOrderStatusComplete(String kioskToken){
+    Orders order = ordersRepository.findOrderByKioskToken(kioskToken);
+
+    if (order != null){
+      return order.getOrderStatus() == OrderStatus.ORDER_COMPLETED;
+    }
+
+    return false;
   }
 
   private List<ThreadTypeDetails> updateStocks(List<Kiosk> kiosks) {

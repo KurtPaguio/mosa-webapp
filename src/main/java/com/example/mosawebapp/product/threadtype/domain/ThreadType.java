@@ -5,9 +5,9 @@ import com.example.mosawebapp.kiosk.domain.Kiosk;
 import com.example.mosawebapp.onsite_order.domain.OnsiteOrder;
 import com.example.mosawebapp.product.brand.domain.Brand;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -35,18 +35,11 @@ public class ThreadType {
   private String imageUrl;
   @Column
   private String description;
-  @ManyToOne
+  @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "brand_id")
   private Brand brand;
-  @OneToMany(mappedBy = "threadType", cascade = CascadeType.REMOVE, orphanRemoval = true)
-  private Set<ThreadTypeDetails> details = new HashSet<>();
-  @OneToMany(mappedBy = "type", cascade = CascadeType.REMOVE, orphanRemoval = true)
-  private Set<Cart> carts = new HashSet<>();
-  @OneToMany(mappedBy = "type", cascade = CascadeType.REMOVE, orphanRemoval = true)
-  private Set<Kiosk> kiosk = new HashSet<>();
-  @OneToMany(mappedBy = "type", cascade = CascadeType.REMOVE, orphanRemoval = true)
-  private Set<OnsiteOrder> onsiteOrders = new HashSet<>();
-
+  @OneToMany(mappedBy = "threadType", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<ThreadTypeDetails> details = new ArrayList<>();
 
   public ThreadType(){}
 
@@ -106,7 +99,6 @@ public class ThreadType {
     this.description = description;
   }
 
-
   public Brand getBrand() {
     return brand;
   }
@@ -115,37 +107,14 @@ public class ThreadType {
     this.brand = brand;
   }
 
-  public Set<ThreadTypeDetails> getDetails() {
+  public List<ThreadTypeDetails> getDetails() {
     return details;
   }
 
   public void setDetails(
-      Set<ThreadTypeDetails> details) {
+      List<ThreadTypeDetails> details) {
     this.details = details;
   }
 
-  public Set<Cart> getCarts() {
-    return carts;
-  }
 
-  public void setCarts(Set<Cart> carts) {
-    this.carts = carts;
-  }
-
-  public Set<Kiosk> getKiosk() {
-    return kiosk;
-  }
-
-  public void setKiosk(Set<Kiosk> kiosk) {
-    this.kiosk = kiosk;
-  }
-
-  public Set<OnsiteOrder> getOnsiteOrders() {
-    return onsiteOrders;
-  }
-
-  public void setOnsiteOrders(
-      Set<OnsiteOrder> onsiteOrders) {
-    this.onsiteOrders = onsiteOrders;
-  }
 }

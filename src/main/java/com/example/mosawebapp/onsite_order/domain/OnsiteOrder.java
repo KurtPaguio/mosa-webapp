@@ -1,14 +1,22 @@
 package com.example.mosawebapp.onsite_order.domain;
 
 import com.example.mosawebapp.account.domain.Account;
+import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import org.hibernate.annotations.CreationTimestamp;
@@ -25,10 +33,10 @@ public class OnsiteOrder {
   @OneToOne
   @JoinColumn(name = "admin_id")
   private Account account;
-  @OneToOne
+  @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "thread_type_id")
   private ThreadType type;
-  @OneToOne
+  @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "details_id")
   private ThreadTypeDetails details;
   @Column
@@ -40,6 +48,8 @@ public class OnsiteOrder {
   @Column
   private boolean isBeingOrdered;
 
+  @OneToMany(mappedBy = "onsiteOrder", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Orders> onsiteOrders = new ArrayList<>();
   public OnsiteOrder(){}
 
   public OnsiteOrder(Account account, ThreadType type, ThreadTypeDetails details, long quantity, float totalPrice,
@@ -123,5 +133,13 @@ public class OnsiteOrder {
 
   public void setAccount(Account account) {
     this.account = account;
+  }
+
+  public List<Orders> getOnsiteOrders() {
+    return onsiteOrders;
+  }
+
+  public void setOnsiteOrders(List<Orders> onsiteOrders) {
+    this.onsiteOrders = onsiteOrders;
   }
 }

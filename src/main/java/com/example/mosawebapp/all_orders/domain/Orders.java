@@ -6,6 +6,7 @@ import com.example.mosawebapp.kiosk.dto.KioskDto;
 import com.example.mosawebapp.onsite_order.domain.OnsiteOrder;
 import java.util.Date;
 import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -17,6 +18,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import org.apache.poi.xwpf.usermodel.Borders;
@@ -42,13 +44,13 @@ public class Orders {
   private String referenceNumber;
   @Column
   private String paymentMethod;
-  @OneToOne
+  @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "cart_id")
   private Cart cart;
-  @OneToOne
+  @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "kiosk_id")
   private Kiosk kiosk;
-  @OneToOne
+  @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "onsite_order_id")
   private OnsiteOrder onsiteOrder;
   @Column

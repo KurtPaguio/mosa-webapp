@@ -1,14 +1,21 @@
 package com.example.mosawebapp.cart.domain;
 
 import com.example.mosawebapp.account.domain.Account;
+import com.example.mosawebapp.all_orders.domain.Orders;
+import com.example.mosawebapp.onsite_order.domain.OnsiteOrder;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
@@ -21,13 +28,13 @@ public class Cart {
   private String id;
   @CreationTimestamp
   private Date dateCreated;
-  @OneToOne
+  @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "customer_id")
   private Account account;
-  @OneToOne
+  @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "thread_type_id")
   private ThreadType type;
-  @OneToOne
+  @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "details_id")
   private ThreadTypeDetails details;
   @Column
@@ -40,6 +47,9 @@ public class Cart {
   private boolean isPaid;
   @Column
   private boolean isOrderNow;
+
+  @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Orders> carts = new ArrayList<>();
 
   public Cart(){}
 
@@ -132,5 +142,13 @@ public class Cart {
 
   public void setOrderNow(boolean orderNow) {
     isOrderNow = orderNow;
+  }
+
+  public List<Orders> getCarts() {
+    return carts;
+  }
+
+  public void setCarts(List<Orders> carts) {
+    this.carts = carts;
   }
 }

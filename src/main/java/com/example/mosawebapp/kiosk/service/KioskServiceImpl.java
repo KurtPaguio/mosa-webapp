@@ -344,8 +344,6 @@ public class KioskServiceImpl implements KioskService{
     logger.info("cancelling check out of selected kiosk orders of {}", kioskToken);
 
     List<Kiosk> cancelledKiosks = kioskRepository.findByToken(kioskToken);
-    List<Orders> orders = ordersRepository.findOrdersByKioskToken(kioskToken);
-    ordersRepository.deleteAll(orders);
     kioskRepository.deleteAll(cancelledKiosks);
 
     logger.info("Successfully cancelled the checkouts");

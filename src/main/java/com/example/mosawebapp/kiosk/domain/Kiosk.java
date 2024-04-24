@@ -1,9 +1,16 @@
 package com.example.mosawebapp.kiosk.domain;
 
 import com.example.mosawebapp.all_orders.domain.OrderStatus;
+import com.example.mosawebapp.all_orders.domain.Orders;
+import com.example.mosawebapp.onsite_order.domain.OnsiteOrder;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -11,6 +18,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
@@ -25,10 +34,10 @@ public class Kiosk {
   private Date dateCreated;
   @Column
   private String token;
-  @OneToOne
+  @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "thread_type_id")
   private ThreadType type;
-  @OneToOne
+  @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "details_id")
   private ThreadTypeDetails details;
   @Column
@@ -40,6 +49,8 @@ public class Kiosk {
   @Column
   private Long queueingNumber;
 
+  @OneToMany(mappedBy = "kiosk", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Orders> kiosks = new ArrayList<>();
   public Kiosk(){}
   public Kiosk(String token, ThreadType type, ThreadTypeDetails details, long quantity, float totalPrice,
       boolean isCheckedOut) {
@@ -121,5 +132,13 @@ public class Kiosk {
 
   public void setQueueingNumber(Long queueingNumber) {
     this.queueingNumber = queueingNumber;
+  }
+
+  public List<Orders> getKiosks() {
+    return kiosks;
+  }
+
+  public void setKiosks(List<Orders> kiosks) {
+    this.kiosks = kiosks;
   }
 }

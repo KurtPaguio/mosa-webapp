@@ -149,11 +149,9 @@ public class FileUploadService {
     if(cell.getCellTypeEnum() == CellType.STRING){
       String value = cell.getStringCellValue().replace(",", "");
 
-      logger.info("VALUE {}", value);
       return Long.parseLong(value);
     }
 
-    logger.info("CELL {}", cell.getNumericCellValue());
     return (long) cell.getNumericCellValue();
   }
 

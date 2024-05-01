@@ -4,7 +4,6 @@ import com.example.mosawebapp.account.domain.Account;
 import com.example.mosawebapp.account.domain.AccountRepository;
 import com.example.mosawebapp.account.domain.UserRole;
 import com.example.mosawebapp.all_orders.domain.OrderStatus;
-import com.example.mosawebapp.all_orders.domain.Orders;
 import com.example.mosawebapp.exceptions.NotFoundException;
 import com.example.mosawebapp.exceptions.ValidationException;
 import com.example.mosawebapp.logs.domain.ActivityLogs;
@@ -15,11 +14,9 @@ import com.example.mosawebapp.onsite_order.dto.OnsiteOrderDto;
 import com.example.mosawebapp.product.brand.domain.Brand;
 import com.example.mosawebapp.product.threadtype.domain.ThreadType;
 import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
-import com.example.mosawebapp.scheduling.domain.Schedule;
 import com.example.mosawebapp.security.JwtGenerator;
 import com.example.mosawebapp.utils.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -127,23 +124,6 @@ public class ActivityLogsService {
   public void adminChangePasswordActivity(Account user, Account targetUser){
     String actor = user.getFullName();
     String message = actor + " changed the password of " + targetUser.getFullName();
-
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
-    activityLogsRepository.save(log);
-  }
-
-  public void makeSchedule(Account account, Schedule schedule){
-    String actor = account.getFullName();
-    String message = actor + " just submitted a schedule for service on " + schedule.getDateScheduled();
-
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, false);
-    activityLogsRepository.save(log);
-  }
-
-  public void approveSchedule(Account account, Schedule schedule){
-    String actor = account.getFullName();
-    String message = actor + " just approved the schedule for service on " + schedule.getDateScheduled() +
-        " submitted by " + schedule.getOrderedBy().getFullName();
 
     ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
     activityLogsRepository.save(log);

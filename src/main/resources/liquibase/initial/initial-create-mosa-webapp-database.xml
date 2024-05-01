@@ -1,0 +1,267 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+						http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+  <changeSet author="ktfp" id="2019128347-1">
+    <createTable tableName="account">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="full_name" type="VARCHAR(255)"/>
+      <column name="email" type="VARCHAR(255)"/>
+      <column name="contact_number" type="VARCHAR(255)"/>
+      <column name="address" type="VARCHAR(255)"/>
+      <column name="password" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="user_role" type="VARCHAR(255)"/>
+      <column name="login_otp" type="BIGINT"/>
+      <column name="change_password_otp" type="BIGINT"/>
+      <column name="change_password_token" type="VARCHAR(255)"/>
+      <column name="is_ordering" type="BOOLEAN"/>
+    </createTable>
+
+    <createTable tableName="account_registration">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="full_name" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="email" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="contact_number" type="varchar(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="address" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="password" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="user_role" type="varchar(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="register_otp" type="bigint">
+        <constraints nullable="false"/>
+      </column>
+      <column name="status" type="varchar(50)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <createTable tableName="accounts_roles">
+      <column name="account_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="role_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <createTable tableName="role">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="name" type="VARCHAR(255)"/>
+      <column name="description" type="VARCHAR(500)">
+      </column>
+    </createTable>
+
+    <createTable tableName="orders">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="order_type" type="VARCHAR(255)"/>
+      <column name="order_status" type="VARCHAR(255)"/>
+      <column name="reference_number" type="VARCHAR(255)"/>
+      <column name="payment_method" type="VARCHAR(255)"/>
+      <column name="cart_id" type="VARCHAR(255)"/>
+      <column name="kiosk_id" type="VARCHAR(255)"/>
+      <column name="onsite_order_id" type="VARCHAR(255)"/>
+      <column name="order_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <createTable tableName="cart">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="customer_id" type="VARCHAR(255)"/>
+      <column name="thread_type_id" type="VARCHAR(255)"/>
+      <column name="details_id" type="VARCHAR(255)"/>
+      <column name="quantity" type="BIGINT"/>
+      <column name="total_price" type="FLOAT"/>
+      <column name="is_checked_out" type="BOOLEAN"/>
+      <column name="is_paid" type="BOOLEAN"/>
+      <column name="is_order_now" type="BOOLEAN">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <createTable tableName="kiosk">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+      <column name="token" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="quantity" type="bigint">
+        <constraints nullable="false"/>
+      </column>
+      <column name="total_price" type="float">
+        <constraints nullable="false"/>
+      </column>
+      <column name="is_checked_out" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column name="queueing_number" type="bigint">
+        <constraints nullable="false"/>
+      </column>
+      <column name="thread_type_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="details_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <createTable tableName="activity_logs">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+      <column name="actor" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="activity" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="is_staff" type="BOOLEAN">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <createTable tableName="onsite_order">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+      <column name="admin_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="thread_type_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="details_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="quantity" type="bigint">
+        <constraints nullable="false"/>
+      </column>
+      <column name="total_price" type="float">
+        <constraints nullable="false"/>
+      </column>
+      <column name="is_paid" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column name="is_being_ordered" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet author="ktfp" id="2019128347-2">
+    <createTable tableName="brand">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="name" type="VARCHAR(255)"/>
+      <column name="image_url" type="TEXT"/>
+    </createTable>
+
+    <createTable tableName="thread_type">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="type" type="VARCHAR(255)"/>
+      <column name="rating" type="INTEGER"/>
+      <column name="image_url" type="TEXT"/>
+      <column name="description" type="VARCHAR(255)"/>
+      <column name="brand_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <createTable tableName="thread_type_details">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="width" type="varchar(255)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="aspect_ratio" type="varchar(255)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="diameter" type="varchar(255)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="sidewall" type="varchar(255)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="ply_rating" type="varchar(255)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="price" type="float">
+        <constraints nullable="true"/>
+      </column>
+      <column name="stocks" type="bigint">
+        <constraints nullable="true"/>
+      </column>
+      <column name="thread_type_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <createTable tableName="token_blacklist">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="token" type="TEXT">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+  </changeSet>
+</databaseChangeLog>

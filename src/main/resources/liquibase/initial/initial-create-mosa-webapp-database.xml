@@ -41,9 +41,7 @@
       <column name="contact_number" type="varchar(20)">
         <constraints nullable="false"/>
       </column>
-      <column name="address" type="varchar(255)">
-        <constraints nullable="false"/>
-      </column>
+      <column name="address" type="varchar(255)"/>
       <column name="password" type="varchar(255)">
         <constraints nullable="false"/>
       </column>
@@ -72,8 +70,7 @@
         <constraints nullable="false"/>
       </column>
       <column name="name" type="VARCHAR(255)"/>
-      <column name="description" type="VARCHAR(500)">
-      </column>
+      <column name="description" type="VARCHAR(500)"/>
     </createTable>
 
     <createTable tableName="orders">
@@ -102,11 +99,21 @@
       <column name="date_created" type="TIMESTAMP">
         <constraints nullable="false"/>
       </column>
-      <column name="customer_id" type="VARCHAR(255)"/>
-      <column name="thread_type_id" type="VARCHAR(255)"/>
-      <column name="details_id" type="VARCHAR(255)"/>
-      <column name="quantity" type="BIGINT"/>
-      <column name="total_price" type="FLOAT"/>
+      <column name="customer_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="thread_type_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="details_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="quantity" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="total_price" type="FLOAT">
+        <constraints nullable="false"/>
+      </column>
       <column name="is_checked_out" type="BOOLEAN"/>
       <column name="is_paid" type="BOOLEAN"/>
       <column name="is_order_now" type="BOOLEAN">
@@ -201,7 +208,9 @@
       <column name="date_created" type="TIMESTAMP">
         <constraints nullable="false"/>
       </column>
-      <column name="name" type="VARCHAR(255)"/>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
       <column name="image_url" type="TEXT"/>
     </createTable>
 
@@ -212,7 +221,9 @@
       <column name="date_created" type="TIMESTAMP">
         <constraints nullable="false"/>
       </column>
-      <column name="type" type="VARCHAR(255)"/>
+      <column name="type" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
       <column name="rating" type="INTEGER"/>
       <column name="image_url" type="TEXT"/>
       <column name="description" type="VARCHAR(255)"/>
@@ -240,9 +251,7 @@
       <column name="sidewall" type="varchar(255)">
         <constraints nullable="true"/>
       </column>
-      <column name="ply_rating" type="varchar(255)">
-        <constraints nullable="true"/>
-      </column>
+      <column name="ply_rating" type="varchar(255)"/>
       <column name="price" type="float">
         <constraints nullable="true"/>
       </column>

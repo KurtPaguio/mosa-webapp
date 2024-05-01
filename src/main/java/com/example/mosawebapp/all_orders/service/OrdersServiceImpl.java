@@ -327,6 +327,27 @@ public class OrdersServiceImpl implements OrdersService{
     return refNo;
   }
 
+  @Override
+  public void cancelOrder(String token, String orderId) {
+    validateIfAccountIsNotCustomerOrContentManager(token);
+
+    logger.info("Cancelling orders with order id {}", orderId);
+
+    List<Orders> orders = ordersRepository.findByOrderId(orderId);
+    List<Orders> cancelledOrder = new ArrayList<>();
+
+    for (Orders order: orders){
+      if(order.getOrderStatus().equals(OrderStatus.ORDER_COMPLETED) || order.getOrderStatus().equals(OrderStatus.FOR_DELIVERY)){
+        throw new ValidationException("Cannot cancel a completed or for delivery orders");
+      }
+
+      order.setOrderStatus(OrderStatus.CANCELLED);
+      cancelledOrder.add(order);
+    }
+
+    ordersRepository.saveAll(cancelledOrder);
+  }
+
   private Account getAccountFromToken(String token){
     String id = jwtGenerator.getUserFromJWT(token);
 
@@ -337,7 +358,7 @@ public class OrdersServiceImpl implements OrdersService{
     String accId = jwtGenerator.getUserFromJWT(token);
     Account adminAccount = accountRepository.findById(accId).orElseThrow(() -> new NotFoundException("Account does not exists"));
 
-    if(!adminAccount.getUserRole().equals(UserRole.ADMINISTRATOR)){
+    if(adminAccount.getUserRole().equals(UserRole.CUSTOMER) || adminAccount.getUserRole().equals(UserRole.CONTENT_MANAGER)){
       throw new ValidationException("Only Administrators, Product, and Order managers have access to this feature");
     }
   }

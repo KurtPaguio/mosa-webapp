@@ -407,7 +407,7 @@ public class KioskServiceImpl implements KioskService{
     String accId = jwtGenerator.getUserFromJWT(token);
     Account adminAccount = accountRepository.findById(accId).orElseThrow(() -> new NotFoundException("Account does not exists"));
 
-    if(!adminAccount.getUserRole().equals(UserRole.ADMINISTRATOR)){
+    if(adminAccount.getUserRole().equals(UserRole.CUSTOMER) || adminAccount.getUserRole().equals(UserRole.CONTENT_MANAGER)){
       throw new ValidationException("Only Administrators, Product, and Order managers have access to this feature");
     }
   }

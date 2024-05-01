@@ -86,6 +86,17 @@ public class OrdersController {
     String refNo = ordersService.orderNotVerified(token,id);
     return ResponseEntity.ok(new ApiResponse("Order with reference number " + refNo + " was not verified", HttpStatus.OK));
   }
+
+  @GetMapping(value = "/cancelOrder/{orderId}")
+  public ResponseEntity<?> cancelOrder(@RequestHeader("Authorization") String header, @PathVariable("orderId") String orderId){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+    ordersService.cancelOrder(token,orderId);
+
+    return ResponseEntity.ok(new ApiResponse("Order with order id " + orderId + " was cancelled", HttpStatus.OK));
+  }
+
   private void validateTokenValidity(String token){
     if(!jwtGenerator.isTokenValid(token) || token.isEmpty() || tokenBlacklistingService.isTokenBlacklisted(token)){
       throw new TokenException(TOKEN_INVALID);

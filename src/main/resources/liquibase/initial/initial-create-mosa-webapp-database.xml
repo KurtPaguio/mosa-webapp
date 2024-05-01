@@ -4,6 +4,24 @@
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
 						http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
   <changeSet author="ktfp" id="2019128347-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="account"/>
+        <tableExists tableName="account_registration"/>
+        <tableExists tableName="accounts_roles"/>
+        <tableExists tableName="role"/>
+        <tableExists tableName="orders"/>
+        <tableExists tableName="cart"/>
+        <tableExists tableName="kiosk"/>
+        <tableExists tableName="onsite_order"/>
+        <tableExists tableName="activity_logs"/>
+        <tableExists tableName="brand"/>
+        <tableExists tableName="thread_type"/>
+        <tableExists tableName="thread_type_details"/>
+        <tableExists tableName="token_blacklist"/>
+      </not>
+    </preConditions>
+
     <createTable tableName="account">
       <column name="id" type="VARCHAR(255)">
         <constraints nullable="false"/>
@@ -198,9 +216,7 @@
         <constraints nullable="false"/>
       </column>
     </createTable>
-  </changeSet>
 
-  <changeSet author="ktfp" id="2019128347-2">
     <createTable tableName="brand">
       <column name="id" type="VARCHAR(255)">
         <constraints nullable="false"/>

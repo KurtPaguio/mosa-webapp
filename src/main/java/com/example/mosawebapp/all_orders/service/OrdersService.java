@@ -16,4 +16,6 @@ public interface OrdersService {
   String completeOrder(String token, String orderId);
 
   String orderNotVerified(String token, String orderId);
+
+  void cancelOrder(String token, String orderId);
 }

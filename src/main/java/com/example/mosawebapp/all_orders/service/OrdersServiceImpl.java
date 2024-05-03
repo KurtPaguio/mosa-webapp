@@ -22,9 +22,12 @@ import com.example.mosawebapp.mail.MailService;
 import com.example.mosawebapp.onsite_order.domain.OnsiteOrder;
 import com.example.mosawebapp.onsite_order.domain.OnsiteOrderRepository;
 import com.example.mosawebapp.onsite_order.dto.OnsiteOrderDto;
+import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetails;
+import com.example.mosawebapp.product.threadtypedetails.domain.ThreadTypeDetailsRepository;
 import com.example.mosawebapp.security.JwtGenerator;
 import java.util.*;
 import one.util.streamex.StreamEx;
+import org.aspectj.weaver.ast.Or;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +44,7 @@ public class OrdersServiceImpl implements OrdersService{
   private final OnsiteOrderRepository onsiteOrderRepository;
   private final OrdersRepository ordersRepository;
   private final AccountRepository accountRepository;
+  private final ThreadTypeDetailsRepository threadTypeDetailsRepository;
   private final JwtGenerator jwtGenerator;
   private final MailService mailService;
   private final ActivityLogsService activityLogsService;
@@ -48,13 +52,15 @@ public class OrdersServiceImpl implements OrdersService{
   @Autowired
   public OrdersServiceImpl(CartRepository cartRepository, KioskRepository kioskRepository,
       OnsiteOrderRepository onsiteOrderRepository, OrdersRepository ordersRepository,
-      AccountRepository accountRepository, JwtGenerator jwtGenerator, MailService mailService,
+      AccountRepository accountRepository, ThreadTypeDetailsRepository threadTypeDetailsRepository,
+      JwtGenerator jwtGenerator, MailService mailService,
       ActivityLogsService activityLogsService) {
     this.cartRepository = cartRepository;
     this.kioskRepository = kioskRepository;
     this.onsiteOrderRepository = onsiteOrderRepository;
     this.ordersRepository = ordersRepository;
     this.accountRepository = accountRepository;
+    this.threadTypeDetailsRepository = threadTypeDetailsRepository;
     this.jwtGenerator = jwtGenerator;
     this.mailService = mailService;
     this.activityLogsService = activityLogsService;
@@ -67,6 +73,38 @@ public class OrdersServiceImpl implements OrdersService{
     logger.info("Getting all orders");
 
     List<Orders> orders = ordersRepository.findAllWithExistingIds();
+    orders = StreamEx.of(orders)
+        .distinct(Orders::getOrderId)
+        .toList();
+
+    List<OrdersDto> dto = new ArrayList<>();
+
+    logger.info("setting orders dto");
+    for(Orders order: orders){
+      if(order.getOrderType().equals(OrderType.ONLINE)){
+        dto.add(new OrdersDto(order, getCartDtoListPerOrder(order), null, null));
+      }
+
+      if(order.getOrderType().equals(OrderType.KIOSK)){
+        dto.add(new OrdersDto(order, null, getKioskDtoListPerOrder(order), null));
+      }
+
+      if(order.getOrderType().equals(OrderType.ONSITE)){
+        dto.add(new OrdersDto(order, null, null, getOnsiteOrderDtoListPerOrder(order)));
+      }
+    }
+
+    dto.sort(Comparator.comparing(OrdersDto::getDateOrdered).reversed());
+    return dto;
+  }
+
+  @Override
+  public List<OrdersDto> getCancelledOrders(String token, Pageable pageable) {
+    validateIfAccountIsNotCustomerOrContentManager(token);
+    logger.info("Getting all cancelled orders");
+
+    Page<Orders> allOrders = ordersRepository.findCancelledOrdersPageable(pageable);
+    List<Orders> orders = allOrders.getContent();
     orders = StreamEx.of(orders)
         .distinct(Orders::getOrderId)
         .toList();
@@ -328,7 +366,7 @@ public class OrdersServiceImpl implements OrdersService{
   }
 
   @Override
-  public void cancelOrder(String token, String orderId) {
+  public void cancelOnlineOrder(String token, String orderId) {
     validateIfAccountIsNotCustomerOrContentManager(token);
 
     logger.info("Cancelling orders with order id {}", orderId);
@@ -345,7 +383,27 @@ public class OrdersServiceImpl implements OrdersService{
       cancelledOrder.add(order);
     }
 
+    List<Cart> carts = cartRepository.findAllCartsByOrderId(orderId);
+    List<Cart> cartToSave = new ArrayList<>();
+    List<ThreadTypeDetails> detailsToSave = new ArrayList<>();
+
+    for(Cart cart: carts){
+      cart.setPaid(false);
+      cart.setOrderNow(false);
+      cart.setCheckedOut(false);
+
+      ThreadTypeDetails details = cart.getDetails();
+      details.setStocks(details.getStocks() + cart.getQuantity());
+
+      detailsToSave.add(details);
+      cartToSave.add(cart);
+    }
+
+    threadTypeDetailsRepository.saveAll(detailsToSave);
     ordersRepository.saveAll(cancelledOrder);
+    cartRepository.saveAll(cartToSave);
+
+    logger.info("Successfully cancelled online orders");
   }
 
   private Account getAccountFromToken(String token){

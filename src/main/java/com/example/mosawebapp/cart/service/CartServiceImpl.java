@@ -364,10 +364,10 @@ public class CartServiceImpl implements CartService{
 
     List<String> cartIds = new ArrayList<>(form.getIds());
 
-    cartIds.removeIf(id -> {
-      Cart cart = cartRepository.findByIdAndAccount(id, account);
-      return cart != null && cart.isPaid();
-    });
+//    cartIds.removeIf(id -> {
+//      Cart cart = cartRepository.findByIdAndAccount(id, account);
+//      return cart != null && cart.isPaid();
+//    });
 
     logger.info("processing payment of selected cart orders of {}", account.getFullName());
 
@@ -378,7 +378,7 @@ public class CartServiceImpl implements CartService{
     List<ThreadTypeDetails> detailsList = new ArrayList<>();
     for(String id: cartIds){
       Cart cart = cartRepository.findByIdAndAccount(id, account);
-
+      
       if(!cart.isOrderNow()){
         validateCartDetails(cart);
       }

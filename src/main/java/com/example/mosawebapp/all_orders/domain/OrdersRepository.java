@@ -38,4 +38,7 @@ public interface OrdersRepository extends JpaRepository<Orders, String> {
 
     @Query("SELECT ord FROM Orders ord WHERE ord.orderStatus = 'ORDER_COMPLETED'")
     Page<Orders> findCompletedOrdersPageable(Pageable pageable);
+
+    @Query("SELECT ord FROM Orders ord WHERE ord.orderStatus = 'CANCELLED'")
+    Page<Orders> findCancelledOrdersPageable(Pageable pageable);
 }

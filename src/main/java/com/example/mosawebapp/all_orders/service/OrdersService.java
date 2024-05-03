@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 public interface OrdersService {
   List<OrdersDto> getAllOrders(String token);
 
+  List<OrdersDto> getCancelledOrders(String token, Pageable pageable);
+
   OrdersReportDto getAllFinishedOrdersAndStatistics(String token, Pageable pageable);
 
   String verifyOrder(String token, String orderId);
@@ -17,5 +19,5 @@ public interface OrdersService {
 
   String orderNotVerified(String token, String orderId);
 
-  void cancelOrder(String token, String orderId);
+  void cancelOnlineOrder(String token, String orderId);
 }

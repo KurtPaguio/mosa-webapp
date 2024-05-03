@@ -41,6 +41,15 @@ public class OrdersController {
     return ResponseEntity.ok(ordersService.getAllOrders(token));
   }
 
+  @GetMapping(value = "/cancelledOrders")
+  public ResponseEntity<?> getCancelledOrders(@PageableDefault(size = 20) Pageable pageable, @RequestHeader("Authorization") String header){
+    String token = header.replace(BEARER, "");
+
+    validateTokenValidity(token);
+
+    return ResponseEntity.ok(ordersService.getCancelledOrders(token, pageable));
+  }
+
   @GetMapping(value = "/getFinishedOrders")
   public ResponseEntity<?> getFinishedOrders(@PageableDefault(size = 20) Pageable pageable,
       @RequestHeader("Authorization") String header) {
@@ -92,7 +101,7 @@ public class OrdersController {
     String token = header.replace(BEARER, "");
 
     validateTokenValidity(token);
-    ordersService.cancelOrder(token,orderId);
+    ordersService.cancelOnlineOrder(token,orderId);
 
     return ResponseEntity.ok(new ApiResponse("Order with order id " + orderId + " was cancelled", HttpStatus.OK));
   }

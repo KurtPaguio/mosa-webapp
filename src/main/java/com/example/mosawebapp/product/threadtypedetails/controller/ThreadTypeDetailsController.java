@@ -28,7 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/threadTypeDetails")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
+@CrossOrigin(origins = "*")
 public class ThreadTypeDetailsController {
   private static final String BEARER = "Bearer ";
   private static final String TOKEN_INVALID = "Token Invalid/Expired";

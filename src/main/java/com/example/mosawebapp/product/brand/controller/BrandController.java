@@ -28,7 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/brand")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
+@CrossOrigin(origins = "*")
 public class BrandController {
   private static final String BEARER = "Bearer ";
   private static final String TOKEN_INVALID = "Token Invalid/Expired";

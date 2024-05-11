@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/account")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
+@CrossOrigin(origins = "*")
 public class AccountController {
   private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
   @Value("${reset.password.page}")

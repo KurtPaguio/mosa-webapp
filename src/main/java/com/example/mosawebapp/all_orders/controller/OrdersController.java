@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
+@CrossOrigin(origins = "*")
 public class OrdersController {
   private static final String BEARER = "Bearer ";
   private static final String TOKEN_INVALID = "Token Invalid/Expired";

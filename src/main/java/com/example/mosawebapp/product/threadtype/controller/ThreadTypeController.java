@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/threadType")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
+@CrossOrigin(origins = "*")
 public class ThreadTypeController {
   private static final String BEARER = "Bearer ";
   private static final String TOKEN_INVALID = "Token Invalid/Expired";

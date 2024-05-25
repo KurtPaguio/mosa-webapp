@@ -55,7 +55,7 @@ public class ActivityLogsService {
     String message = actor + " just logged into the system";
     boolean isStaff = account.getUserRole() != UserRole.CUSTOMER;
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, isStaff);
+    ActivityLogs log = new ActivityLogs(actor, message, isStaff);
     activityLogsRepository.save(log);
   }
 
@@ -64,7 +64,7 @@ public class ActivityLogsService {
     String message = actor + " just logged out of the system";
     boolean isStaff = account.getUserRole() != UserRole.CUSTOMER;
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, isStaff);
+    ActivityLogs log = new ActivityLogs(actor, message, isStaff);
     activityLogsRepository.save(log);
   }
 
@@ -72,7 +72,7 @@ public class ActivityLogsService {
     String actor = user.getFullName();
     String message = user.getFullName() + " just created an account for " + createdAccount.getFullName();
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    ActivityLogs log = new ActivityLogs(actor, message, true);
     activityLogsRepository.save(log);
   }
 
@@ -81,7 +81,7 @@ public class ActivityLogsService {
     String message =
         user.getFullName() + " just updated the account of " + updatedAccount.getFullName();
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    ActivityLogs log = new ActivityLogs(actor, message, true);
     activityLogsRepository.save(log);
   }
 
@@ -90,7 +90,7 @@ public class ActivityLogsService {
     String message =
         user.getFullName() + " just deleted the account of " + deletedAccount.getFullName();
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    ActivityLogs log = new ActivityLogs(actor, message, true);
     activityLogsRepository.save(log);
   }
 
@@ -99,7 +99,7 @@ public class ActivityLogsService {
     String message =
         account.getFullName() + " just updated their account";
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, false);
+    ActivityLogs log = new ActivityLogs(actor, message, false);
     activityLogsRepository.save(log);
   }
 
@@ -108,7 +108,7 @@ public class ActivityLogsService {
     String message =
         account.getFullName() + " just deleted their account";
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, false);
+    ActivityLogs log = new ActivityLogs(actor, message, false);
     activityLogsRepository.save(log);
   }
 
@@ -117,7 +117,7 @@ public class ActivityLogsService {
     String message = "Account Password of " + actor + " has been changed";
     boolean isStaff = account.getUserRole() != UserRole.CUSTOMER;
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, isStaff);
+    ActivityLogs log = new ActivityLogs(actor, message, isStaff);
     activityLogsRepository.save(log);
   }
 
@@ -125,7 +125,7 @@ public class ActivityLogsService {
     String actor = user.getFullName();
     String message = actor + " changed the password of " + targetUser.getFullName();
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    ActivityLogs log = new ActivityLogs(actor, message, true);
     activityLogsRepository.save(log);
   }
 
@@ -145,7 +145,7 @@ public class ActivityLogsService {
       String message = actor + " just " + action + " the brand " + brand.getName() +
           " in Mosa Tire Supply";
 
-      ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+      ActivityLogs log = new ActivityLogs(actor, message, true);
       activityLogsRepository.save(log);
     }
   }
@@ -157,7 +157,7 @@ public class ActivityLogsService {
       String message = actor + " just " + action + " the Thread Type " + type.getType() +
           " with brand " + type.getBrand().getName() + " in Mosa Tire Supply";
 
-      ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+      ActivityLogs log = new ActivityLogs(actor, message, true);
       activityLogsRepository.save(log);
     }
   }
@@ -168,7 +168,7 @@ public class ActivityLogsService {
         actor + " just " + action + " a Thread Type details for " + details.getThreadType()
             .getType() + " in Mosa Tire Supply";
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    ActivityLogs log = new ActivityLogs(actor, message, true);
     activityLogsRepository.save(log);
   }
 
@@ -177,7 +177,7 @@ public class ActivityLogsService {
     String message = actor + " just changed the status of order with reference number '" + refNo
         + "' to " + orderStatus.toString();
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    ActivityLogs log = new ActivityLogs(actor, message, true);
     activityLogsRepository.save(log);
   }
 
@@ -185,7 +185,7 @@ public class ActivityLogsService {
     String actor = account.getFullName();
     String message = actor + " just " + action + " an order of " + order.getType().getType() + " on " + order.getDateCreated();
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    ActivityLogs log = new ActivityLogs(actor, message, true);
     activityLogsRepository.save(log);
   }
 
@@ -200,7 +200,7 @@ public class ActivityLogsService {
     String actor = account.getFullName();
     String message = actor + " just completed an order of " + orderedItems + " on " + DateTimeFormatter.get_MMDDYYY_Format(currentDate);
 
-    ActivityLogs log = new ActivityLogs(new Date(), actor, message, true);
+    ActivityLogs log = new ActivityLogs(actor, message, true);
     activityLogsRepository.save(log);
   }
 }

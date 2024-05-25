@@ -26,8 +26,7 @@ public class ActivityLogs {
 
   public ActivityLogs(){}
 
-  public ActivityLogs(Date dateCreated, String actor, String activity, boolean isStaff) {
-    this.dateCreated = dateCreated;
+  public ActivityLogs(String actor, String activity, boolean isStaff) {
     this.actor = actor;
     this.activity = activity;
     this.isStaff = isStaff;
